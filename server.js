@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.ANTHROPIC_API_KEY;
+const API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.MODEL || "claude-sonnet-5-5";
 
 const SYSTEM = `You are RashAI, a friendly, smart and helpful AI assistant.
