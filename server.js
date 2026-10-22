@@ -97,8 +97,17 @@ if (req.method === "GET" && PAGES[url]) {
           },
           body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: SYSTEM, messages: clean }),
         });
-        const data = await r.json();
-        if (!r.ok) return send(res, 502, { error: "Upstream error" });
+        
+const data = await r.json();
+
+if (!r.ok) {
+  console.error("Anthropic API error:", r.status, data);
+  return send(res, 502, {
+    error: "AI provider request failed",
+    status: r.status
+  });
+}
+
         const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
         send(res, 200, { text });
         // Privacy: chat content is never logged or stored on this server.
