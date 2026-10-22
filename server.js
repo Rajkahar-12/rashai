@@ -88,28 +88,45 @@ if (req.method === "GET" && PAGES[url]) {
           role: m.role === "assistant" ? "assistant" : "user",
           content: String(m.content).slice(0, 8000),
         }));
-        const r = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": API_KEY,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({ model: MODEL, max_tokens: 1500, system: SYSTEM, messages: clean }),
-        });
-        
+       
+const r = await fetch(
+  "https://openrouter.ai/api/v1/chat/completions",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${API_KEY}`,
+    },
+    body: JSON.stringify({
+      model: MODEL,
+      max_tokens: 1500,
+      messages: [
+        { role: "system", content: SYSTEM },
+        ...clean,
+      ],
+    }),
+  }
+);
+
 const data = await r.json();
 
 if (!r.ok) {
-  console.error("Anthropic API error:", r.status, data);
+  console.error("OpenRouter API error:", r.status, data);
   return send(res, 502, {
     error: "AI provider request failed",
-    status: r.status
+    status: r.status,
   });
 }
 
-        const text = (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n");
-        send(res, 200, { text });
+const text = data.choices?.[0]?.message?.content;
+
+if (typeof text !== "string") {
+  console.error("Unexpected OpenRouter response:", data);
+  return send(res, 502, { error: "Invalid AI response" });
+}
+
+send(res, 200, { text });
+
         // Privacy: chat content is never logged or stored on this server.
       } catch (e) {
         send(res, 500, { error: "Server error" });
