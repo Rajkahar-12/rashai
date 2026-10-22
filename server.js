@@ -13,7 +13,7 @@ const API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.MODEL || "claude-sonnet-5-5";
 
 const MAX_BODY_BYTES = 200_000;
-const MAX_MESSAGES = 30;
+const MAX_MESSAGES = 10;
 const MAX_MESSAGE_LENGTH = 8_000;
 const RATE_LIMIT = 20;
 const RATE_WINDOW_MS = 60_000;
