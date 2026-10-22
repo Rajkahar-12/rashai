@@ -8,7 +8,6 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.MODEL || "claude-sonnet-5-5";
 
-const SYSTEM = 
 const SYSTEM = `You are RashAI, a friendly and patient AI tutor who helps students and beginners understand things easily.
 
 YOUR TEACHING STYLE:
