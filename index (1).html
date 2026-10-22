@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RashAI</title>
+<style>
+:root{--bg:#faf9f7;--panel:#f1efeb;--text:#1f1e1c;--muted:#7a766f;--line:#e2dfd9;--accent:#6d4aff;--accent-t:#fff;--user:#ece9ff;--code:#1e1e24;--code-t:#e8e6f0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171618;--panel:#201f22;--text:#ececea;--muted:#95918a;--line:#33313a;--accent:#8b6dff;--user:#2a2542;--code:#0f0f13;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171618;--panel:#201f22;--text:#ececea;--muted:#95918a;--line:#33313a;--accent:#8b6dff;--user:#2a2542;--code:#0f0f13;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;overflow:hidden}
+#side{width:260px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px;gap:8px;flex-shrink:0}
+.brand{font-weight:700;font-size:20px;display:flex;align-items:center;gap:8px;padding:4px 6px 10px}
+.logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#ff6ba8);color:#fff;display:grid;place-items:center;font-size:15px}
+button{font:inherit;color:inherit;cursor:pointer}
+#new{background:var(--accent);color:var(--accent-t);border:0;border-radius:10px;padding:10px;font-weight:600}
+#list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.item{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:14px}
+.item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item:hover,.item.on{background:var(--line)}
+.item button{background:none;border:0;color:var(--muted);padding:0 4px;opacity:0}
+.item:hover button{opacity:1}
+#theme{background:none;border:1px solid var(--line);border-radius:8px;padding:6px;color:var(--muted);font-size:13px}
+main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
+header{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+#menu{background:none;border:0;font-size:22px}
+#msgs{flex:1;overflow-y:auto;padding:20px 16px}
+.wrap{max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.m{display:flex;gap:10px}
+.m.u{justify-content:flex-end}
+.bub{max-width:100%;overflow-wrap:anywhere}
+.u .bub{background:var(--user);padding:10px 14px;border-radius:16px 16px 4px 16px;max-width:85%;white-space:pre-wrap}
+.a .logo{margin-top:2px;flex-shrink:0}
+.a .bub{flex:1;min-width:0}
+.bub p{margin:0 0 10px}.bub p:last-child{margin:0}
+.bub ul,.bub ol{margin:0 0 10px;padding-left:22px}
+.bub h1,.bub h2,.bub h3{margin:14px 0 6px;line-height:1.3}
+.bub h1{font-size:1.3em}.bub h2{font-size:1.15em}.bub h3{font-size:1.05em}
+.bub code{background:var(--panel);padding:1px 5px;border-radius:5px;font:0.9em ui-monospace,Menlo,Consolas,monospace}
+.bub pre{background:var(--code);color:var(--code-t);padding:12px 14px;border-radius:10px;overflow-x:auto;margin:0 0 10px}
+.bub pre code{background:none;padding:0;color:inherit}
+.err{color:#d6455d}
+.hello{text-align:center;margin:12vh auto 0;max-width:560px}
+.hello h1{font-size:34px;margin:10px 0 6px}
+.hello p{color:var(--muted);margin:0 0 22px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips button{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:14px}
+.chips button:hover{border-color:var(--accent)}
+#bar{padding:10px 16px 14px}
+#box{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:8px 8px 8px 14px}
+#box:focus-within{border-color:var(--accent)}
+textarea{flex:1;background:none;border:0;outline:0;resize:none;font:inherit;color:inherit;max-height:180px;padding:6px 0}
+#send{background:var(--accent);color:var(--accent-t);border:0;border-radius:12px;width:38px;height:38px;font-size:18px;flex-shrink:0}
+#send:disabled{opacity:.4;cursor:default}
+.note{text-align:center;color:var(--muted);font-size:12px;margin-top:8px}
+@media (max-width:720px){
+#side{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);transition:transform .2s;padding-top:calc(12px + env(safe-area-inset-top,0px))}
+#side.open{transform:none}
+header{display:flex}
+}
+</style>
+</head>
+<body>
+<aside id="side">
+  <div class="brand"><div class="logo">✦</div>RashAI</div>
+  <button id="new">+ New chat</button>
+  <div id="list"></div>
+  <button id="theme">Toggle theme</button>
+</aside>
+<main>
+  <header><button id="menu" aria-label="Menu">☰</button><div class="brand" style="padding:0"><div class="logo">✦</div>RashAI</div></header>
+  <div id="msgs"><div class="wrap" id="wrap"></div></div>
+  <div id="bar">
+    <div id="box">
+      <textarea id="in" rows="1" placeholder="Message RashAI…"></textarea>
+      <button id="send" aria-label="Send">↑</button>
+    </div>
+    <div class="note">RashAI is an AI and can make mistakes. Chats stay in your browser. <a href="/privacy" style="color:inherit">Privacy</a></div>
+  </div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let chats=[],cur=null,busy=false,ctrl=null;
+
+function load(){try{chats=JSON.parse(localStorage.getItem("rashai")||"[]")}catch(e){chats=[]}}
+function save(){try{localStorage.setItem("rashai",JSON.stringify(chats.slice(0,40)))}catch(e){}}
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
+
+function inline(t){
+  return esc(t).replace(/`([^`]+)`/g,"<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>")
+    .replace(/(^|[\s(])\*([^*\n]+)\*/g,"$1<em>$2</em>");
+}
+function md(src){
+  const parts=src.split(/```/);let out="";
+  parts.forEach((p,i)=>{
+    if(i%2){out+="<pre><code>"+esc(p.replace(/^[^\n]*\n/,"").replace(/\n$/,""))+"</code></pre>";return}
+    let list=null;
+    const close=()=>{if(list){out+="</"+list+">";list=null}};
+    p.split("\n").forEach(line=>{
+      let m;
+      if(m=line.match(/^(#{1,3})\s+(.*)/)){close();out+="<h"+m[1].length+">"+inline(m[2])+"</h"+m[1].length+">"}
+      else if(m=line.match(/^\s*[-*]\s+(.*)/)){if(list!=="ul"){close();out+="<ul>";list="ul"}out+="<li>"+inline(m[1])+"</li>"}
+      else if(m=line.match(/^\s*\d+\.\s+(.*)/)){if(list!=="ol"){close();out+="<ol>";list="ol"}out+="<li>"+inline(m[1])+"</li>"}
+      else if(line.trim()===""){close()}
+      else{close();out+="<p>"+inline(line)+"</p>"}
+    });
+    close();
+  });
+  return out;
+}
+
+function renderList(){
+  const l=$("list");l.innerHTML="";
+  chats.forEach(c=>{
+    const d=document.createElement("div");d.className="item"+(c===cur?" on":"");
+    const s=document.createElement("span");s.textContent=c.title;
+    const x=document.createElement("button");x.textContent="✕";x.title="Delete";
+    x.onclick=e=>{e.stopPropagation();chats=chats.filter(k=>k!==c);if(cur===c)cur=null;save();renderList();renderChat()};
+    d.onclick=()=>{if(busy)return;cur=c;renderList();renderChat();$("side").classList.remove("open")};
+    d.append(s,x);l.append(d);
+  });
+}
+function bubble(role,html){
+  const m=document.createElement("div");m.className="m "+(role==="user"?"u":"a");
+  if(role!=="user"){const g=document.createElement("div");g.className="logo";g.textContent="✦";m.append(g)}
+  const b=document.createElement("div");b.className="bub";b.innerHTML=html;m.append(b);
+  $("wrap").append(m);return b;
+}
+function renderChat(){
+  const w=$("wrap");w.innerHTML="";
+  if(!cur||!cur.msgs.length){
+    w.innerHTML='<div class="hello"><div class="logo" style="width:52px;height:52px;font-size:26px;margin:0 auto;border-radius:14px">✦</div><h1>Hi, I’m RashAI</h1><p>Ask me anything: code, ideas, writing, study help.</p><div class="chips"></div></div>';
+    ["Explain pointers in C","Write a Python quiz game","Give me a study plan","Tell me a fun fact"].forEach(t=>{
+      const b=document.createElement("button");b.textContent=t;b.onclick=()=>send(t);w.querySelector(".chips").append(b)});
+    return;
+  }
+  cur.msgs.forEach(m=>bubble(m.role,m.role==="user"?esc(m.content):md(m.content)));
+  $("msgs").scrollTop=1e9;
+}
+
+async function send(text){
+  text=(text||$("in").value).trim();
+  if(!text||busy)return;
+  if(!cur){cur={title:text.slice(0,32),msgs:[]};chats.unshift(cur)}
+  cur.msgs.push({role:"user",content:text});
+  $("in").value="";grow();renderChat();renderList();
+  const b=bubble("assistant","…");$("msgs").scrollTop=1e9;
+  busy=true;$("send").disabled=true;ctrl=new AbortController();
+  const hist=cur.msgs.map(m=>({role:m.role,content:m.content}));
+  try{
+    const res=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:hist}),signal:ctrl.signal});
+    const r=await res.json();
+    if(!res.ok)throw {code:res.status===429?"rate_limited":"error"};
+    cur.msgs.push({role:"assistant",content:r.text});b.innerHTML=md(r.text);
+  }catch(e){
+    if(e&&e.text){cur.msgs.push({role:"assistant",content:e.text})}
+    else{b.innerHTML='<span class="err">Something went wrong'+(e&&e.code==="rate_limited"?" (too many requests, wait a moment)":e&&e.code==="not_granted"?" (access was not granted)":"")+'. Try again.</span>';cur.msgs.pop()}
+  }
+  busy=false;$("send").disabled=false;save();renderList();$("in").focus();
+}
+
+function grow(){const t=$("in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,180)+"px"}
+$("in").addEventListener("input",grow);
+$("in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("send").onclick=()=>send();
+$("new").onclick=()=>{if(busy)return;cur=null;renderList();renderChat();$("side").classList.remove("open");$("in").focus()};
+$("menu").onclick=()=>$("side").classList.toggle("open");
+$("theme").onclick=()=>{const r=document.documentElement;const dark=getComputedStyle(r).colorScheme==="dark";r.setAttribute("data-theme",dark?"light":"dark")};
+
+load();renderList();renderChat();
+</script>
+</body>
+</html>
