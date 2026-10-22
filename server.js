@@ -46,9 +46,29 @@ function send(res, code, body, type = "application/json") {
 const server = http.createServer((req, res) => {
   const url = req.url.split("?")[0];
 
-  if (req.method === "GET" && PAGES[url]) {
-    return send(res, 200, fs.readFileSync(path.join(__dirname, PAGES[url])), "text/html; charset=utf-8");
+ 
+if (req.method === "GET" && PAGES[url]) {
+  try {
+    const filePath = path.join(__dirname, PAGES[url]);
+    const html = fs.readFileSync(filePath);
+
+    return send(
+      res,
+      200,
+      html,
+      "text/html; charset=utf-8"
+    );
+  } catch (err) {
+    console.error("Page loading error:", err.message);
+
+    return send(
+      res,
+      500,
+      "Page could not be loaded",
+      "text/plain; charset=utf-8"
+    );
   }
+}
 
   if (req.method === "POST" && url === "/api/chat") {
     const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
@@ -92,4 +112,6 @@ const server = http.createServer((req, res) => {
   send(res, 404, { error: "Not found" });
 });
 
-server.listen(PORT, () => console.log("RashAI running on port " + PORT));
+server.listen(PORT, "0.0.0.0", () => {
+  console.log("RashAI running on port " + PORT);
+});
