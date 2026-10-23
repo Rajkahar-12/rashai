@@ -489,20 +489,69 @@ async function chat(messages, attachment) {
       };
     }
 
-    if (!response.ok) {
-      // Log status and safe error metadata only; never log keys or full response bodies.
-      const providerCode =
-        typeof data?.error?.code === "string" ||
-        typeof data?.error?.code === "number"
-          ? String(data.error.code).slice(0, 80)
-          : "unknown";
+       if (!response.ok) {
+      const providerError = data?.error || {};
+      const metadata = providerError.metadata || {};
+
+      const safeString = (value, max = 200) => {
+        if (typeof value === "string") {
+          return value.slice(0, max);
+        }
+
+        if (typeof value === "number") {
+          return String(value);
+        }
+
+        return "unknown";
+      };
 
       console.error("OpenRouter request failed:", {
         status: response.status,
-        code: providerCode,
+        code: safeString(providerError.code),
+        message: safeString(providerError.message),
+        errorType: safeString(metadata.error_type),
+        providerCode: safeString(metadata.provider_code),
+        limitSource: safeString(metadata.limit_source),
+        retryAfter: safeString(
+          response.headers.get("retry-after")
+        ),
+        rateLimitLimit: safeString(
+          response.headers.get("x-ratelimit-limit")
+        ),
+        rateLimitRemaining: safeString(
+          response.headers.get("x-ratelimit-remaining")
+        ),
+        rateLimitReset: safeString(
+          response.headers.get("x-ratelimit-reset")
+        ),
         model: MODEL,
       });
 
+      let message =
+        "The AI provider could not complete the request.";
+
+      if (response.status === 401 || response.status === 403) {
+        message =
+          "The AI service rejected the request. Check its server configuration.";
+      } else if (response.status === 402) {
+        message =
+          "The AI provider requires available credits or a supported payment method.";
+      } else if (response.status === 429) {
+        message =
+          "The AI service is busy or rate-limited. Please wait and try again.";
+      } else if (response.status === 503) {
+        message =
+          "No AI provider is currently available for this model. Please try again shortly.";
+      } else if (response.status >= 500) {
+        message =
+          "The AI provider is temporarily unavailable. Please try again shortly.";
+      }
+
+      return {
+        status: 502,
+        body: { error: message },
+      };
+    }
       let message = "The AI provider could not complete the request.";
 
       if (response.status === 401 || response.status === 403) {
