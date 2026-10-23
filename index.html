@@ -20,8 +20,17 @@ button{font:inherit;color:inherit;cursor:pointer}
 .item{display:flex;align-items:center;gap:6px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:14px}
 .item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item:hover,.item.on{background:var(--line)}
-.item button{background:none;border:0;color:var(--muted);padding:0 4px;opacity:0}
-.item:hover button{opacity:1}
+.item{position:relative;min-width:0}
+.item-title{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:none;border:0;text-align:left;padding:0;color:inherit;font:inherit;cursor:pointer}
+.chat-menu-btn{flex-shrink:0;width:28px;height:28px;display:grid;place-items:center;background:transparent;border:0;border-radius:7px;color:var(--muted);font-size:20px;line-height:1;opacity:0;cursor:pointer}
+.item:hover .chat-menu-btn,.item:focus-within .chat-menu-btn,.item.on .chat-menu-btn{opacity:1}
+.chat-menu-btn:hover{background:var(--bg);color:var(--text)}
+.chat-menu{position:absolute;right:4px;top:38px;z-index:20;min-width:150px;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px #0002;display:flex;flex-direction:column;gap:2px}
+.chat-menu[hidden]{display:none}
+.chat-menu button{width:100%;text-align:left;background:none;border:0;border-radius:6px;padding:8px 10px;font-size:13px;color:var(--text);cursor:pointer}
+.chat-menu button:hover{background:var(--line)}
+.chat-menu button.danger{color:#d6455d}
+@media(max-width:720px){.chat-menu-btn{opacity:1}.item{padding:7px}.chat-menu{top:34px}}
 #theme{background:none;border:1px solid var(--line);border-radius:8px;padding:6px;color:var(--muted);font-size:13px}
 main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
 header{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
@@ -192,13 +201,29 @@ function renderList(){
   const list=$("list");list.innerHTML="";
   chats.forEach(chat=>{
     const item=document.createElement("div");item.className="item"+(chat===cur?" on":"");
-    const title=document.createElement("span");title.textContent=chat.title;
-    const remove=document.createElement("button");remove.textContent="✕";remove.title="Delete chat";remove.setAttribute("aria-label","Delete chat");
-    remove.onclick=e=>{e.stopPropagation();if(busy&&chat===cur)return;chats=chats.filter(c=>c!==chat);if(cur===chat)cur=null;save();renderList();renderChat()};
-    item.onclick=()=>{if(busy)return;cur=chat;renderList();renderChat();$("side").classList.remove("open")};
-    item.append(title,remove);list.append(item);
+    const title=document.createElement("button");title.type="button";title.className="item-title";title.textContent=chat.title;title.title=chat.title;
+    title.onclick=()=>{if(busy)return;cur=chat;renderList();renderChat();$("side").classList.remove("open")};
+
+    const more=document.createElement("button");more.type="button";more.className="chat-menu-btn";more.textContent="⋯";more.title="Chat options";more.setAttribute("aria-label","Options for "+chat.title);more.setAttribute("aria-haspopup","menu");more.setAttribute("aria-expanded","false");
+    const menu=document.createElement("div");menu.className="chat-menu";menu.hidden=true;menu.setAttribute("role","menu");
+
+    const rename=document.createElement("button");rename.type="button";rename.textContent="✎  Rename";rename.setAttribute("role","menuitem");
+    rename.onclick=e=>{e.stopPropagation();closeMenus();if(busy&&chat===cur)return;const next=prompt("Rename this chat:",chat.title);if(next===null)return;const clean=next.trim();if(!clean){alert("Chat title cannot be empty.");return}chat.title=clean.slice(0,80);save();renderList()};
+
+    const remove=document.createElement("button");remove.type="button";remove.className="danger";remove.textContent="♲  Delete chat";remove.setAttribute("role","menuitem");
+    remove.onclick=e=>{e.stopPropagation();closeMenus();if(busy&&chat===cur){alert("Wait for RashAI to finish responding before deleting this chat.");return}if(!confirm("Delete this chat? This cannot be undone."))return;chats=chats.filter(c=>c!==chat);if(cur===chat)cur=null;save();renderList();renderChat()};
+
+    menu.append(rename,remove);
+    more.onclick=e=>{e.stopPropagation();const willOpen=menu.hidden;closeMenus();menu.hidden=!willOpen;more.setAttribute("aria-expanded",String(willOpen))};
+    item.append(title,more,menu);list.append(item);
   });
 }
+function closeMenus(){
+  document.querySelectorAll(".chat-menu").forEach(menu=>menu.hidden=true);
+  document.querySelectorAll(".chat-menu-btn").forEach(button=>button.setAttribute("aria-expanded","false"));
+}
+document.addEventListener("click",e=>{if(!e.target.closest(".item"))closeMenus()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeMenus()});
 function bubble(role,html){
   const message=document.createElement("div");message.className="m "+(role==="user"?"u":"a");
   if(role!=="user"){const logo=document.createElement("div");logo.className="logo";logo.textContent="✦";message.append(logo)}
