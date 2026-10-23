@@ -141,8 +141,11 @@ function readJsonBody(req, res) {
 }
 
 function validateMessages(messages) {
-  if (!Array.isArray(messages) || messages.length === 0 ||
-      messages.length > 200) {
+  if (
+    !Array.isArray(messages) ||
+    messages.length === 0 ||
+    messages.length > 200
+  ) {
     return null;
   }
 
@@ -269,7 +272,9 @@ function decodeAttachment(attachment) {
       throw new Error("INVALID_PDF");
     }
 
-    if (!["application/pdf", "application/octet-stream"].includes(declaredMime)) {
+    if (
+      !["application/pdf", "application/octet-stream"].includes(declaredMime)
+    ) {
       throw new Error("FILE_TYPE_MISMATCH");
     }
   } else if (extension === ".docx") {
@@ -397,7 +402,6 @@ function extractAnswer(message) {
     if (text) return text;
   }
 
-  // A refusal is a user-facing answer, not hidden reasoning.
   if (typeof message?.refusal === "string" && message.refusal.trim()) {
     return message.refusal.trim();
   }
@@ -482,14 +486,22 @@ async function chat(messages, attachment) {
     try {
       data = JSON.parse(raw);
     } catch {
-      console.error("OpenRouter returned invalid JSON. HTTP status:", response.status);
+      console.error(
+        "OpenRouter returned invalid JSON. HTTP status:",
+        response.status
+      );
+
       return {
         status: 502,
-        body: { error: "The AI provider returned an invalid response. Please try again." },
+        body: {
+          error: "The AI provider returned an invalid response. Please try again.",
+        },
       };
     }
 
-       if (!response.ok) {
+    // IMPROVED ERROR HANDLING:
+    // Logs safe diagnostic metadata without logging keys or full response bodies.
+    if (!response.ok) {
       const providerError = data?.error || {};
       const metadata = providerError.metadata || {};
 
@@ -512,9 +524,7 @@ async function chat(messages, attachment) {
         errorType: safeString(metadata.error_type),
         providerCode: safeString(metadata.provider_code),
         limitSource: safeString(metadata.limit_source),
-        retryAfter: safeString(
-          response.headers.get("retry-after")
-        ),
+        retryAfter: safeString(response.headers.get("retry-after")),
         rateLimitLimit: safeString(
           response.headers.get("x-ratelimit-limit")
         ),
@@ -527,8 +537,7 @@ async function chat(messages, attachment) {
         model: MODEL,
       });
 
-      let message =
-        "The AI provider could not complete the request.";
+      let message = "The AI provider could not complete the request.";
 
       if (response.status === 401 || response.status === 403) {
         message =
@@ -545,26 +554,12 @@ async function chat(messages, attachment) {
       } else if (response.status >= 500) {
         message =
           "The AI provider is temporarily unavailable. Please try again shortly.";
-      }};
+      }
 
       return {
         status: 502,
         body: { error: message },
       };
-    }
-      let message = "The AI provider could not complete the request.";
-
-      if (response.status === 401 || response.status === 403) {
-        message = "The AI service rejected the request. Check its server configuration.";
-      } else if (response.status === 402) {
-        message = "The AI provider requires available credits or a supported payment method.";
-      } else if (response.status === 429) {
-        message = "The AI service is busy or rate-limited. Please wait and try again.";
-      } else if (response.status >= 500) {
-        message = "The AI provider is temporarily unavailable. Please try again shortly.";
-      }
-
-      return { status: 502, body: { error: message } };
     }
 
     const choice = data?.choices?.[0];
@@ -590,7 +585,8 @@ async function chat(messages, attachment) {
       return {
         status: 502,
         body: {
-          error: "The AI response was cut short. Please ask again with a shorter question or document.",
+          error:
+            "The AI response was cut short. Please ask again with a shorter question or document.",
         },
       };
     }
@@ -605,6 +601,7 @@ async function chat(messages, attachment) {
   } catch (error) {
     if (error.name === "AbortError") {
       console.error("OpenRouter request timed out.");
+
       return {
         status: 504,
         body: { error: "The AI request timed out. Please try again." },
@@ -612,7 +609,10 @@ async function chat(messages, attachment) {
     }
 
     // Do not print request headers, API keys, or user document contents.
-    console.error("AI provider connection failed:", error.name || "UnknownError");
+    console.error(
+      "AI provider connection failed:",
+      error.name || "UnknownError"
+    );
 
     return {
       status: 502,
@@ -638,6 +638,7 @@ function getClientIp(req) {
 
 function limited(ip) {
   const now = Date.now();
+
   const recent = (hits.get(ip) || []).filter(
     (time) => now - time < RATE_WINDOW_MS
   );
@@ -656,7 +657,10 @@ const cleanupTimer = setInterval(() => {
   const now = Date.now();
 
   for (const [ip, times] of hits) {
-    const recent = times.filter((time) => now - time < RATE_WINDOW_MS);
+    const recent = times.filter(
+      (time) => now - time < RATE_WINDOW_MS
+    );
+
     if (recent.length) hits.set(ip, recent);
     else hits.delete(ip);
   }
@@ -677,10 +681,17 @@ const server = http.createServer(async (req, res) => {
     try {
       const filePath = path.join(__dirname, PAGES[url]);
       const html = fs.readFileSync(filePath);
+
       return send(res, 200, html, "text/html; charset=utf-8");
     } catch {
       console.error("A website page could not be loaded.");
-      return send(res, 500, "Page could not be loaded.", "text/plain; charset=utf-8");
+
+      return send(
+        res,
+        500,
+        "Page could not be loaded.",
+        "text/plain; charset=utf-8"
+      );
     }
   }
 
@@ -693,13 +704,18 @@ const server = http.createServer(async (req, res) => {
 
     if (!API_KEY) {
       console.error("OPENROUTER_API_KEY is not configured.");
-      return send(res, 500, { error: "AI service is not configured." });
+
+      return send(res, 500, {
+        error: "AI service is not configured.",
+      });
     }
 
     const contentType = req.headers["content-type"] || "";
 
     if (!contentType.toLowerCase().startsWith("application/json")) {
-      return send(res, 415, { error: "Content-Type must be application/json." });
+      return send(res, 415, {
+        error: "Content-Type must be application/json.",
+      });
     }
 
     try {
@@ -724,11 +740,14 @@ const server = http.createServer(async (req, res) => {
 
           if (message) return send(res, 400, { error: message });
 
-          // Log the parser error type, not file contents or document text.
-          console.error("Attachment processing failed:", error.name || "UnknownError");
+          console.error(
+            "Attachment processing failed:",
+            error.name || "UnknownError"
+          );
 
           return send(res, 400, {
-            error: "The file could not be read. Check that it is valid and try again.",
+            error:
+              "The file could not be read. Check that it is valid and try again.",
           });
         }
       }
@@ -742,9 +761,14 @@ const server = http.createServer(async (req, res) => {
 
       if (error.message === "REQUEST_ABORTED") return;
 
-      console.error("Chat request could not be processed:", error.name || "UnknownError");
+      console.error(
+        "Chat request could not be processed:",
+        error.name || "UnknownError"
+      );
 
-      return send(res, 500, { error: "Something went wrong. Please try again." });
+      return send(res, 500, {
+        error: "Something went wrong. Please try again.",
+      });
     }
   }
 
@@ -759,4 +783,3 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log("RashAI server listening on port " + PORT);
   console.log("Configured AI model:", MODEL);
 });
-
