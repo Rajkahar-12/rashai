@@ -21,7 +21,7 @@ const MAX_MESSAGE_LENGTH = 8000;
 const MAX_EXTRACTED_CHARS = 60000;
 const RATE_LIMIT = 20;
 const RATE_WINDOW_MS = 60000;
-const PROVIDER_TIMEOUT_MS = 45000;
+const PROVIDER_TIMEOUT_MS = 90000;
 
 const SYSTEM = `You are RashAI, a friendly, reliable AI assistant focused on learning, programming, and technology.
 
