@@ -545,7 +545,7 @@ async function chat(messages, attachment) {
       } else if (response.status >= 500) {
         message =
           "The AI provider is temporarily unavailable. Please try again shortly.";
-      }
+      }};
 
       return {
         status: 502,
