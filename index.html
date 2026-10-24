@@ -12,9 +12,12 @@
 html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;overflow:hidden}
 button,select{font:inherit;color:inherit;cursor:pointer}
+
 #side{width:260px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:12px 10px;gap:8px;flex-shrink:0}
+.side-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .brand{font-weight:700;font-size:19px;padding:5px 8px 14px;letter-spacing:-.5px}
 .brand span{color:#9b7cff}
+#closeSide{display:none;background:transparent;border:1px solid var(--line);border-radius:8px;padding:5px 10px}
 #new,#theme{background:transparent;border:1px solid var(--line);border-radius:10px;padding:9px 11px;text-align:left}
 #list{flex:1;overflow-y:auto}
 .item{display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:8px;font-size:13px}
@@ -24,6 +27,9 @@ button,select{font:inherit;color:inherit;cursor:pointer}
 .chat-menu{position:absolute;z-index:5;background:var(--panel);border:1px solid var(--line);padding:6px;border-radius:8px}
 .chat-menu button{display:block;background:none;border:0;padding:5px}
 .list-label{padding:8px 10px;color:var(--muted);font-size:11px;text-transform:uppercase}
+
+#sideOverlay{display:none}
+
 main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
 header{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
 #menu{background:none;border:0}
@@ -71,9 +77,13 @@ header{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:
 .actions button{font-size:12px;padding:4px 8px;border:1px solid var(--line);background:var(--panel);border-radius:7px}
 #uploadHelp{max-width:760px;margin:5px auto;color:var(--muted);font-size:11px}
 #status{color:var(--muted)}
+
 @media(max-width:720px){
  #side{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%);transition:transform .2s;width:min(290px,86vw);box-shadow:8px 0 30px #0001}
  #side.open{transform:none}
+ #closeSide{display:block}
+ #sideOverlay{position:fixed;inset:0;z-index:4;background:rgba(0,0,0,.45)}
+ #sideOverlay.visible{display:block}
  header{display:flex}
  #msgs{padding:16px 12px}
  #bar{padding:8px 10px 12px}
@@ -86,14 +96,19 @@ header{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:
 </head>
 <body>
 <aside id="side">
- <div class="brand">✦ Rash<span>AI</span></div>
+ <div class="side-top">
+  <div class="brand">✦ Rash<span>AI</span></div>
+  <button id="closeSide" type="button" aria-label="Close sidebar" title="Close sidebar">✕</button>
+ </div>
  <button id="new">＋ New chat</button>
  <div class="list-label">Recent chats</div>
  <div id="list"></div>
  <button id="theme">Toggle theme</button>
 </aside>
+<div id="sideOverlay" aria-hidden="true"></div>
+
 <main>
- <header><button id="menu" aria-label="Menu">☰</button><div class="brand">✦ Rash<span>AI</span></div></header>
+ <header><button id="menu" aria-label="Menu" title="Open sidebar">☰</button><div class="brand">✦ Rash<span>AI</span></div></header>
  <div id="msgs"><div class="wrap" id="wrap"></div></div>
  <div id="bar">
   <div id="filePreview"><span>📎</span><span id="fileName"></span><button id="removeFile">×</button></div>
@@ -115,13 +130,24 @@ header{display:none;align-items:center;gap:10px;padding:10px 14px;border-bottom:
   <div class="note">RashAI can make mistakes. Chats stay in your browser. <a href="/privacy" style="color:inherit">Privacy</a></div>
  </div>
 </main>
+
 <script>
 "use strict";
+
 const $=id=>document.getElementById(id);
 let chats=[],cur=null,busy=false,selectedFile=null,recognition=null;
 const MAX_FILE_BYTES=5*1024*1024;
 const ALLOWED_EXT=/\.(pdf|txt|md|csv|json|xml|html|css|js|ts|py|c|h|cpp|hpp|java|sql|docx|png|jpe?g|webp|gif)$/i;
 let selectedMode="general";
+
+function openSidebar(){
+ $("side").classList.add("open");
+ $("sideOverlay").classList.add("visible");
+}
+function closeSidebar(){
+ $("side").classList.remove("open");
+ $("sideOverlay").classList.remove("visible");
+}
 
 function load(){
  try{
@@ -129,8 +155,12 @@ function load(){
   chats=Array.isArray(saved)?saved.filter(c=>c&&typeof c.title==="string"&&Array.isArray(c.msgs)):[];
  }catch{chats=[]}
 }
-function save(){try{localStorage.setItem("rashai",JSON.stringify(chats.slice(0,40)))}catch{}}
-function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}
+function save(){
+ try{localStorage.setItem("rashai",JSON.stringify(chats.slice(0,40)))}catch{}
+}
+function esc(s){
+ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
 function inline(text){
  let s=esc(text);
  s=s.replace(/`([^`\n]+)`/g,"<code>$1</code>");
@@ -145,86 +175,191 @@ function md(src){
  const isRow=l=>/^\s*\|.*\|\s*$/.test(l);
  const cells=l=>l.trim().replace(/^\|/,"").replace(/\|$/,"").split("|").map(x=>x.trim());
  const isSep=l=>l.includes("-")&&cells(l).every(c=>/^:?-{3,}:?$/.test(c));
+
  while(i<lines.length){
   const line=lines[i];
+
   if(/^\s*```/.test(line)){
-   const lang=line.trim().slice(3).trim()||"Code",code=[];i++;
+   const lang=line.trim().slice(3).trim()||"Code",code=[];
+   i++;
    while(i<lines.length&&!/^\s*```/.test(lines[i]))code.push(lines[i++]);
    if(i<lines.length)i++;
-   out+='<div class="code-wrap"><div class="code-head"><span>'+esc(lang)+'</span><button type="button" data-copy>Copy code</button></div><pre><code>'+esc(code.join("\n"))+'</code></pre></div>';continue;
+   out+='<div class="code-wrap"><div class="code-head"><span>'+esc(lang)+'</span><button type="button" data-copy>Copy code</button></div><pre><code>'+esc(code.join("\n"))+'</code></pre></div>';
+   continue;
   }
+
   if(/^\s*(---+|\*\*\*+|___+)\s*$/.test(line)){out+="<hr>";i++;continue}
+
   if(isRow(line)&&i+1<lines.length&&isRow(lines[i+1])&&isSep(lines[i+1])){
    const h=cells(line),count=Math.min(h.length,cells(lines[i+1]).length);
-   out+="<table><thead><tr>";for(let j=0;j<count;j++)out+="<th>"+inline(h[j])+"</th>";
-   out+="</tr></thead><tbody>";i+=2;
-   while(i<lines.length&&isRow(lines[i])){const r=cells(lines[i]);out+="<tr>";for(let j=0;j<count;j++)out+="<td>"+inline(r[j]||"")+"</td>";out+="</tr>";i++}
+   out+="<table><thead><tr>";
+   for(let j=0;j<count;j++)out+="<th>"+inline(h[j])+"</th>";
+   out+="</tr></thead><tbody>";
+   i+=2;
+   while(i<lines.length&&isRow(lines[i])){
+    const r=cells(lines[i]);out+="<tr>";
+    for(let j=0;j<count;j++)out+="<td>"+inline(r[j]||"")+"</td>";
+    out+="</tr>";i++;
+   }
    out+="</tbody></table>";continue;
   }
+
   const heading=line.match(/^(#{1,3})\s+(.*)$/);
-  if(heading){const n=heading[1].length;out+="<h"+n+">"+inline(heading[2])+"</h"+n+">";i++;continue}
-  if(/^\s*[-*]\s+/.test(line)){out+="<ul>";while(i<lines.length&&/^\s*[-*]\s+/.test(lines[i]))out+="<li>"+inline(lines[i++].replace(/^\s*[-*]\s+/,""))+"</li>";out+="</ul>";continue}
-  if(/^\s*\d+[.)]\s+/.test(line)){out+="<ol>";while(i<lines.length&&/^\s*\d+[.)]\s+/.test(lines[i]))out+="<li>"+inline(lines[i++].replace(/^\s*\d+[.)]\s+/,""))+"</li>";out+="</ol>";continue}
+  if(heading){
+   const n=heading[1].length;
+   out+="<h"+n+">"+inline(heading[2])+"</h"+n+">";i++;continue;
+  }
+
+  if(/^\s*[-*]\s+/.test(line)){
+   out+="<ul>";
+   while(i<lines.length&&/^\s*[-*]\s+/.test(lines[i]))out+="<li>"+inline(lines[i++].replace(/^\s*[-*]\s+/,""))+"</li>";
+   out+="</ul>";continue;
+  }
+
+  if(/^\s*\d+[.)]\s+/.test(line)){
+   out+="<ol>";
+   while(i<lines.length&&/^\s*\d+[.)]\s+/.test(lines[i]))out+="<li>"+inline(lines[i++].replace(/^\s*\d+[.)]\s+/,""))+"</li>";
+   out+="</ol>";continue;
+  }
+
   if(!line.trim()){i++;continue}
   out+="<p>"+inline(line)+"</p>";i++;
  }
  return out;
 }
+
 function renderList(){
  const list=$("list");list.innerHTML="";
  chats.forEach(chat=>{
   const item=document.createElement("div");item.className="item"+(chat===cur?" on":"");
-  const title=document.createElement("button");title.type="button";title.className="item-title";title.textContent=chat.title;title.title=chat.title;
-  title.onclick=()=>{if(busy)return;cur=chat;selectedMode=chat.mode||"general";$("mode").value=selectedMode;renderList();renderChat();$("side").classList.remove("open")};
-  const more=document.createElement("button");more.type="button";more.className="chat-menu-btn";more.textContent="⋯";more.title="Chat options";
+  const title=document.createElement("button");
+  title.type="button";title.className="item-title";title.textContent=chat.title;title.title=chat.title;
+  title.onclick=()=>{
+   if(busy)return;
+   cur=chat;selectedMode=chat.mode||"general";$("mode").value=selectedMode;
+   renderList();renderChat();closeSidebar();
+  };
+
+  const more=document.createElement("button");
+  more.type="button";more.className="chat-menu-btn";more.textContent="⋯";more.title="Chat options";
   const menu=document.createElement("div");menu.className="chat-menu";menu.hidden=true;
-  const rename=document.createElement("button");rename.textContent="Rename";rename.onclick=e=>{e.stopPropagation();menu.hidden=true;if(busy&&chat===cur)return;const n=prompt("Rename this chat:",chat.title);if(n===null)return;if(!n.trim()){alert("Title cannot be empty.");return}chat.title=n.trim().slice(0,80);save();renderList()};
-  const remove=document.createElement("button");remove.textContent="Delete chat";remove.onclick=e=>{e.stopPropagation();menu.hidden=true;if(busy&&chat===cur)return;if(!confirm("Delete this chat?"))return;chats=chats.filter(c=>c!==chat);if(cur===chat)cur=null;save();renderList();renderChat()};
-  menu.append(rename,remove);more.onclick=e=>{e.stopPropagation();document.querySelectorAll(".chat-menu").forEach(m=>{if(m!==menu)m.hidden=true});menu.hidden=!menu.hidden};
+
+  const rename=document.createElement("button");
+  rename.textContent="Rename";
+  rename.onclick=e=>{
+   e.stopPropagation();menu.hidden=true;
+   if(busy&&chat===cur)return;
+   const n=prompt("Rename this chat:",chat.title);
+   if(n===null)return;
+   if(!n.trim()){alert("Title cannot be empty.");return}
+   chat.title=n.trim().slice(0,80);save();renderList();
+  };
+
+  const remove=document.createElement("button");
+  remove.textContent="Delete chat";
+  remove.onclick=e=>{
+   e.stopPropagation();menu.hidden=true;
+   if(busy&&chat===cur)return;
+   if(!confirm("Delete this chat?"))return;
+   chats=chats.filter(c=>c!==chat);
+   if(cur===chat)cur=null;
+   save();renderList();renderChat();
+  };
+
+  menu.append(rename,remove);
+  more.onclick=e=>{
+   e.stopPropagation();
+   document.querySelectorAll(".chat-menu").forEach(m=>{if(m!==menu)m.hidden=true});
+   menu.hidden=!menu.hidden;
+  };
   item.append(title,more,menu);list.append(item);
  });
 }
-document.addEventListener("click",e=>{if(!e.target.closest(".item"))document.querySelectorAll(".chat-menu").forEach(m=>m.hidden=true)});
+
+document.addEventListener("click",e=>{
+ if(!e.target.closest(".item"))document.querySelectorAll(".chat-menu").forEach(m=>m.hidden=true);
+});
+
 function bubble(role,html){
  const message=document.createElement("div");message.className="m "+(role==="user"?"u":"a");
- if(role!=="user"){const logo=document.createElement("div");logo.className="logo";logo.textContent="✦";message.append(logo)}
- const content=document.createElement("div");content.className="bub";content.innerHTML=html;message.append(content);$("wrap").append(message);return content;
+ if(role!=="user"){
+  const logo=document.createElement("div");logo.className="logo";logo.textContent="✦";message.append(logo);
+ }
+ const content=document.createElement("div");content.className="bub";content.innerHTML=html;
+ message.append(content);$("wrap").append(message);return content;
 }
+
 function renderChat(){
  const wrap=$("wrap");wrap.innerHTML="";
  if(!cur||!cur.msgs.length){
   wrap.innerHTML='<div class="hello"><div style="font-size:42px">✦</div><h1>Hi, I’m RashAI</h1><p>Ask me anything: code, ideas, writing, study help.</p><div class="chips"></div></div>';
-  ["Explain pointers in C","Write a Python quiz game","Give me a study plan","Tell me a fun fact"].forEach(t=>{const b=document.createElement("button");b.textContent=t;b.onclick=()=>send(t);wrap.querySelector(".chips").append(b)});
+  ["Explain pointers in C","Write a Python quiz game","Give me a study plan","Tell me a fun fact"].forEach(t=>{
+   const b=document.createElement("button");b.textContent=t;b.onclick=()=>send(t);wrap.querySelector(".chips").append(b);
+  });
   return;
  }
- cur.msgs.forEach(m=>{const b=bubble(m.role,m.role==="user"?esc(m.content):md(m.content));if(m.role!=="user")addAnswerActions(b,m.content)});
+ cur.msgs.forEach(m=>{
+  const b=bubble(m.role,m.role==="user"?esc(m.content):md(m.content));
+  if(m.role!=="user")addAnswerActions(b,m.content);
+ });
  $("msgs").scrollTop=$("msgs").scrollHeight;
 }
+
 function addAnswerActions(container,text){
  const row=document.createElement("div");row.className="actions";
  const speak=document.createElement("button");speak.textContent="🔊 Read aloud";speak.onclick=()=>speakText(text);
- const copy=document.createElement("button");copy.textContent="Copy answer";copy.onclick=async()=>{try{await navigator.clipboard.writeText(text);copy.textContent="Copied!"}catch{copy.textContent="Copy failed"}};
+ const copy=document.createElement("button");copy.textContent="Copy answer";
+ copy.onclick=async()=>{
+  try{await navigator.clipboard.writeText(text);copy.textContent="Copied!"}
+  catch{copy.textContent="Copy failed"}
+ };
  const pdf=document.createElement("button");pdf.textContent="Download PDF";pdf.onclick=()=>downloadPdf(text);
  const txt=document.createElement("button");txt.textContent="Download .txt";txt.onclick=()=>downloadText(text,"rashai-answer.txt");
  row.append(speak,copy,pdf,txt);container.append(row);
 }
+
 function downloadPdf(text){
- const win=window.open("","_blank");if(!win){alert("Please allow pop-ups to create your PDF.");return}
- win.document.open();win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>RashAI Answer</title><style>body{font:12pt/1.6 Arial;margin:30px;color:#222}pre{white-space:pre-wrap;background:#f4f4f4;padding:10px}table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:6px}@page{size:A4;margin:18mm}</style></head><body><h2>RashAI</h2>'+md(text)+'</body></html>');win.document.close();setTimeout(()=>{if(!win.closed){win.focus();win.print()}},700);
+ const win=window.open("","_blank");
+ if(!win){alert("Please allow pop-ups to create your PDF.");return}
+ win.document.open();
+ win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>RashAI Answer</title><style>body{font:12pt/1.6 Arial;margin:30px;color:#222}pre{white-space:pre-wrap;background:#f4f4f4;padding:10px}table{border-collapse:collapse}td,th{border:1px solid #aaa;padding:6px}@page{size:A4;margin:18mm}</style></head><body><h2>RashAI</h2>'+md(text)+'</body></html>');
+ win.document.close();
+ setTimeout(()=>{if(!win.closed){win.focus();win.print()}},700);
 }
-function downloadText(text,name){const blob=new Blob([text],{type:"text/plain;charset=utf-8"});const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=name;document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url)}
-function speakText(text){if(!("speechSynthesis"in window)){alert("Read aloud is not supported.");return}window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-IN";window.speechSynthesis.speak(u)}
+
+function downloadText(text,name){
+ const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+ const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download=name;
+ document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+}
+
+function speakText(text){
+ if(!("speechSynthesis"in window)){alert("Read aloud is not supported.");return}
+ window.speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(text);u.lang="en-IN";window.speechSynthesis.speak(u);
+}
+
 function setupVoice(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){$("mic").disabled=true;$("mic").title="Voice input is not supported in this browser.";return}
  recognition=new SR();recognition.lang="en-IN";recognition.interimResults=false;recognition.maxAlternatives=1;
  recognition.onstart=()=>{$("status").textContent="Listening…"};
- recognition.onresult=e=>{$("in").value=($("in").value+" "+e.results[0][0].transcript).trim();grow();$("status").textContent="Voice captured. Press send."};
+ recognition.onresult=e=>{
+  $("in").value=($("in").value+" "+e.results[0][0].transcript).trim();
+  grow();$("status").textContent="Voice captured. Press send.";
+ };
  recognition.onerror=()=>{$("status").textContent="Voice input failed. You can type instead."};
  recognition.onend=()=>{$("status").textContent=""};
  $("mic").onclick=()=>{if(!busy)try{recognition.start()}catch{recognition.stop()}};
 }
-function showSelectedFile(file){selectedFile=file;$("fileName").textContent=file?file.name+" ("+(file.size/1024).toFixed(0)+" KB)":"";$("filePreview").style.display=file?"flex":"none"}
+
+function showSelectedFile(file){
+ selectedFile=file;
+ $("fileName").textContent=file?file.name+" ("+(file.size/1024).toFixed(0)+" KB)":"";
+ $("filePreview").style.display=file?"flex":"none";
+}
+
 $("attach").onclick=()=>{if(!busy)$("file").click()};
 $("file").addEventListener("change",()=>{
  const file=$("file").files[0];if(!file)return;
@@ -233,47 +368,109 @@ $("file").addEventListener("change",()=>{
  showSelectedFile(file);
 });
 $("removeFile").onclick=()=>{showSelectedFile(null);$("file").value=""};
-function fileToDataURL(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(new Error("Could not read the file."));r.readAsDataURL(file)})}
-function grow(){const t=$("in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,180)+"px"}
+
+function fileToDataURL(file){
+ return new Promise((resolve,reject)=>{
+  const r=new FileReader();
+  r.onload=()=>resolve(r.result);
+  r.onerror=()=>reject(new Error("Could not read the file."));
+  r.readAsDataURL(file);
+ });
+}
+
+function grow(){
+ const t=$("in");t.style.height="auto";t.style.height=Math.min(t.scrollHeight,180)+"px";
+}
+
 $("mode").addEventListener("change",()=>{
  selectedMode=$("mode").value;
  if(cur){cur.mode=selectedMode;save()}
 });
+
 async function send(text){
  text=(text||$("in").value).trim();
  if((!text&&!selectedFile)||busy)return;
  if(!text&&selectedFile)text="Please read the attached file and explain its contents in simple language.";
- if(!cur){cur={title:text.slice(0,32)||selectedFile.name,msgs:[],mode:selectedMode};chats.unshift(cur)}
+
+ if(!cur){
+  cur={title:text.slice(0,32)||selectedFile.name,msgs:[],mode:selectedMode};
+  chats.unshift(cur);
+ }
  const activeChat=cur;activeChat.mode=selectedMode;
  const file=selectedFile;
  activeChat.msgs.push({role:"user",content:file?text+"\n\n📎 Attached: "+file.name:text});
  $("in").value="";grow();showSelectedFile(null);$("file").value="";
  renderChat();renderList();
+
  const answerBubble=bubble("assistant","<p>Thinking…</p>");
- $("msgs").scrollTop=$("msgs").scrollHeight;busy=true;$("send").disabled=true;$("attach").disabled=true;$("mic").disabled=true;$("mode").disabled=true;
+ $("msgs").scrollTop=$("msgs").scrollHeight;
+ busy=true;$("send").disabled=true;$("attach").disabled=true;$("mic").disabled=true;$("mode").disabled=true;
+
  try{
   let attachment=null;
-  if(file){const data=await fileToDataURL(file);attachment={name:file.name,mimeType:file.type||"application/octet-stream",data}}
+  if(file){
+   const data=await fileToDataURL(file);
+   attachment={name:file.name,mimeType:file.type||"application/octet-stream",data};
+  }
   const history=activeChat.msgs.map(m=>({role:m.role,content:m.content}));
-  const response=await fetch("/api/chat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history,attachment,mode:selectedMode})});
-  let result;try{result=await response.json()}catch{throw new Error("The server returned an invalid response.")}
+  const response=await fetch("/api/chat",{
+   method:"POST",
+   headers:{"Content-Type":"application/json"},
+   body:JSON.stringify({messages:history,attachment,mode:selectedMode})
+  });
+  let result;
+  try{result=await response.json()}
+  catch{throw new Error("The server returned an invalid response.")}
   if(!response.ok)throw new Error(result.error||"Request failed ("+response.status+").");
   if(typeof result.text!=="string")throw new Error("The server returned an invalid answer.");
-  activeChat.msgs.push({role:"assistant",content:result.text});answerBubble.innerHTML=md(result.text);addAnswerActions(answerBubble,result.text);
- }catch(error){answerBubble.innerHTML='<p class="err">'+esc(error.message||"Something went wrong. Please try again.")+'</p>'}
- finally{busy=false;$("send").disabled=false;$("attach").disabled=false;$("mic").disabled=false;$("mode").disabled=false;save();renderList();$("msgs").scrollTop=$("msgs").scrollHeight;$("in").focus()}
+  activeChat.msgs.push({role:"assistant",content:result.text});
+  answerBubble.innerHTML=md(result.text);addAnswerActions(answerBubble,result.text);
+ }catch(error){
+  answerBubble.innerHTML='<p class="err">'+esc(error.message||"Something went wrong. Please try again.")+'</p>';
+ }finally{
+  busy=false;$("send").disabled=false;$("attach").disabled=false;$("mic").disabled=false;$("mode").disabled=false;
+  save();renderList();$("msgs").scrollTop=$("msgs").scrollHeight;$("in").focus();
+ }
 }
+
 $("in").addEventListener("input",grow);
-$("in").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
+$("in").addEventListener("keydown",e=>{
+ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}
+});
 $("send").onclick=()=>send();
-$("new").onclick=()=>{if(busy)return;cur=null;renderList();renderChat();$("side").classList.remove("open");$("in").focus()};
-$("menu").onclick=()=>$("side").classList.toggle("open");
-$("theme").onclick=()=>{const root=document.documentElement;root.setAttribute("data-theme",root.getAttribute("data-theme")==="light"?"dark":"light")};
+
+$("new").onclick=()=>{
+ if(busy)return;
+ cur=null;renderList();renderChat();closeSidebar();$("in").focus();
+};
+
+$("menu").onclick=()=>{
+ if($("side").classList.contains("open"))closeSidebar();
+ else openSidebar();
+};
+
+$("closeSide").onclick=closeSidebar;
+$("sideOverlay").onclick=closeSidebar;
+
+document.addEventListener("keydown",e=>{
+ if(e.key==="Escape")closeSidebar();
+});
+
+$("theme").onclick=()=>{
+ const root=document.documentElement;
+ root.setAttribute("data-theme",root.getAttribute("data-theme")==="light"?"dark":"light");
+};
+
 $("wrap").addEventListener("click",async e=>{
  const button=e.target.closest("[data-copy]");if(!button)return;
  const code=button.closest(".code-wrap")?.querySelector("code");if(!code)return;
- try{await navigator.clipboard.writeText(code.textContent);button.textContent="Copied!";button.disabled=true;setTimeout(()=>{button.textContent="Copy code";button.disabled=false},1500)}catch{button.textContent="Copy failed"}
+ try{
+  await navigator.clipboard.writeText(code.textContent);
+  button.textContent="Copied!";button.disabled=true;
+  setTimeout(()=>{button.textContent="Copy code";button.disabled=false},1500);
+ }catch{button.textContent="Copy failed"}
 });
+
 load();renderList();renderChat();setupVoice();
 </script>
 </body>
