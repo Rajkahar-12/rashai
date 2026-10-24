@@ -97,7 +97,10 @@ function updateFileChip(){$("filechip").style.display=attachment?"block":"none";
 async function send(){
  let text=$("prompt").value.trim();if((!text&&!attachment)||busy)return;let msg=text+(attachment?`\n[Attachment: ${attachment.name}]`:"");history.push({role:"user",content:msg});renderMessages();$("prompt").value="";$("prompt").style.height="34px";busy=true;$("send").disabled=true;
  let loading=document.createElement("div");loading.className="typing";loading.textContent="RashAI is thinking…";$("wrap").appendChild(loading);$("msgs").scrollTop=$("msgs").scrollHeight;
- try{let r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history,attachment,mode:selectedMode})});if(!r.ok)throw Error("Server returned "+r.status);let d=await r.json();history.push({role:"assistant",content:d.reply||d.response||d.message||d.answer||"I couldn't find a response. Please try again."});renderMessages();saveCurrentChat()}
+ try{let r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history,attachment,mode:selectedMode})});if(!r.ok)throw Error("Server returned "+r.status);let d=await r.json();history.push({
+  role: "assistant",
+  content: d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again."
+});renderMessages();saveCurrentChat()}
  catch(e){history.push({role:"assistant",content:"Sorry, I couldn't connect to RashAI right now. Please try again.\n\nDetails: "+e.message});renderMessages()}
  finally{attachment=null;$("file").value="";updateFileChip();busy=false;$("send").disabled=false;$("prompt").focus()}
 }
