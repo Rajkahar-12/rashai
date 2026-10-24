@@ -108,7 +108,47 @@ $("send").onclick=send;$("prompt").addEventListener("input",()=>{$("prompt").sty
 function speak(t){if(!("speechSynthesis"in window))return;speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t))}
 function downloadText(t,n){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:"text/plain"}));a.download=n;a.click();URL.revokeObjectURL(a.href)}
 function downloadPDF(t){let w=window.open("","_blank");if(!w){alert("Allow pop-ups to print or save as PDF.");return}w.document.write(`<html><head><title>RashAI Answer</title><style>body{font:14px Arial;white-space:pre-wrap;line-height:1.6;padding:30px;color:#111}</style></head><body>${escapeHTML(t)}</body></html>`);w.document.close();w.focus();w.print()}
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;$("mic").onclick=()=>{if(!SR){alert("Voice input is not supported in this browser.");return}let r=new SR();r.lang="en-IN";r.interimResults=false;r.onresult=e=>{$("prompt").value+=($("prompt").value?" ":"")+e.results[0][0].transcript;$("prompt").dispatchEvent(new Event("input"))};r.start()};
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+$("mic").onclick = () => {
+  if (!SR) {
+    alert("Voice input is not supported. Please use Google Chrome.");
+    return;
+  }
+
+  const r = new SR();
+  r.lang = "en-IN";
+  r.interimResults = true;
+  r.continuous = false;
+
+  $("mic").textContent = "🔴";
+
+  r.onresult = (e) => {
+    let text = "";
+
+    for (let i = 0; i < e.results.length; i++) {
+      text += e.results[i][0].transcript;
+    }
+
+    $("prompt").value = text;
+    $("prompt").dispatchEvent(new Event("input"));
+  };
+
+  r.onerror = (e) => {
+    alert("Voice input error: " + e.error);
+  };
+
+  r.onend = () => {
+    $("mic").textContent = "🎙";
+  };
+
+  try {
+    r.start();
+  } catch (e) {
+    $("mic").textContent = "🎙";
+    alert("Could not start voice input. Please try again.");
+  }
+};
 renderRecent();renderMessages();updateModeMenu();
 </script>
 </body>
