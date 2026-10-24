@@ -32,6 +32,7 @@ pre{background:#08120f;color:#d8f0df;padding:12px;border-radius:11px;overflow:au
 .modeoption{border:0;background:transparent;text-align:left;border-radius:8px;padding:9px;display:flex;align-items:center;gap:9px;color:var(--text)}.modeoption:hover,.modeoption.active{background:var(--panel2)}.check{margin-left:auto;color:var(--accent)}
 #file{display:none}.filechip{font-size:11px;color:var(--muted);padding:0 7px;display:none;cursor:pointer}.hint{text-align:center;color:var(--muted);font-size:10px;padding:0 8px 7px}
 .typing{color:var(--muted);font-size:13px;padding:8px 0}
+#voiceLanguage{max-width:105px;height:36px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 5px}
 body.empty #msgs{display:flex;align-items:center;justify-content:center;padding-bottom:125px;overflow:hidden}body.empty .hello{margin:0 auto;transform:translateY(-26px)}body.empty #wrap{display:none}body.empty #bar{position:absolute;top:59%;left:50%;transform:translate(-50%,-50%);margin:0}
 @media(max-width:600px){header{height:52px;padding:0 10px}#msgs{padding:16px 12px}.hello{margin-top:8vh;padding:0 8px}.hello h1{font-size:27px}#bar{width:calc(100% - 18px);margin-bottom:8px}.msgrow{gap:7px}.bubble{padding:10px 12px}body.empty #bar{top:59%}}
 @media(max-height:620px){body.empty #bar{top:65%}body.empty .hello{transform:translateY(-45px)}}
@@ -52,34 +53,34 @@ body.empty #msgs{display:flex;align-items:center;justify-content:center;padding-
   <div class="filechip" id="filechip"></div>
   <textarea id="prompt" rows="1" placeholder="Message RashAI..." aria-label="Message RashAI"></textarea>
   <div class="toolbar">
-   <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button><input type="file" id="file" accept=".txt,.pdf,.png,.jpg,.jpeg,.webp,.md,.csv,.json">
+   <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button><input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css">
    <button class="modebtn" id="modeBtn" title="Choose chat mode" aria-label="Choose chat mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><path d="M13 4v6M7 14v6"/></svg></button>
-   <select id="voiceLanguage" aria-label="Voice language" title="Voice language"
-  style="max-width:105px;height:36px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 5px">
-  <option value="auto">Auto detect</option>
-  <option value="en">English</option>
-  <option value="hi">Hindi</option>
-  <option value="mr">Marathi</option>
-  <option value="gu">Gujarati</option>
-  <option value="ta">Tamil</option>
-  <option value="te">Telugu</option>
-  <option value="bn">Bengali</option>
-  <option value="ur">Urdu</option>
-  <option value="kn">Kannada</option>
-  <option value="ml">Malayalam</option>
-  <option value="pa">Punjabi</option>
-  <option value="es">Spanish</option>
-  <option value="fr">French</option>
-  <option value="de">German</option>
-  <option value="ar">Arabic</option>
-  <option value="zh">Chinese</option>
-  <option value="ja">Japanese</option>
-  <option value="ko">Korean</option>
-  <option value="pt">Portuguese</option>
-  <option value="ru">Russian</option>
-</select>
-<button class="iconbtn" id="mic" title="Start voice recording"
-  aria-label="Start voice recording">🎙</button><div class="spacer"></div><button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
+   <select id="voiceLanguage" aria-label="Voice language" title="Voice language">
+    <option value="auto">Auto detect</option>
+    <option value="en">English</option>
+    <option value="hi">Hindi</option>
+    <option value="mr">Marathi</option>
+    <option value="gu">Gujarati</option>
+    <option value="ta">Tamil</option>
+    <option value="te">Telugu</option>
+    <option value="bn">Bengali</option>
+    <option value="ur">Urdu</option>
+    <option value="kn">Kannada</option>
+    <option value="ml">Malayalam</option>
+    <option value="pa">Punjabi</option>
+    <option value="es">Spanish</option>
+    <option value="fr">French</option>
+    <option value="de">German</option>
+    <option value="ar">Arabic</option>
+    <option value="zh">Chinese</option>
+    <option value="ja">Japanese</option>
+    <option value="ko">Korean</option>
+    <option value="pt">Portuguese</option>
+    <option value="ru">Russian</option>
+   </select>
+   <button class="iconbtn" id="mic" title="Start voice recording" aria-label="Start voice recording">🎙</button>
+   <div class="spacer"></div>
+   <button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
   </div>
   <div id="modeMenu">
    <button class="modeoption active" data-mode="general"><span>💬</span> General <span class="check">✓</span></button>
@@ -91,184 +92,399 @@ body.empty #msgs{display:flex;align-items:center;justify-content:center;padding-
  <div class="hint">RashAI can make mistakes. Check important information.</div>
 </main>
 <script>
-const API_URL="https://rashai.onrender.com/api/chat", $=id=>document.getElementById(id);
-let history=[],attachment=null,selectedMode="general",busy=false;
-let savedChats=JSON.parse(localStorage.getItem("rashai")||"[]");
-function openSidebar(){$("side").classList.add("open");$("overlay").classList.add("show")}
-function closeSidebar(){$("side").classList.remove("open");$("overlay").classList.remove("show")}
-$("menu").onclick=openSidebar;$("closeSide").onclick=closeSidebar;$("overlay").onclick=closeSidebar;
-function persist(){localStorage.setItem("rashai",JSON.stringify(savedChats))}
-function renderRecent(){$("recent").innerHTML="";savedChats.slice().reverse().forEach(chat=>{let b=document.createElement("button");b.className="recentitem";b.textContent=chat.title||"Chat";b.onclick=()=>{history=chat.messages||[];renderMessages();closeSidebar()};$("recent").appendChild(b)})}
-function escapeHTML(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
-function formatAnswer(t){let s=escapeHTML(t);s=s.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>`<pre><code>${c.trim()}</code></pre>`);s=s.replace(/\*\*(.*?)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");return s.replace(/\n/g,"<br>")}
-function action(label,fn){let b=document.createElement("button");b.className="smallbtn";b.textContent=label;b.onclick=fn;return b}
-function renderMessages(){
- const wrap=$("wrap");wrap.innerHTML="";document.body.classList.toggle("empty",history.length===0);$("hello").style.display=history.length?"none":"block";
- history.forEach(m=>{let row=document.createElement("div");row.className="msgrow "+(m.role==="user"?"user":"assistant");let bubble=document.createElement("div");bubble.className="bubble";if(m.role==="assistant")bubble.innerHTML=formatAnswer(m.content||"");else bubble.textContent=m.content||"";row.appendChild(bubble);
- if(m.role==="assistant"){let a=document.createElement("div");a.className="msgactions";a.append(action("Copy",()=>navigator.clipboard?.writeText(m.content||"")),action("Read aloud",()=>speak(m.content||"")),action("Download TXT",()=>downloadText(m.content||"","rashai-answer.txt")),action("Download PDF",()=>downloadPDF(m.content||"")));bubble.appendChild(a)}wrap.appendChild(row)});
- $("msgs").scrollTop=$("msgs").scrollHeight;
-}
-function saveCurrentChat(){if(!history.length)return;let title=(history.find(m=>m.role==="user")?.content||"New chat").slice(0,42);savedChats.push({title,messages:history,updated:Date.now()});savedChats=savedChats.slice(-30);persist();renderRecent()}
-function newChat(){if(history.length)saveCurrentChat();history=[];attachment=null;updateFileChip();renderMessages();$("prompt").value="";closeSidebar();$("prompt").focus()}
-$("newChat").onclick=newChat;$("clearChats").onclick=()=>{if(confirm("Clear all saved chat history?")){savedChats=[];persist();renderRecent()}};
-$("themeBtn").onclick=()=>{document.body.classList.toggle("light");localStorage.setItem("rashai-theme",document.body.classList.contains("light")?"light":"dark")};if(localStorage.getItem("rashai-theme")==="light")document.body.classList.add("light");
-function updateModeMenu(){document.querySelectorAll(".modeoption").forEach(b=>{let on=b.dataset.mode===selectedMode;b.classList.toggle("active",on);b.querySelector(".check").textContent=on?"✓":""})}
-$("modeBtn").onclick=()=>$("modeMenu").classList.toggle("show");
-document.querySelectorAll(".modeoption").forEach(b=>b.onclick=()=>{selectedMode=b.dataset.mode;updateModeMenu();$("modeMenu").classList.remove("show");$("modeBtn").title="Chat mode: "+selectedMode});
-document.addEventListener("click",e=>{if(!$("modeMenu").contains(e.target)&&e.target!==$("modeBtn"))$("modeMenu").classList.remove("show")});
-$("attach").onclick=()=>$("file").click();
-$("file").onchange=async e=>{let f=e.target.files[0];if(!f)return;attachment={name:f.name,type:f.type||"application/octet-stream"};if(f.type.startsWith("text/")||/\.(txt|md|csv|json)$/i.test(f.name))attachment.content=await f.text();else if(f.type.startsWith("image/"))attachment.content=await new Promise((resolve,reject)=>{let r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(f)});updateFileChip()};
-function updateFileChip(){$("filechip").style.display=attachment?"block":"none";$("filechip").textContent=attachment?`Attached: ${attachment.name}  ×`:"";$("filechip").onclick=()=>{attachment=null;$("file").value="";updateFileChip()}}
-async function send(){
- let text=$("prompt").value.trim();if((!text&&!attachment)||busy)return;let msg=text+(attachment?`\n[Attachment: ${attachment.name}]`:"");history.push({role:"user",content:msg});renderMessages();$("prompt").value="";$("prompt").style.height="34px";busy=true;$("send").disabled=true;
- let loading=document.createElement("div");loading.className="typing";loading.textContent="RashAI is thinking…";$("wrap").appendChild(loading);$("msgs").scrollTop=$("msgs").scrollHeight;
- try{let r=await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history,attachment,mode:selectedMode})});if(!r.ok)throw Error("Server returned "+r.status);let d=await r.json();history.push({
-  role: "assistant",
-  content: d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again."
-});renderMessages();saveCurrentChat()}
- catch(e){history.push({role:"assistant",content:"Sorry, I couldn't connect to RashAI right now. Please try again.\n\nDetails: "+e.message});renderMessages()}
- finally{attachment=null;$("file").value="";updateFileChip();busy=false;$("send").disabled=false;$("prompt").focus()}
-}
-$("send").onclick=send;$("prompt").addEventListener("input",()=>{$("prompt").style.height="34px";$("prompt").style.height=Math.min($("prompt").scrollHeight,140)+"px"});$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}});
-function speak(t){if(!("speechSynthesis"in window))return;speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(t))}
-function downloadText(t,n){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t],{type:"text/plain"}));a.download=n;a.click();URL.revokeObjectURL(a.href)}
-function downloadPDF(t){let w=window.open("","_blank");if(!w){alert("Allow pop-ups to print or save as PDF.");return}w.document.write(`<html><head><title>RashAI Answer</title><style>body{font:14px Arial;white-space:pre-wrap;line-height:1.6;padding:30px;color:#111}</style></head><body>${escapeHTML(t)}</body></html>`);w.document.close();w.focus();w.print()}
-// Multilingual voice input using server-side transcription
-let mediaRecorder = null;
-let audioChunks = [];
-let recordingStream = null;
-let recordingTimer = null;
-let isRecording = false;
+const API_URL = "https://rashai.onrender.com/api/chat";
+const TRANSCRIBE_URL = "https://rashai.onrender.com/api/transcribe";
+const $ = id => document.getElementById(id);
 
-$("mic").onclick = async () => {
-  if (isRecording) {
-    mediaRecorder?.stop();
+let history = [], attachment = null, selectedMode = "general", busy = false, currentChatId = null;
+let savedChats = [];
+try { savedChats = JSON.parse(localStorage.getItem("rashai") || "[]"); } catch { savedChats = []; }
+
+/* ---------- sidebar and chats ---------- */
+function openSidebar() { $("side").classList.add("open"); $("overlay").classList.add("show"); }
+function closeSidebar() { $("side").classList.remove("open"); $("overlay").classList.remove("show"); }
+$("menu").onclick = openSidebar; $("closeSide").onclick = closeSidebar; $("overlay").onclick = closeSidebar;
+
+function persist() { try { localStorage.setItem("rashai", JSON.stringify(savedChats)); } catch {} }
+
+function renderRecent() {
+  $("recent").innerHTML = "";
+  savedChats.slice().reverse().forEach(chat => {
+    const b = document.createElement("button");
+    b.className = "recentitem";
+    b.textContent = chat.title || "Chat";
+    b.onclick = () => {
+      saveCurrentChat();
+      history = chat.messages || [];
+      currentChatId = chat.id;
+      renderMessages();
+      closeSidebar();
+    };
+    $("recent").appendChild(b);
+  });
+}
+
+function saveCurrentChat() {
+  if (!history.length) return;
+  const title = (history.find(m => m.role === "user")?.content || "New chat").slice(0, 42);
+  if (!currentChatId) currentChatId = String(Date.now());
+  const entry = { id: currentChatId, title, messages: history, updated: Date.now() };
+  const i = savedChats.findIndex(c => c.id === currentChatId);
+  if (i >= 0) savedChats[i] = entry; else savedChats.push(entry);
+  savedChats = savedChats.slice(-30);
+  persist();
+  renderRecent();
+}
+
+function newChat() {
+  saveCurrentChat();
+  history = []; currentChatId = null; attachment = null;
+  updateFileChip(); renderMessages();
+  $("prompt").value = "";
+  closeSidebar();
+  $("prompt").focus();
+}
+$("newChat").onclick = newChat;
+$("clearChats").onclick = () => {
+  if (confirm("Clear all saved chat history?")) { savedChats = []; persist(); renderRecent(); }
+};
+
+$("themeBtn").onclick = () => {
+  document.body.classList.toggle("light");
+  localStorage.setItem("rashai-theme", document.body.classList.contains("light") ? "light" : "dark");
+};
+if (localStorage.getItem("rashai-theme") === "light") document.body.classList.add("light");
+
+/* ---------- messages ---------- */
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function formatAnswer(t) {
+  let s = escapeHTML(t);
+  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><code>${c.trim()}</code></pre>`);
+  s = s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
+  return s.replace(/\n/g, "<br>");
+}
+
+function action(label, fn) {
+  const b = document.createElement("button");
+  b.className = "smallbtn";
+  b.textContent = label;
+  b.onclick = () => fn(b);
+  return b;
+}
+
+async function copyText(text, btn) {
+  let ok = false;
+  try {
+    await navigator.clipboard.writeText(text);
+    ok = true;
+  } catch {
+    const t = document.createElement("textarea");
+    t.value = text;
+    t.style.position = "fixed";
+    t.style.opacity = "0";
+    document.body.appendChild(t);
+    t.select();
+    try { ok = document.execCommand("copy"); } catch {}
+    t.remove();
+  }
+  if (btn) {
+    const old = btn.textContent;
+    btn.textContent = ok ? "Copied" : "Copy failed";
+    setTimeout(() => { btn.textContent = old; }, 1500);
+  }
+}
+
+function renderMessages() {
+  const wrap = $("wrap");
+  wrap.innerHTML = "";
+  document.body.classList.toggle("empty", history.length === 0);
+  $("hello").style.display = history.length ? "none" : "block";
+
+  history.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "msgrow " + (m.role === "user" ? "user" : "assistant");
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    if (m.role === "assistant") bubble.innerHTML = formatAnswer(m.content || "");
+    else bubble.textContent = m.content || "";
+
+    row.appendChild(bubble);
+
+    if (m.role === "assistant") {
+      const a = document.createElement("div");
+      a.className = "msgactions";
+      a.append(
+        action("Copy", btn => copyText(m.content || "", btn)),
+        action("Read aloud", () => speak(m.content || "")),
+        action("Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
+        action("Download PDF", () => downloadPDF(m.content || ""))
+      );
+      bubble.appendChild(a);
+    }
+
+    wrap.appendChild(row);
+  });
+
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+}
+
+/* ---------- modes and attachments ---------- */
+function updateModeMenu() {
+  document.querySelectorAll(".modeoption").forEach(b => {
+    const on = b.dataset.mode === selectedMode;
+    b.classList.toggle("active", on);
+    b.querySelector(".check").textContent = on ? "✓" : "";
+  });
+}
+$("modeBtn").onclick = () => $("modeMenu").classList.toggle("show");
+document.querySelectorAll(".modeoption").forEach(b => b.onclick = () => {
+  selectedMode = b.dataset.mode;
+  updateModeMenu();
+  $("modeMenu").classList.remove("show");
+  $("modeBtn").title = "Chat mode: " + selectedMode;
+});
+document.addEventListener("click", e => {
+  if (!$("modeMenu").contains(e.target) && !$("modeBtn").contains(e.target)) $("modeMenu").classList.remove("show");
+});
+
+$("attach").onclick = () => $("file").click();
+
+$("file").onchange = async e => {
+  const f = e.target.files[0];
+  if (!f) return;
+
+  if (f.size > 5 * 1024 * 1024) {
+    alert("Files must be 5 MB or smaller.");
+    e.target.value = "";
     return;
   }
 
+  try {
+    const data = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = () => reject(new Error("Could not read the file."));
+      r.readAsDataURL(f);
+    });
+    attachment = { name: f.name, type: f.type || "application/octet-stream", data };
+    updateFileChip();
+  } catch (err) {
+    alert(err.message);
+    e.target.value = "";
+  }
+};
+
+function updateFileChip() {
+  $("filechip").style.display = attachment ? "block" : "none";
+  $("filechip").textContent = attachment ? `Attached: ${attachment.name}  ×` : "";
+  $("filechip").onclick = () => { attachment = null; $("file").value = ""; updateFileChip(); };
+}
+
+/* ---------- sending ---------- */
+async function send() {
+  const text = $("prompt").value.trim();
+  if ((!text && !attachment) || busy) return;
+
+  const msg = (text || "Please review the attached file.") + (attachment ? `\n[Attachment: ${attachment.name}]` : "");
+  history.push({ role: "user", content: msg });
+  renderMessages();
+  $("prompt").value = "";
+  $("prompt").style.height = "34px";
+  busy = true;
+  $("send").disabled = true;
+
+  const loading = document.createElement("div");
+  loading.className = "typing";
+  loading.textContent = "RashAI is thinking…";
+  $("wrap").appendChild(loading);
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+
+  try {
+    const r = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: history.filter(m => !m.error).map(m => ({ role: m.role, content: m.content })),
+        attachment,
+        mode: selectedMode
+      })
+    });
+
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || "Server returned " + r.status);
+
+    history.push({
+      role: "assistant",
+      content: d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again."
+    });
+    renderMessages();
+    saveCurrentChat();
+  } catch (e) {
+    const offline = e instanceof TypeError;
+    history.push({
+      role: "assistant",
+      error: true,
+      content: offline
+        ? "Sorry, I couldn't reach RashAI. The free server may be waking up, so wait about a minute and try again."
+        : "Sorry, something went wrong.\n\n" + e.message
+    });
+    renderMessages();
+  } finally {
+    attachment = null;
+    $("file").value = "";
+    updateFileChip();
+    busy = false;
+    $("send").disabled = false;
+    $("prompt").focus();
+  }
+}
+
+$("send").onclick = send;
+$("prompt").addEventListener("input", () => {
+  $("prompt").style.height = "34px";
+  $("prompt").style.height = Math.min($("prompt").scrollHeight, 140) + "px";
+});
+$("prompt").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+
+/* ---------- read aloud and downloads ---------- */
+function speak(t) {
+  if (!("speechSynthesis" in window)) return;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(new SpeechSynthesisUtterance(t));
+}
+
+function downloadText(t, n) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([t], { type: "text/plain" }));
+  a.download = n;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function downloadPDF(t) {
+  const w = window.open("", "_blank");
+  if (!w) { alert("Allow pop-ups to print or save as PDF."); return; }
+  w.document.write(`<html><head><title>RashAI Answer</title><style>body{font:14px Arial;white-space:pre-wrap;line-height:1.6;padding:30px;color:#111}</style></head><body>${escapeHTML(t)}</body></html>`);
+  w.document.close();
+  w.focus();
+  w.print();
+}
+
+/* ---------- voice input: Auto detect or manual language ---------- */
+let mediaRecorder = null, audioChunks = [], recordingStream = null;
+let recordingTimer = null, isRecording = false;
+
+const savedVoiceLang = localStorage.getItem("rashai-voice-lang");
+if (savedVoiceLang && [...$("voiceLanguage").options].some(o => o.value === savedVoiceLang)) {
+  $("voiceLanguage").value = savedVoiceLang;
+}
+$("voiceLanguage").onchange = () => localStorage.setItem("rashai-voice-lang", $("voiceLanguage").value);
+
+function pickAudioMime() {
+  const options = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4", "audio/ogg;codecs=opus"];
+  return options.find(t => MediaRecorder.isTypeSupported(t)) || "";
+}
+
+function resetMic() {
+  clearTimeout(recordingTimer);
+  if (recordingStream) recordingStream.getTracks().forEach(t => t.stop());
+  recordingStream = null;
+  isRecording = false;
+  $("mic").disabled = false;
+  $("mic").textContent = "🎙";
+  $("mic").title = "Start voice recording";
+}
+
+$("mic").onclick = async () => {
+  if (isRecording) { mediaRecorder?.stop(); return; }
+
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
-    alert("Voice recording is not supported in this browser. Try Chrome on HTTPS.");
+    alert("Voice recording is not supported in this browser.");
     return;
   }
 
   try {
     recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true });
     audioChunks = [];
+    const mimeType = pickAudioMime();
+    mediaRecorder = new MediaRecorder(recordingStream, mimeType ? { mimeType } : undefined);
 
-    const mimeType = MediaRecorder.isTypeSupported("audio/webm")
-      ? "audio/webm"
-      : "";
-
-    mediaRecorder = new MediaRecorder(
-      recordingStream,
-      mimeType ? { mimeType } : undefined
-    );
-
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data && event.data.size > 0) {
-        audioChunks.push(event.data);
-      }
-    };
+    mediaRecorder.ondataavailable = e => { if (e.data && e.data.size) audioChunks.push(e.data); };
 
     mediaRecorder.onstop = async () => {
-      clearTimeout(recordingTimer);
-      recordingStream?.getTracks().forEach(track => track.stop());
-      recordingStream = null;
-      isRecording = false;
-      $("mic").textContent = "🎙";
-      $("mic").title = "Start voice recording";
+      const type = mediaRecorder.mimeType || mimeType || "audio/webm";
+      const blob = new Blob(audioChunks, { type });
+      resetMic();
 
-      const audioBlob = new Blob(audioChunks, {
-        type: mediaRecorder.mimeType || "audio/webm"
-      });
-
-      if (!audioBlob.size) {
-        alert("No audio was recorded. Please try again.");
-        return;
-      }
-
-      // Keep the request safely below the backend's 8 MB body limit.
-      if (audioBlob.size > 5 * 1024 * 1024) {
-        alert("Recording is too large. Please record a shorter message.");
-        return;
-      }
+      if (!blob.size) { alert("No audio was recorded. Please try again."); return; }
+      if (blob.size > 5 * 1024 * 1024) { alert("Recording is too large. Please record a shorter message."); return; }
 
       $("mic").disabled = true;
       $("mic").textContent = "…";
 
       try {
         const dataUrl = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(new Error("Could not read recording."));
-          reader.readAsDataURL(audioBlob);
+          const r = new FileReader();
+          r.onload = () => resolve(r.result);
+          r.onerror = () => reject(new Error("Could not read the recording."));
+          r.readAsDataURL(blob);
         });
 
-        const response = await fetch("https://rashai.onrender.com/api/transcribe", {
+        const response = await fetch(TRANSCRIBE_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             audio: String(dataUrl).split(",")[1],
+            mimeType: type,
             language: $("voiceLanguage").value
           })
         });
 
         const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Transcription failed.");
 
-        if (!response.ok) {
-          throw new Error(data.error || "Transcription failed.");
-        }
+        const text = (data.text || "").trim();
+        if (!text) throw new Error("No speech was detected. Please try again.");
 
-        const transcript = (data.text || "").trim();
-
-        if (!transcript) {
-          throw new Error("No speech was detected. Please try again.");
-        }
-
-        $("prompt").value += ($("prompt").value.trim() ? " " : "") + transcript;
+        $("prompt").value += ($("prompt").value.trim() ? " " : "") + text;
         $("prompt").dispatchEvent(new Event("input"));
         $("prompt").focus();
       } catch (error) {
-        alert(error.message || "Voice transcription failed. Please try again.");
+        alert(error instanceof TypeError
+          ? "Could not reach the server. It may be waking up, so try again in a minute."
+          : error.message || "Voice transcription failed. Please try again.");
       } finally {
         $("mic").disabled = false;
         $("mic").textContent = "🎙";
-        $("mic").title = "Start voice recording";
       }
     };
 
-    mediaRecorder.onerror = () => {
-      clearTimeout(recordingTimer);
-      recordingStream?.getTracks().forEach(track => track.stop());
-      recordingStream = null;
-      isRecording = false;
-      $("mic").textContent = "🎙";
-      alert("Recording failed. Please try again.");
-    };
+    mediaRecorder.onerror = () => { resetMic(); alert("Recording failed. Please try again."); };
 
     mediaRecorder.start();
     isRecording = true;
     $("mic").textContent = "⏹";
     $("mic").title = "Stop recording";
     recordingTimer = setTimeout(() => {
-      if (isRecording && mediaRecorder?.state === "recording") {
-        mediaRecorder.stop();
-      }
+      if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
     }, 60000);
   } catch (error) {
-    recordingStream?.getTracks().forEach(track => track.stop());
-    recordingStream = null;
-    isRecording = false;
-    $("mic").textContent = "🎙";
-
-    if (error.name === "NotAllowedError") {
-      alert("Please allow microphone access in your browser.");
-    } else {
-      alert("Could not start recording. Check your microphone and try again.");
-    }
+    resetMic();
+    alert(error.name === "NotAllowedError"
+      ? "Please allow microphone access in your browser."
+      : "Could not start recording. Check your microphone and try again.");
   }
 };
-renderRecent();renderMessages();updateModeMenu();
+
+renderRecent();
+renderMessages();
+updateModeMenu();
 </script>
 </body>
 </html>
