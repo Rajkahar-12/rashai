@@ -388,51 +388,125 @@ $("mode").addEventListener("change",()=>{
  if(cur){cur.mode=selectedMode;save()}
 });
 
+
 async function send(text){
  text=(text||$("in").value).trim();
  if((!text&&!selectedFile)||busy)return;
  if(!text&&selectedFile)text="Please read the attached file and explain its contents in simple language.";
 
  if(!cur){
-  cur={title:text.slice(0,32)||selectedFile.name,msgs:[],mode:selectedMode};
+  cur={title:text.slice(0,32)||(selectedFile?selectedFile.name:"New chat"),msgs:[],mode:selectedMode};
   chats.unshift(cur);
  }
- const activeChat=cur;activeChat.mode=selectedMode;
- const file=selectedFile;
- activeChat.msgs.push({role:"user",content:file?text+"\n\n📎 Attached: "+file.name:text});
- $("in").value="";grow();showSelectedFile(null);$("file").value="";
- renderChat();renderList();
 
- const answerBubble=bubble("assistant","<p>Thinking…</p>");
+ const activeChat=cur;
+ activeChat.mode=selectedMode;
+ const file=selectedFile;
+
+ activeChat.msgs.push({
+  role:"user",
+  content:file?text+"\n\n📎 Attached: "+file.name:text
+ });
+
+ $("in").value="";
+ grow();
+ showSelectedFile(null);
+ $("file").value="";
+ renderChat();
+ renderList();
+
+ const answerBubble=bubble("assistant","<p>Connecting to RashAI server…</p>");
  $("msgs").scrollTop=$("msgs").scrollHeight;
- busy=true;$("send").disabled=true;$("attach").disabled=true;$("mic").disabled=true;$("mode").disabled=true;
+
+ busy=true;
+ $("send").disabled=true;
+ $("attach").disabled=true;
+ $("mic").disabled=true;
+ $("mode").disabled=true;
 
  try{
   let attachment=null;
+
   if(file){
    const data=await fileToDataURL(file);
-   attachment={name:file.name,mimeType:file.type||"application/octet-stream",data};
+   attachment={
+    name:file.name,
+    mimeType:file.type||"application/octet-stream",
+    data
+   };
   }
-  const history=activeChat.msgs.map(m=>({role:m.role,content:m.content}));
-  const response=await fetch("/api/chat",{
+
+  const history=activeChat.msgs.map(m=>({
+   role:m.role,
+   content:m.content
+  }));
+
+  const response=await fetch("https://rashai.onrender.com/api/chat",{
    method:"POST",
    headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({messages:history,attachment,mode:selectedMode})
+   body:JSON.stringify({
+    messages:history,
+    attachment,
+    mode:selectedMode
+   })
   });
+
+  const contentType=response.headers.get("content-type")||"";
   let result;
-  try{result=await response.json()}
-  catch{throw new Error("The server returned an invalid response.")}
-  if(!response.ok)throw new Error(result.error||"Request failed ("+response.status+").");
-  if(typeof result.text!=="string")throw new Error("The server returned an invalid answer.");
-  activeChat.msgs.push({role:"assistant",content:result.text});
-  answerBubble.innerHTML=md(result.text);addAnswerActions(answerBubble,result.text);
+
+  if(contentType.includes("application/json")){
+   result=await response.json();
+  }else{
+   const responseText=await response.text();
+   throw new Error(
+    "The server returned a non-JSON response (HTTP "+
+    response.status+"). Check your Render backend."
+   );
+  }
+
+  if(!response.ok){
+   throw new Error(
+    result.error||"Server request failed (HTTP "+response.status+")."
+   );
+  }
+
+  if(typeof result.text!=="string"){
+   throw new Error("The server response is missing the answer text.");
+  }
+
+  activeChat.msgs.push({
+   role:"assistant",
+   content:result.text
+  });
+
+  answerBubble.innerHTML=md(result.text);
+  addAnswerActions(answerBubble,result.text);
+
  }catch(error){
-  answerBubble.innerHTML='<p class="err">'+esc(error.message||"Something went wrong. Please try again.")+'</p>';
+  console.error("RashAI chat error:",error);
+
+  let message=error.message||"Something went wrong.";
+
+  if(error instanceof TypeError){
+   message="Could not connect to the RashAI server. Check your internet connection, Render server status, and backend CORS settings.";
+  }
+
+  answerBubble.innerHTML='<p class="err">'+esc(message)+'</p>';
+
  }finally{
-  busy=false;$("send").disabled=false;$("attach").disabled=false;$("mic").disabled=false;$("mode").disabled=false;
-  save();renderList();$("msgs").scrollTop=$("msgs").scrollHeight;$("in").focus();
+  busy=false;
+  $("send").disabled=false;
+  $("attach").disabled=false;
+  $("mic").disabled=false;
+  $("mode").disabled=false;
+
+  save();
+  renderList();
+  $("msgs").scrollTop=$("msgs").scrollHeight;
+  $("in").focus();
  }
 }
+
 
 $("in").addEventListener("input",grow);
 $("in").addEventListener("keydown",e=>{
