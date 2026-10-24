@@ -679,7 +679,36 @@ const cleanupTimer = setInterval(() => {
 
 cleanupTimer.unref();
 
+
 const server = http.createServer(async (req, res) => {
+  const allowedOrigin = "https://rajkahar-12.github.io";
+  const origin = req.headers.origin;
+
+  // Allow requests from the GitHub Pages website only.
+  if (origin === allowedOrigin) {
+    res.setHeader("Access-Control-Allow-Origin", allowedOrigin);
+    res.setHeader("Vary", "Origin");
+    res.setHeader(
+      "Access-Control-Allow-Methods",
+      "GET, POST, OPTIONS"
+    );
+    res.setHeader(
+      "Access-Control-Allow-Headers",
+      "Content-Type"
+    );
+  }
+
+  // Handle the browser's CORS preflight request.
+  if (req.method === "OPTIONS") {
+    if (origin !== allowedOrigin) {
+      return send(res, 403, {
+        error: "Origin not allowed."
+      });
+    }
+
+    return send(res, 204, "", "text/plain; charset=utf-8");
+  }
+
   let url;
 
   try {
