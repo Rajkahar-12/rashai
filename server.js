@@ -500,12 +500,14 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  if (req.method === "GET" && req.url === "/") {
-    return send(res, 200, {
-      service: "RashAI API",
-      status: "online"
-    });
-  }
+  
+if (req.method === "GET" && req.url === "/") {
+  res.writeHead(302, {
+    Location: "https://rajkahar-12.github.io/rashai/"
+  });
+  return res.end();
+}
+
 
   if (req.method === "GET" && req.url === "/health") {
     return send(res, 200, {
