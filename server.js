@@ -499,7 +499,124 @@ const server = http.createServer(async (req, res) => {
       error: "Origin not allowed."
     });
   }
+  // Voice transcription endpoint
+  if (req.method === "POST" && req.url === "/api/transcribe") {
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
+    if (!GROQ_API_KEY) {
+      return send(res, 500, {
+        error: "Voice service is not configured. Add GROQ_API_KEY in Render."
+      });
+    }
+
+    const ip = req.socket.remoteAddress || "unknown";
+    const limit = checkRateLimit(ip);
+
+    if (!limit.allowed) {
+      return send(res, 429, {
+        error: `Too many requests. Try again in ${limit.retryAfter} seconds.`
+      }, {
+        "Retry-After": String(limit.retryAfter)
+      });
+    }
+
+    try {
+      const rawBody = await readBody(req);
+      const body = JSON.parse(rawBody || "{}");
+
+      if (typeof body.audio !== "string") {
+        return send(res, 400, { error: "No audio was received." });
+      }
+
+      // The frontend sends base64 audio without a data-URL prefix.
+      const match = body.audio.match(
+        /^(?:data:audio\/[\w.+-]+;base64,)?([A-Za-z0-9+/]+={0,2})$/
+      );
+
+      if (!match) {
+        return send(res, 400, { error: "Invalid audio data." });
+      }
+
+      const audioBuffer = Buffer.from(match[1], "base64");
+
+      if (!audioBuffer.length || audioBuffer.length > 5 * 1024 * 1024) {
+        return send(res, 413, {
+          error: "Audio is empty or too large. Please record a shorter message."
+        });
+      }
+
+      const allowedLanguages = [
+        "en", "hi", "mr", "gu", "ta", "te", "bn", "ur",
+        "kn", "ml", "pa", "or", "as", "es", "fr", "de",
+        "ar", "zh", "ja", "ko", "pt", "ru"
+      ];
+
+      const language = body.language === "auto"
+        ? ""
+        : String(body.language || "");
+
+      if (language && !allowedLanguages.includes(language)) {
+        return send(res, 400, { error: "Unsupported language selection." });
+      }
+
+      const form = new FormData();
+      const audioBlob = new Blob([audioBuffer], { type: "audio/webm" });
+
+      form.append("file", audioBlob, "rashai-recording.webm");
+      form.append("model", "whisper-large-v3-turbo");
+      form.append("response_format", "json");
+      if (language) form.append("language", language);
+
+      const response = await fetch(
+        "https://api.groq.com/openai/v1/audio/transcriptions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${GROQ_API_KEY}`
+          },
+          body: form,
+          signal: AbortSignal.timeout(60000)
+        }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        console.error("Groq transcription failed:", response.status, data);
+        return send(res, response.status === 429 ? 503 : 502, {
+          error: response.status === 429
+            ? "Voice transcription is busy or rate-limited. Please try again later."
+            : "Voice transcription failed. Check the Groq API key and try again."
+        });
+      }
+
+      if (typeof data.text !== "string" || !data.text.trim()) {
+        return send(res, 422, {
+          error: "No speech was detected. Please try recording again."
+        });
+      }
+
+      return send(res, 200, { text: data.text.trim() });
+    } catch (error) {
+      console.error("Transcription error:", error.message);
+
+      if (error.message === "REQUEST_TOO_LARGE") {
+        return send(res, 413, {
+          error: "Recording is too large. Please record a shorter message."
+        });
+      }
+
+      if (error instanceof SyntaxError) {
+        return send(res, 400, { error: "Invalid transcription request." });
+      }
+
+      return send(res, 503, {
+        error: "Could not transcribe the recording. Please try again."
+      });
+    }
+  }
+
+  if (req.method !== "POST" || req.url !== "/api/chat") {
   
 if (req.method === "GET" && req.url === "/") {
   res.writeHead(302, {
