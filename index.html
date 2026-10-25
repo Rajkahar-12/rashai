@@ -4,92 +4,334 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RashAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#111827;--panel:#182235;--panel2:#222f45;--text:#edf2fb;--muted:#a5b1c5;--line:#334155;--accent:#a5b4fc;--accentText:#111827;--user:#202d42;--shadow:0 12px 36px #0003}
-body.light{--bg:#f4f6fb;--panel:#fff;--panel2:#e9edf7;--text:#202a3b;--muted:#69758a;--line:#d9dfeb;--accent:#5865c8;--accentText:#fff;--user:#e8edf8;--shadow:0 12px 36px #202a3b12}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.55 Inter,system-ui,-apple-system,Segoe UI,sans-serif;height:100dvh;overflow:hidden}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 15% 8%,#6478b51c,transparent 42%),radial-gradient(ellipse at 88% 88%,#8b9ed31a,transparent 40%);z-index:-1}
-button,textarea,select{font:inherit}button{cursor:pointer;color:inherit}
-#overlay{position:fixed;inset:0;background:#0007;opacity:0;visibility:hidden;transition:.2s;z-index:8}#overlay.show{opacity:1;visibility:visible}
-#side{position:fixed;z-index:10;inset:0 auto 0 0;width:275px;background:var(--panel);border-right:1px solid var(--line);padding:16px 13px;display:flex;flex-direction:column;gap:15px;transform:translateX(-105%);transition:transform .22s;box-shadow:var(--shadow)}#side.open{transform:translateX(0)}
-.brand{display:flex;align-items:center;gap:9px;font-weight:750;font-size:19px;padding:3px 6px}.logo{width:33px;height:33px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,#c7d2fe,#818cf8);color:#111827;font-weight:900}
-.iconbtn{border:1px solid var(--line);background:var(--panel2);border-radius:11px;width:36px;height:36px;display:grid;place-items:center;flex-shrink:0}.iconbtn:hover{filter:brightness(1.1)}
-.newchat{display:flex;align-items:center;gap:9px;width:100%;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--panel2);text-align:left}
-.sectionlabel{font-size:11px;color:var(--muted);padding:0 8px;text-transform:uppercase;letter-spacing:.08em}
-#recent{display:flex;flex-direction:column;gap:4px;overflow:auto}.recentitem{border:0;background:transparent;text-align:left;border-radius:9px;padding:8px 9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted)}.recentitem:hover{background:var(--panel2);color:var(--text)}
-.sidebottom{margin-top:auto;display:grid;gap:5px}.sideaction{display:flex;align-items:center;gap:10px;background:transparent;border:0;border-radius:9px;padding:9px;text-align:left}.sideaction:hover{background:var(--panel2)}
+:root{
+  --bg:#0b0f17;
+  --bg2:#0f1420;
+  --panel:#141b29;
+  --panel2:#1b2436;
+  --panel3:#232e44;
+  --text:#eef2f9;
+  --muted:#8b97ad;
+  --line:#26324a;
+  --accent:#8b9cff;
+  --accent2:#b8a4ff;
+  --accentText:#0b0f17;
+  --user:#1d2840;
+  --shadow:0 18px 50px #0006;
+  --radius:16px;
+}
+body.light{
+  --bg:#f6f7fb;
+  --bg2:#eef1f8;
+  --panel:#ffffff;
+  --panel2:#eef1f8;
+  --panel3:#e2e8f4;
+  --text:#1a2233;
+  --muted:#69748a;
+  --line:#dde3ef;
+  --accent:#5b6bd6;
+  --accent2:#8b7ce8;
+  --accentText:#ffffff;
+  --user:#e9eefb;
+  --shadow:0 18px 50px #1a223312;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  height:100dvh;overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:
+    radial-gradient(600px 400px at 12% -5%, #6d7fff22, transparent 60%),
+    radial-gradient(700px 500px at 95% 105%, #a06bff1c, transparent 60%);
+}
+button,textarea,select{font:inherit}
+button{cursor:pointer;color:inherit;border:0;background:none}
+button:disabled{cursor:not-allowed}
+::selection{background:var(--accent);color:var(--accentText)}
+
+/* scrollbar */
+*::-webkit-scrollbar{width:9px;height:9px}
+*::-webkit-scrollbar-thumb{background:var(--line);border-radius:9px;border:2px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:content-box}
+
+#overlay{position:fixed;inset:0;background:#0008;backdrop-filter:blur(2px);opacity:0;visibility:hidden;transition:.22s;z-index:8}
+#overlay.show{opacity:1;visibility:visible}
+
+/* ---------- sidebar ---------- */
+#side{
+  position:fixed;z-index:10;inset:0 auto 0 0;width:284px;
+  background:var(--panel);border-right:1px solid var(--line);
+  padding:16px 12px;display:flex;flex-direction:column;gap:14px;
+  transform:translateX(-105%);transition:transform .26s cubic-bezier(.4,0,.2,1);
+  box-shadow:var(--shadow);
+}
+#side.open{transform:translateX(0)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;padding:4px 6px;letter-spacing:-.02em}
+.logo{
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  background:linear-gradient(145deg,var(--accent),var(--accent2));
+  color:#0b0f17;font-weight:800;font-size:17px;
+  box-shadow:0 6px 18px #6d7fff44;
+}
+.iconbtn{
+  border:1px solid var(--line);background:var(--panel2);border-radius:11px;
+  width:36px;height:36px;display:grid;place-items:center;flex-shrink:0;
+  transition:.16s;
+}
+.iconbtn:hover{background:var(--panel3);border-color:var(--accent)}
+.newchat{
+  display:flex;align-items:center;gap:9px;width:100%;padding:11px 12px;
+  border:1px solid var(--line);border-radius:13px;background:var(--panel2);
+  text-align:left;font-weight:600;font-size:14px;transition:.16s;
+}
+.newchat:hover{border-color:var(--accent);background:var(--panel3);transform:translateY(-1px)}
+.newchat span{font-size:17px;color:var(--accent)}
+.sectionlabel{font-size:10.5px;color:var(--muted);padding:0 8px;text-transform:uppercase;letter-spacing:.1em;font-weight:600}
+#recent{display:flex;flex-direction:column;gap:3px;overflow:auto;flex:1}
+.recentitem{
+  border:0;background:transparent;text-align:left;border-radius:10px;
+  padding:9px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--muted);font-size:14px;transition:.14s;border-left:2px solid transparent;
+}
+.recentitem:hover{background:var(--panel2);color:var(--text)}
+.recentitem.active{background:var(--panel2);color:var(--text);border-left-color:var(--accent)}
+.sidebottom{margin-top:auto;display:grid;gap:3px;padding-top:8px;border-top:1px solid var(--line)}
+.sideaction{display:flex;align-items:center;gap:10px;background:transparent;border:0;border-radius:10px;padding:9px 10px;text-align:left;color:var(--muted);font-size:14px;transition:.14s}
+.sideaction:hover{background:var(--panel2);color:var(--text)}
+.sideaction span{width:16px;text-align:center;color:var(--accent)}
+
+/* ---------- main ---------- */
 main{height:100dvh;display:flex;flex-direction:column;position:relative}
-header{height:56px;display:flex;align-items:center;gap:10px;padding:0 16px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);flex-shrink:0}.headbrand{font-size:16px;font-weight:750}.header-spacer{flex:1}
-#msgs{flex:1;overflow:auto;padding:22px 18px 15px;scroll-behavior:smooth}.hello{max-width:650px;margin:10vh auto 0;text-align:center}.hello h1{font-size:clamp(26px,4vw,36px);letter-spacing:-.04em;margin:0 0 8px}.hello p{color:var(--muted);margin:0}
-#wrap{width:min(780px,calc(100% - 20px));margin:0 auto}.msgrow{display:flex;margin:0 auto 20px;max-width:780px;gap:10px;align-items:flex-start}.msgrow.user{justify-content:flex-end}.bubble{max-width:min(100%,680px);padding:11px 14px;border-radius:15px;white-space:pre-wrap;overflow-wrap:anywhere}.user .bubble{background:var(--user);border:1px solid var(--line);border-bottom-right-radius:5px}.assistant .bubble{padding:2px 0;max-width:100%;width:100%}.msgactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.smallbtn{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:4px 8px;font-size:12px;color:var(--muted)}.smallbtn:hover{color:var(--text);background:var(--panel2)}
-pre{background:#08120f;color:#d8f0df;padding:12px;border-radius:11px;overflow:auto;white-space:pre}
-#bar{width:min(760px,calc(100% - 28px));margin:0 auto 10px;padding:7px 9px;border:1px solid var(--line);border-radius:19px;background:var(--panel);box-shadow:var(--shadow);position:relative;z-index:2}
-#prompt{width:100%;min-height:34px;max-height:140px;resize:none;border:0;outline:0;background:transparent;color:var(--text);padding:6px 7px}
-.toolbar{display:flex;align-items:center;gap:7px;padding:1px 0 0}.toolbar .spacer{flex:1}
-.modebtn{height:34px;width:36px;border:1px solid var(--line);background:var(--panel2);border-radius:11px;display:grid;place-items:center;color:var(--accent);transition:.18s}.modebtn svg{width:18px;height:18px}.modebtn:hover{background:var(--accent);color:var(--accentText);transform:translateY(-1px)}
-.sendbtn{background:var(--accent);color:var(--accentText);border:0;border-radius:11px;width:35px;height:35px;display:grid;place-items:center;font-size:19px;font-weight:800}.sendbtn:disabled{opacity:.45;cursor:not-allowed}
-#modeMenu{position:absolute;left:9px;bottom:calc(100% + 8px);display:none;width:175px;padding:5px;background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);z-index:5}#modeMenu.show{display:grid}
-.modeoption{border:0;background:transparent;text-align:left;border-radius:8px;padding:9px;display:flex;align-items:center;gap:9px;color:var(--text)}.modeoption:hover,.modeoption.active{background:var(--panel2)}.check{margin-left:auto;color:var(--accent)}
-#file{display:none}.filechip{font-size:11px;color:var(--muted);padding:0 7px;display:none;cursor:pointer}.hint{text-align:center;color:var(--muted);font-size:10px;padding:0 8px 7px}
-.typing{color:var(--muted);font-size:13px;padding:8px 0}
-#voiceLanguage{max-width:105px;height:36px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 5px}
-body.empty #msgs{display:flex;align-items:center;justify-content:center;padding-bottom:125px;overflow:hidden}body.empty .hello{margin:0 auto;transform:translateY(-26px)}body.empty #wrap{display:none}body.empty #bar{position:absolute;top:59%;left:50%;transform:translate(-50%,-50%);margin:0}
-@media(max-width:600px){header{height:52px;padding:0 10px}#msgs{padding:16px 12px}.hello{margin-top:8vh;padding:0 8px}.hello h1{font-size:27px}#bar{width:calc(100% - 18px);margin-bottom:8px}.msgrow{gap:7px}.bubble{padding:10px 12px}body.empty #bar{top:59%}}
-@media(max-height:620px){body.empty #bar{top:65%}body.empty .hello{transform:translateY(-45px)}}
+header{
+  height:58px;display:flex;align-items:center;gap:11px;padding:0 16px;
+  border-bottom:1px solid var(--line);
+  background:color-mix(in srgb,var(--bg) 82%,transparent);
+  backdrop-filter:blur(14px) saturate(1.2);flex-shrink:0;z-index:5;
+}
+.headbrand{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.headbrand b{color:var(--accent)}
+.header-spacer{flex:1}
+.statusdot{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);padding:5px 10px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+.statusdot i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade8099;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+#msgs{flex:1;overflow:auto;padding:26px 18px 15px;scroll-behavior:smooth}
+.hello{max-width:650px;margin:12vh auto 0;text-align:center;padding:0 12px}
+.hello .orb{
+  width:76px;height:76px;margin:0 auto 22px;border-radius:24px;
+  background:linear-gradient(145deg,var(--accent),var(--accent2));
+  display:grid;place-items:center;font-size:34px;font-weight:800;color:#0b0f17;
+  box-shadow:0 18px 44px #6d7fff55, inset 0 -6px 14px #00000022;
+  animation:float 5s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.hello h1{font-size:clamp(26px,4vw,38px);letter-spacing:-.04em;margin:0 0 10px;font-weight:800}
+.hello h1 span{background:linear-gradient(120deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.hello p{color:var(--muted);margin:0;font-size:15px}
+.suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:26px}
+.suggestions button{
+  border:1px solid var(--line);background:var(--panel);border-radius:99px;
+  padding:8px 14px;font-size:13px;color:var(--muted);transition:.16s;
+}
+.suggestions button:hover{border-color:var(--accent);color:var(--text);transform:translateY(-1px);background:var(--panel2)}
+
+#wrap{width:min(780px,calc(100% - 20px));margin:0 auto}
+.msgrow{display:flex;margin:0 auto 22px;max-width:780px;gap:11px;align-items:flex-start;animation:rise .3s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msgrow.user{justify-content:flex-end}
+.bubble{max-width:min(100%,680px);padding:12px 15px;border-radius:16px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14.5px;line-height:1.65}
+.user .bubble{
+  background:linear-gradient(145deg,var(--user),color-mix(in srgb,var(--user) 80%,var(--accent)));
+  border:1px solid var(--line);border-bottom-right-radius:6px;
+}
+.assistant .bubble{padding:2px 0;max-width:100%;width:100%}
+.msgactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.smallbtn{
+  border:1px solid var(--line);background:var(--panel);border-radius:9px;
+  padding:5px 10px;font-size:12px;color:var(--muted);transition:.14s;font-weight:500;
+}
+.smallbtn:hover{color:var(--accent);border-color:var(--accent);background:var(--panel2);transform:translateY(-1px)}
+pre{
+  background:var(--bg2);color:#c9e6d4;padding:14px 16px;border-radius:12px;
+  overflow:auto;white-space:pre;border:1px solid var(--line);font-size:13px;
+  font-family:"SF Mono",Menlo,Consolas,monospace;line-height:1.55;
+}
+code{background:var(--panel2);padding:1px 5px;border-radius:5px;font-size:13px;font-family:"SF Mono",Menlo,Consolas,monospace;color:var(--accent2)}
+pre code{background:none;padding:0;color:inherit}
+.typing{color:var(--muted);font-size:13px;padding:10px 2px;display:flex;align-items:center;gap:9px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bounce 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.15s}
+.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* ---------- composer ---------- */
+#bar{
+  width:min(780px,calc(100% - 28px));margin:0 auto 12px;padding:9px 11px;
+  border:1px solid var(--line);border-radius:20px;background:var(--panel);
+  box-shadow:var(--shadow);position:relative;z-index:2;transition:border-color .2s,box-shadow .2s;
+}
+#bar:focus-within{border-color:color-mix(in srgb,var(--accent) 60%,var(--line));box-shadow:var(--shadow),0 0 0 3px #8b9cff1f}
+.filechip{
+  font-size:12px;color:var(--accent);padding:5px 9px;display:none;cursor:pointer;
+  background:var(--panel2);border-radius:8px;margin-bottom:6px;width:fit-content;border:1px solid var(--line);
+}
+#prompt{
+  width:100%;min-height:38px;max-height:150px;resize:none;border:0;outline:0;
+  background:transparent;color:var(--text);padding:8px 8px;font-size:15px;line-height:1.5;
+}
+#prompt::placeholder{color:var(--muted)}
+.toolbar{display:flex;align-items:center;gap:7px;padding:3px 0 0}
+.toolbar .spacer{flex:1}
+.modebtn{
+  height:36px;padding:0 12px;border:1px solid var(--line);background:var(--panel2);
+  border-radius:11px;display:flex;align-items:center;gap:7px;color:var(--accent);
+  font-size:13px;font-weight:600;transition:.16s;
+}
+.modebtn svg{width:16px;height:16px}
+.modebtn:hover{background:var(--accent);color:var(--accentText);border-color:var(--accent)}
+.modebtn span{color:var(--text)}
+.modebtn:hover span{color:var(--accentText)}
+.sendbtn{
+  background:linear-gradient(145deg,var(--accent),var(--accent2));color:var(--accentText);
+  border:0;border-radius:12px;width:38px;height:38px;display:grid;place-items:center;
+  font-size:19px;font-weight:800;transition:.16s;box-shadow:0 6px 18px #6d7fff55;
+}
+.sendbtn:hover:not(:disabled){transform:translateY(-1px) scale(1.03);box-shadow:0 9px 24px #6d7fff77}
+.sendbtn:disabled{opacity:.4;box-shadow:none}
+#modeMenu{
+  position:absolute;left:9px;bottom:calc(100% + 8px);display:none;width:185px;padding:6px;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);z-index:5;
+}
+#modeMenu.show{display:grid;animation:rise .18s ease}
+.modeoption{
+  border:0;background:transparent;text-align:left;border-radius:9px;padding:10px;
+  display:flex;align-items:center;gap:10px;color:var(--text);font-size:14px;transition:.12s;
+}
+.modeoption:hover,.modeoption.active{background:var(--panel2)}
+.modeoption.active{color:var(--accent);font-weight:600}
+.check{margin-left:auto;color:var(--accent);font-weight:700}
+#file{display:none}
+#voiceLanguage{
+  max-width:110px;height:36px;border:1px solid var(--line);border-radius:11px;
+  background:var(--panel2);color:var(--text);padding:0 7px;font-size:13px;outline:0;
+}
+#voiceLanguage:focus{border-color:var(--accent)}
+#mic.recording{
+  background:#ef4444;color:#fff;border-color:#ef4444;
+  animation:recmic 1.2s infinite;
+}
+@keyframes recmic{0%,100%{box-shadow:0 0 0 0 #ef444466}50%{box-shadow:0 0 0 7px #ef444400}}
+.hint{text-align:center;color:var(--muted);font-size:11px;padding:0 8px 9px;opacity:.75}
+
+/* empty state */
+body.empty #msgs{display:flex;align-items:center;justify-content:center;padding-bottom:120px;overflow:hidden}
+body.empty .hello{margin:0 auto;transform:translateY(-18px)}
+body.empty #wrap{display:none}
+body.empty #bar{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);margin:0}
+@media(max-width:600px){
+  header{height:54px;padding:0 10px}
+  #msgs{padding:16px 12px}
+  .hello{margin-top:9vh;padding:0 8px}
+  .hello h1{font-size:27px}
+  .hello .orb{width:64px;height:64px;font-size:28px}
+  #bar{width:calc(100% - 18px);margin-bottom:9px;border-radius:18px}
+  .msgrow{gap:8px;margin-bottom:18px}
+  .bubble{padding:11px 13px;font-size:14px}
+  .modebtn span{display:none}
+  .modebtn{padding:0 10px}
+  body.empty #bar{top:60%}
+  #voiceLanguage{max-width:82px}
+}
+@media(max-height:620px){body.empty #bar{top:66%}body.empty .hello{transform:translateY(-40px)}}
 </style>
 </head>
 <body class="empty">
 <div id="overlay"></div>
 <aside id="side">
- <div class="brand"><div class="logo">R</div><span>RashAI</span><div style="flex:1"></div><button class="iconbtn" id="closeSide" aria-label="Close sidebar" title="Close sidebar">×</button></div>
- <button class="newchat" id="newChat"><span>＋</span> New chat</button>
- <div class="sectionlabel">Recent chats</div><div id="recent"></div>
- <div class="sidebottom"><button class="sideaction" id="themeBtn"><span>☼</span> Toggle theme</button><button class="sideaction" id="clearChats">⌫ Clear chat history</button></div>
+  <div class="brand"><div class="logo">R</div><span>RashAI</span><div style="flex:1"></div><button class="iconbtn" id="closeSide" aria-label="Close sidebar" title="Close sidebar">×</button></div>
+  <button class="newchat" id="newChat"><span>＋</span> New chat</button>
+  <div class="sectionlabel">Recent chats</div><div id="recent"></div>
+  <div class="sidebottom">
+    <button class="sideaction" id="themeBtn"><span>☼</span> Toggle theme</button>
+    <button class="sideaction" id="clearChats"><span>⌫</span> Clear chat history</button>
+  </div>
 </aside>
 <main>
- <header><button class="iconbtn" id="menu" aria-label="Open sidebar" title="Open sidebar"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><div class="headbrand">RashAI</div><div class="header-spacer"></div></header>
- <section id="msgs"><div class="hello" id="hello"><h1>What’s on your mind?</h1><p>A calm space to think, learn, and create.</p></div><div id="wrap"></div></section>
- <div id="bar">
-  <div class="filechip" id="filechip"></div>
-  <textarea id="prompt" rows="1" placeholder="Message RashAI..." aria-label="Message RashAI"></textarea>
-  <div class="toolbar">
-   <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button><input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css">
-   <button class="modebtn" id="modeBtn" title="Choose chat mode" aria-label="Choose chat mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><path d="M13 4v6M7 14v6"/></svg></button>
-   <select id="voiceLanguage" aria-label="Voice language" title="Voice language">
-    <option value="auto">Auto detect</option>
-    <option value="en">English</option>
-    <option value="hi">Hindi</option>
-    <option value="mr">Marathi</option>
-    <option value="gu">Gujarati</option>
-    <option value="ta">Tamil</option>
-    <option value="te">Telugu</option>
-    <option value="bn">Bengali</option>
-    <option value="ur">Urdu</option>
-    <option value="kn">Kannada</option>
-    <option value="ml">Malayalam</option>
-    <option value="pa">Punjabi</option>
-    <option value="es">Spanish</option>
-    <option value="fr">French</option>
-    <option value="de">German</option>
-    <option value="ar">Arabic</option>
-    <option value="zh">Chinese</option>
-    <option value="ja">Japanese</option>
-    <option value="ko">Korean</option>
-    <option value="pt">Portuguese</option>
-    <option value="ru">Russian</option>
-   </select>
-   <button class="iconbtn" id="mic" title="Start voice recording" aria-label="Start voice recording">🎙</button>
-   <div class="spacer"></div>
-   <button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
+  <header>
+    <button class="iconbtn" id="menu" aria-label="Open sidebar" title="Open sidebar"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <div class="headbrand">Rash<b>AI</b></div>
+    <div class="header-spacer"></div>
+    <div class="statusdot"><i></i> Online</div>
+  </header>
+  <section id="msgs">
+    <div class="hello" id="hello">
+      <div class="orb">R</div>
+      <h1>What’s on your <span>mind?</span></h1>
+      <p>A calm space to think, learn, and create.</p>
+      <div class="suggestions">
+        <button data-prompt="Explain quantum entanglement like I'm five.">Explain a concept</button>
+        <button data-prompt="Help me debug this JavaScript function.">Debug code</button>
+        <button data-prompt="Write a short poem about the ocean at dawn.">Write something</button>
+        <button data-prompt="Summarize the key ideas of stoicism.">Learn a topic</button>
+      </div>
+    </div>
+    <div id="wrap"></div>
+  </section>
+  <div id="bar">
+    <div class="filechip" id="filechip"></div>
+    <textarea id="prompt" rows="1" placeholder="Message RashAI..." aria-label="Message RashAI"></textarea>
+    <div class="toolbar">
+      <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button>
+      <input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css">
+      <button class="modebtn" id="modeBtn" title="Choose chat mode" aria-label="Choose chat mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><path d="M13 4v6M7 14v6"/></svg>
+        <span id="modeLabel">General</span>
+      </button>
+      <select id="voiceLanguage" aria-label="Voice language" title="Voice language">
+        <option value="auto">Auto detect</option>
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="mr">Marathi</option>
+        <option value="gu">Gujarati</option>
+        <option value="ta">Tamil</option>
+        <option value="te">Telugu</option>
+        <option value="bn">Bengali</option>
+        <option value="ur">Urdu</option>
+        <option value="kn">Kannada</option>
+        <option value="ml">Malayalam</option>
+        <option value="pa">Punjabi</option>
+        <option value="es">Spanish</option>
+        <option value="fr">French</option>
+        <option value="de">German</option>
+        <option value="ar">Arabic</option>
+        <option value="zh">Chinese</option>
+        <option value="ja">Japanese</option>
+        <option value="ko">Korean</option>
+        <option value="pt">Portuguese</option>
+        <option value="ru">Russian</option>
+      </select>
+      <button class="iconbtn" id="mic" title="Start voice recording" aria-label="Start voice recording">🎙</button>
+      <div class="spacer"></div>
+      <button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
+    </div>
+    <div id="modeMenu">
+      <button class="modeoption active" data-mode="general"><span>💬</span> General <span class="check">✓</span></button>
+      <button class="modeoption" data-mode="study"><span>📚</span> Study <span class="check"></span></button>
+      <button class="modeoption" data-mode="coding"><span>💻</span> Coding <span class="check"></span></button>
+      <button class="modeoption" data-mode="writing"><span>✍️</span> Writing <span class="check"></span></button>
+    </div>
   </div>
-  <div id="modeMenu">
-   <button class="modeoption active" data-mode="general"><span>💬</span> General <span class="check">✓</span></button>
-   <button class="modeoption" data-mode="study"><span>📚</span> Study <span class="check"></span></button>
-   <button class="modeoption" data-mode="coding"><span>💻</span> Coding <span class="check"></span></button>
-   <button class="modeoption" data-mode="writing"><span>✍️</span> Writing <span class="check"></span></button>
-  </div>
- </div>
- <div class="hint">RashAI can make mistakes. Check important information.</div>
+  <div class="hint">RashAI can make mistakes. Check important information.</div>
 </main>
 <script>
 const API_URL = "https://rashai.onrender.com/api/chat";
@@ -111,13 +353,14 @@ function renderRecent() {
   $("recent").innerHTML = "";
   savedChats.slice().reverse().forEach(chat => {
     const b = document.createElement("button");
-    b.className = "recentitem";
+    b.className = "recentitem" + (chat.id === currentChatId ? " active" : "");
     b.textContent = chat.title || "Chat";
     b.onclick = () => {
       saveCurrentChat();
       history = chat.messages || [];
       currentChatId = chat.id;
       renderMessages();
+      renderRecent();
       closeSidebar();
     };
     $("recent").appendChild(b);
@@ -139,14 +382,16 @@ function saveCurrentChat() {
 function newChat() {
   saveCurrentChat();
   history = []; currentChatId = null; attachment = null;
-  updateFileChip(); renderMessages();
+  updateFileChip(); renderMessages(); renderRecent();
   $("prompt").value = "";
   closeSidebar();
   $("prompt").focus();
 }
 $("newChat").onclick = newChat;
 $("clearChats").onclick = () => {
-  if (confirm("Clear all saved chat history?")) { savedChats = []; persist(); renderRecent(); }
+  if (confirm("Clear all saved chat history?")) {
+    savedChats = []; currentChatId = null; persist(); renderRecent();
+  }
 };
 
 $("themeBtn").onclick = () => {
@@ -154,6 +399,11 @@ $("themeBtn").onclick = () => {
   localStorage.setItem("rashai-theme", document.body.classList.contains("light") ? "light" : "dark");
 };
 if (localStorage.getItem("rashai-theme") === "light") document.body.classList.add("light");
+
+/* suggestions */
+document.querySelectorAll(".suggestions button").forEach(b => {
+  b.onclick = () => { $("prompt").value = b.dataset.prompt; $("prompt").dispatchEvent(new Event("input")); $("prompt").focus(); };
+});
 
 /* ---------- messages ---------- */
 function escapeHTML(s) {
@@ -192,7 +442,7 @@ async function copyText(text, btn) {
   }
   if (btn) {
     const old = btn.textContent;
-    btn.textContent = ok ? "Copied" : "Copy failed";
+    btn.textContent = ok ? "Copied ✓" : "Copy failed";
     setTimeout(() => { btn.textContent = old; }, 1500);
   }
 }
@@ -233,12 +483,14 @@ function renderMessages() {
 }
 
 /* ---------- modes and attachments ---------- */
+const modeLabels = { general: "General", study: "Study", coding: "Coding", writing: "Writing" };
 function updateModeMenu() {
   document.querySelectorAll(".modeoption").forEach(b => {
     const on = b.dataset.mode === selectedMode;
     b.classList.toggle("active", on);
     b.querySelector(".check").textContent = on ? "✓" : "";
   });
+  $("modeLabel").textContent = modeLabels[selectedMode] || "General";
 }
 $("modeBtn").onclick = () => $("modeMenu").classList.toggle("show");
 document.querySelectorAll(".modeoption").forEach(b => b.onclick = () => {
@@ -280,7 +532,7 @@ $("file").onchange = async e => {
 
 function updateFileChip() {
   $("filechip").style.display = attachment ? "block" : "none";
-  $("filechip").textContent = attachment ? `Attached: ${attachment.name}  ×` : "";
+  $("filechip").textContent = attachment ? `📎 ${attachment.name}  ×` : "";
   $("filechip").onclick = () => { attachment = null; $("file").value = ""; updateFileChip(); };
 }
 
@@ -293,13 +545,13 @@ async function send() {
   history.push({ role: "user", content: msg });
   renderMessages();
   $("prompt").value = "";
-  $("prompt").style.height = "34px";
+  $("prompt").style.height = "38px";
   busy = true;
   $("send").disabled = true;
 
   const loading = document.createElement("div");
   loading.className = "typing";
-  loading.textContent = "RashAI is thinking…";
+  loading.innerHTML = "<i></i><i></i><i></i> RashAI is thinking…";
   $("wrap").appendChild(loading);
   $("msgs").scrollTop = $("msgs").scrollHeight;
 
@@ -345,8 +597,8 @@ async function send() {
 
 $("send").onclick = send;
 $("prompt").addEventListener("input", () => {
-  $("prompt").style.height = "34px";
-  $("prompt").style.height = Math.min($("prompt").scrollHeight, 140) + "px";
+  $("prompt").style.height = "38px";
+  $("prompt").style.height = Math.min($("prompt").scrollHeight, 150) + "px";
 });
 $("prompt").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
@@ -376,7 +628,7 @@ function downloadPDF(t) {
   w.print();
 }
 
-/* ---------- voice input: Auto detect or manual language ---------- */
+/* ---------- voice input ---------- */
 let mediaRecorder = null, audioChunks = [], recordingStream = null;
 let recordingTimer = null, isRecording = false;
 
@@ -397,6 +649,7 @@ function resetMic() {
   recordingStream = null;
   isRecording = false;
   $("mic").disabled = false;
+  $("mic").classList.remove("recording");
   $("mic").textContent = "🎙";
   $("mic").title = "Start voice recording";
 }
@@ -470,6 +723,7 @@ $("mic").onclick = async () => {
     mediaRecorder.start();
     isRecording = true;
     $("mic").textContent = "⏹";
+    $("mic").classList.add("recording");
     $("mic").title = "Stop recording";
     recordingTimer = setTimeout(() => {
       if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
