@@ -399,11 +399,24 @@ pre { max-width:100%; }
 <script>
 const API_URL = "https://rashai.onrender.com/api/chat";
 const TRANSCRIBE_URL = "https://rashai.onrender.com/api/transcribe";
+const HEALTH_URL = "https://rashai.onrender.com/health";
 const $ = id => document.getElementById(id);
 
 let history = [], attachment = null, selectedMode = "general", busy = false, currentChatId = null;
 let savedChats = [];
 try { savedChats = JSON.parse(localStorage.getItem("rashai") || "[]"); } catch { savedChats = []; }
+
+/* ---------- wake the free Render backend ---------- */
+async function wakeServer() {
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 8000);
+    await fetch(HEALTH_URL, { cache: "no-store", signal: controller.signal });
+    clearTimeout(t);
+  } catch (e) {
+    console.warn("Wake-up ping failed (server may still be starting):", e.message);
+  }
+}
 
 /* ---------- sidebar and chats ---------- */
 function openSidebar() { $("side").classList.add("open"); $("overlay").classList.add("show"); }
@@ -477,14 +490,12 @@ function formatAnswer(t) {
   let s = escapeHTML(t);
   const codeBlocks = [];
 
-  // Keep fenced code safe while formatting headings and normal text.
   s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, language, code) => {
     const token = `@@RASH_CODE_${codeBlocks.length}@@`;
     codeBlocks.push(`<pre><code>${code.trim()}</code></pre>`);
     return token;
   });
 
-  // Render Markdown headings so users do not see raw "####" markers.
   s = s.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, title) => {
     const level = Math.min(hashes.length, 4);
     return `<h${level} class="md-heading">${title}</h${level}>`;
@@ -636,6 +647,9 @@ async function send() {
   $("msgs").scrollTop = $("msgs").scrollHeight;
 
   try {
+    // Wake the free backend before sending the chat request
+    await wakeServer();
+
     const r = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -737,6 +751,9 @@ function resetMic() {
 $("mic").onclick = async () => {
   if (isRecording) { mediaRecorder?.stop(); return; }
 
+  // Wake the free Render backend so transcription doesn't time out
+  await wakeServer();
+
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
     alert("Voice recording is not supported in this browser.");
     return;
@@ -780,7 +797,9 @@ $("mic").onclick = async () => {
         });
 
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.error || "Transcription failed.");
+        if (!response.ok) {
+          throw new Error(data.error || `Transcription failed (HTTP ${response.status}).`);
+        }
 
         const text = (data.text || "").trim();
         if (!text) throw new Error("No speech was detected. Please try again.");
@@ -789,9 +808,12 @@ $("mic").onclick = async () => {
         $("prompt").dispatchEvent(new Event("input"));
         $("prompt").focus();
       } catch (error) {
-        alert(error instanceof TypeError
-          ? "Could not reach the server. It may be waking up, so try again in a minute."
-          : error.message || "Voice transcription failed. Please try again.");
+        console.error("Transcription error:", error);
+        if (error instanceof TypeError) {
+          alert("Could not reach the server. It may be waking up — wait about a minute and try again.");
+        } else {
+          alert(error.message || "Voice transcription failed. Please try again.");
+        }
       } finally {
         $("mic").disabled = false;
         $("mic").textContent = "🎙";
