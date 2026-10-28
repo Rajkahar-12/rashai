@@ -1,4 +1,3 @@
-
 'use strict';
 
 const http = require("http");
@@ -692,11 +691,24 @@ function audioExtension(mimeType) {
   if (m.includes("mp4") || m.includes("m4a")) return "mp4";
   if (m.includes("ogg")) return "ogg";
   if (m.includes("wav")) return "wav";
+  if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
   return "webm";
+}
+
+/**
+ * Normalize a MIME type into a clean value + matching file extension.
+ * Removes codecs/parameters like ";codecs=opus" which Groq rejects,
+ * and picks an extension that the extension-matches the base type.
+ */
+function normalizeAudioType(rawMime, fallback = "audio/webm") {
+  const input = String(rawMime || fallback).toLowerCase().trim();
+  const base = input.split(";")[0].trim() || fallback;
+  return { mime: base, ext: audioExtension(base) };
 }
 
 async function handleTranscribe(req, res) {
   if (!GROQ_API_KEY) {
+    console.error("GROQ_API_KEY is missing.");
     return send(res, 500, {
       error: "Voice service is not configured. Add GROQ_API_KEY in Render."
     });
@@ -723,9 +735,15 @@ async function handleTranscribe(req, res) {
     const base64 = body.audio.replace(/^data:[^,]*,/, "");
     const audioBuffer = Buffer.from(base64, "base64");
 
-    if (!audioBuffer.length || audioBuffer.length > MAX_AUDIO_SIZE) {
+    if (!audioBuffer.length) {
+      return send(res, 400, {
+        error: "Audio is empty. Please record a message and try again."
+      });
+    }
+
+    if (audioBuffer.length > MAX_AUDIO_SIZE) {
       return send(res, 413, {
-        error: "Audio is empty or too large. Please record a shorter message."
+        error: "Audio is too large. Please record a shorter message (max 5 MB)."
       });
     }
 
@@ -736,13 +754,15 @@ async function handleTranscribe(req, res) {
       return send(res, 400, { error: "Unsupported language selection." });
     }
 
-    const mimeType = String(body.mimeType || "audio/webm").slice(0, 60);
+    // Strip codecs/parameters so Groq accepts the file consistently.
+    const { mime, ext } = normalizeAudioType(body.mimeType, "audio/webm");
+
     const form = new FormData();
 
     form.append(
       "file",
-      new Blob([audioBuffer], { type: mimeType }),
-      `rashai-recording.${audioExtension(mimeType)}`
+      new Blob([audioBuffer], { type: mime }),
+      `rashai-recording.${ext}`
     );
     form.append("model", STT_MODEL);
     form.append("response_format", "json");
@@ -764,12 +784,24 @@ async function handleTranscribe(req, res) {
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      console.error("Groq transcription failed:", response.status, data?.error);
+      console.error("Groq transcription failed:", {
+        status: response.status,
+        error: data?.error,
+        mime,
+        ext,
+        bytes: audioBuffer.length
+      });
+
+      // Give the frontend a clearer reason when available.
+      const upstreamMessage =
+        typeof data?.error?.message === "string"
+          ? data.error.message.slice(0, 200)
+          : "";
 
       return send(res, response.status === 429 ? 503 : 502, {
         error: response.status === 429
           ? "Voice transcription is busy. Please try again in a moment."
-          : "Voice transcription failed. Please try again."
+          : `Voice transcription failed${upstreamMessage ? ": " + upstreamMessage : "."}`
       });
     }
 
@@ -791,6 +823,12 @@ async function handleTranscribe(req, res) {
 
     if (error instanceof SyntaxError) {
       return send(res, 400, { error: "Invalid transcription request." });
+    }
+
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return send(res, 504, {
+        error: "Voice transcription timed out. Please try a shorter recording."
+      });
     }
 
     return send(res, 503, {
@@ -820,7 +858,12 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && req.url === "/health") {
-    return send(res, 200, { status: "ok" });
+    return send(res, 200, {
+      status: "ok",
+      uptime: Math.round(process.uptime()),
+      stt: Boolean(GROQ_API_KEY),
+      chat: Boolean(API_KEY)
+    });
   }
 
   if (req.method === "POST" && req.url === "/api/transcribe") {
