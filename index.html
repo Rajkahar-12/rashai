@@ -253,6 +253,69 @@ body.empty #bar{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%
   #voiceLanguage{max-width:82px}
 }
 @media(max-height:620px){body.empty #bar{top:66%}body.empty .hello{transform:translateY(-40px)}}
+
+/* ---------- mobile fixes ---------- */
+html, body { width:100%; min-width:0; }
+main { min-width:0; min-height:0; }
+#msgs { min-height:0; min-width:0; }
+#wrap, .msgrow, .bubble { min-width:0; }
+.bubble { overflow-wrap:anywhere; }
+.md-heading {
+  display:block;
+  margin:16px 0 8px;
+  font-size:1.15em;
+  line-height:1.35;
+  font-weight:700;
+  color:var(--text);
+}
+pre { max-width:100%; }
+@media (max-width:600px) {
+  body { height:100dvh; overflow:hidden; }
+  main { height:100dvh; height:100%; min-height:0; }
+  #msgs { flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain; }
+  body.empty #msgs {
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:flex-start;
+    padding:22px 10px 16px;
+    overflow-y:auto;
+  }
+  body.empty .hello {
+    margin:18px auto 22px;
+    padding:0 4px;
+    transform:none;
+    width:100%;
+  }
+  .hello h1 { font-size:clamp(24px,7vw,29px); }
+  .suggestions { gap:7px; margin-top:20px; }
+  .suggestions button { max-width:100%; }
+  body.empty #bar {
+    position:relative;
+    top:auto;
+    left:auto;
+    transform:none;
+    width:100%;
+    margin:0 auto 8px;
+    flex-shrink:0;
+  }
+  #bar { width:calc(100% - 16px); }
+  .toolbar { flex-wrap:wrap; gap:6px; }
+  .toolbar .spacer { display:none; }
+  #voiceLanguage { max-width:90px; }
+  .hint { padding-bottom:6px; }
+  .msgactions { gap:6px; }
+  .smallbtn { min-height:34px; }
+}
+@media (max-width:360px) {
+  header { gap:7px; }
+  .statusdot { padding:4px 7px; font-size:11px; }
+  #voiceLanguage { max-width:76px; font-size:12px; }
+  .toolbar { gap:5px; }
+  .iconbtn { width:34px; height:34px; }
+  .sendbtn { width:36px; height:36px; }
+}
+
 </style>
 </head>
 <body class="empty">
@@ -412,9 +475,26 @@ function escapeHTML(s) {
 
 function formatAnswer(t) {
   let s = escapeHTML(t);
-  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, l, c) => `<pre><code>${c.trim()}</code></pre>`);
-  s = s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>");
-  return s.replace(/\n/g, "<br>");
+  const codeBlocks = [];
+
+  // Keep fenced code safe while formatting headings and normal text.
+  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, language, code) => {
+    const token = `@@RASH_CODE_${codeBlocks.length}@@`;
+    codeBlocks.push(`<pre><code>${code.trim()}</code></pre>`);
+    return token;
+  });
+
+  // Render Markdown headings so users do not see raw "####" markers.
+  s = s.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, title) => {
+    const level = Math.min(hashes.length, 4);
+    return `<h${level} class="md-heading">${title}</h${level}>`;
+  });
+
+  s = s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+       .replace(/`([^`]+)`/g, "<code>$1</code>");
+
+  s = s.replace(/\n/g, "<br>");
+  return s.replace(/@@RASH_CODE_(\d+)@@/g, (_, index) => codeBlocks[Number(index)]);
 }
 
 function action(label, fn) {
