@@ -772,127 +772,108 @@ function downloadText(t, n) {
 }
 
 
+
 async function downloadPDF(text) {
-  if (!window.html2pdf) {
-    alert("PDF library failed to load. Please refresh and try again.");
+  const answer = String(text ?? "").trim();
+
+  if (!answer) {
+    alert("No answer text was found to export.");
     return;
   }
 
-  if (!text || !String(text).trim()) {
-    alert("There is no answer text to export.");
+  if (typeof window.html2pdf !== "function") {
+    alert("The PDF library did not load. Refresh RashAI and try again.");
     return;
   }
 
   const container = document.createElement("div");
 
-  // Keep the export inside the viewport so html2canvas can capture it.
   Object.assign(container.style, {
     position: "fixed",
-    left: "0",
-    top: "0",
-    width: "180mm",
-    padding: "0",
-    margin: "0",
+    inset: "0",
+    zIndex: "999999",
+    overflow: "auto",
+    boxSizing: "border-box",
+    padding: "24px",
     background: "#ffffff",
     color: "#172033",
     fontFamily: "Arial, sans-serif",
-    fontSize: "12px",
-    lineHeight: "1.6",
-    zIndex: "-1",
-    opacity: "1",
-    pointerEvents: "none"
+    fontSize: "14px",
+    lineHeight: "1.6"
   });
 
-  container.innerHTML = formatAnswer(String(text));
-
-  // Apply readable PDF styles.
-  container.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(el => {
-    el.style.color = "#172033";
-    el.style.pageBreakAfter = "avoid";
-    el.style.margin = "16px 0 8px";
+  const page = document.createElement("div");
+  Object.assign(page.style, {
+    width: "100%",
+    maxWidth: "750px",
+    margin: "0 auto",
+    padding: "24px",
+    boxSizing: "border-box",
+    background: "#ffffff",
+    color: "#172033",
+    overflowWrap: "anywhere"
   });
 
-  container.querySelectorAll("p,li,blockquote").forEach(el => {
-    el.style.color = "#172033";
-    el.style.overflowWrap = "anywhere";
-  });
+  const heading = document.createElement("h2");
+  heading.textContent = "RashAI — Answer";
+  page.appendChild(heading);
 
-  container.querySelectorAll("table").forEach(el => {
-    el.style.width = "100%";
-    el.style.borderCollapse = "collapse";
-    el.style.margin = "12px 0";
-  });
+  const content = document.createElement("div");
 
-  container.querySelectorAll("th,td").forEach(el => {
-    el.style.border = "1px solid #cbd5e1";
-    el.style.padding = "6px";
-    el.style.color = "#172033";
-    el.style.overflowWrap = "anywhere";
-  });
+  if (window.marked && window.DOMPurify) {
+    content.innerHTML = DOMPurify.sanitize(marked.parse(answer));
+  } else {
+    // Fallback: still export the answer if a formatting library fails.
+    content.textContent = answer;
+    content.style.whiteSpace = "pre-wrap";
+  }
 
-  container.querySelectorAll("pre").forEach(el => {
-    el.style.whiteSpace = "pre-wrap";
-    el.style.overflowWrap = "anywhere";
-    el.style.wordBreak = "break-word";
-    el.style.background = "#f1f5f9";
-    el.style.color = "#172033";
-    el.style.padding = "10px";
-    el.style.border = "1px solid #cbd5e1";
-  });
-
-  container.querySelectorAll("code").forEach(el => {
-    el.style.color = "#172033";
-    el.style.whiteSpace = "pre-wrap";
-    el.style.overflowWrap = "anywhere";
-  });
-
-  const title = document.createElement("p");
-  title.textContent =
-    "RashAI — Answer export — " + new Date().toLocaleString();
-  title.style.cssText =
-    "color:#64748b;font-size:10px;border-bottom:1px solid #cbd5e1;padding-bottom:8px;margin-bottom:14px";
-
-  container.prepend(title);
+  page.appendChild(content);
+  container.appendChild(page);
   document.body.appendChild(container);
 
   try {
-    // Wait for layout and fonts before capturing the document.
     await new Promise(resolve =>
       requestAnimationFrame(() =>
         requestAnimationFrame(resolve)
       )
     );
 
-    const options = {
-      margin: [12, 12, 15, 12],
-      filename: "rashai-answer-" + Date.now() + ".pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-        scrollX: 0,
-        scrollY: 0
-      },
-      jsPDF: {
-        unit: "mm",
-        format: "a4",
-        orientation: "portrait"
-      },
-      pagebreak: {
-        mode: ["css", "legacy"],
-        avoid: ["tr", "blockquote", "h1", "h2", "h3"]
-      }
-    };
+    if (!container.innerText.trim()) {
+      throw new Error("The export area contains no visible text.");
+    }
 
-    await html2pdf().set(options).from(container).save();
+    await window.html2pdf()
+      .set({
+        filename: "rashai-answer.pdf",
+        margin: 10,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          logging: true,
+          useCORS: true
+        },
+        jsPDF: {
+          unit: "mm",
+          format: "a4",
+          orientation: "portrait"
+        },
+        pagebreak: {
+          mode: ["css", "legacy"],
+          avoid: ["h1", "h2", "h3", "tr"]
+        }
+      })
+      .from(page)
+      .save();
   } catch (error) {
-    console.error("RashAI PDF export failed:", error);
-    alert("PDF creation failed. Please try again or use your browser's Print → Save as PDF.");
+    console.error("RashAI PDF export error:", error);
+    alert("PDF export failed. Open the browser console (F12) and check the error.");
   } finally {
     container.remove();
   }
 }
+
 
 
 /* ---------- voice input ---------- */
