@@ -773,105 +773,86 @@ function downloadText(t, n) {
 
 
 
+
 async function downloadPDF(text) {
   const answer = String(text ?? "").trim();
 
   if (!answer) {
-    alert("No answer text was found to export.");
+    alert("No answer text was found.");
     return;
   }
 
-  if (typeof window.html2pdf !== "function") {
-    alert("The PDF library did not load. Refresh RashAI and try again.");
+  // Open immediately so the browser is less likely to block the window.
+  const printWindow = window.open("", "_blank");
+
+  if (!printWindow) {
+    alert("Your browser blocked the print window. Allow pop-ups for RashAI and try again.");
     return;
   }
 
-  const container = document.createElement("div");
-
-  Object.assign(container.style, {
-    position: "fixed",
-    inset: "0",
-    zIndex: "999999",
-    overflow: "auto",
-    boxSizing: "border-box",
-    padding: "24px",
-    background: "#ffffff",
-    color: "#172033",
-    fontFamily: "Arial, sans-serif",
-    fontSize: "14px",
-    lineHeight: "1.6"
-  });
-
-  const page = document.createElement("div");
-  Object.assign(page.style, {
-    width: "100%",
-    maxWidth: "750px",
-    margin: "0 auto",
-    padding: "24px",
-    boxSizing: "border-box",
-    background: "#ffffff",
-    color: "#172033",
-    overflowWrap: "anywhere"
-  });
-
-  const heading = document.createElement("h2");
-  heading.textContent = "RashAI — Answer";
-  page.appendChild(heading);
-
-  const content = document.createElement("div");
+  let content;
 
   if (window.marked && window.DOMPurify) {
-    content.innerHTML = DOMPurify.sanitize(marked.parse(answer));
+    content = DOMPurify.sanitize(marked.parse(answer));
   } else {
-    // Fallback: still export the answer if a formatting library fails.
-    content.textContent = answer;
-    content.style.whiteSpace = "pre-wrap";
+    const escapeHTML = value =>
+      value.replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[ch]);
+
+    content = "<pre>" + escapeHTML(answer) + "</pre>";
   }
 
-  page.appendChild(content);
-  container.appendChild(page);
-  document.body.appendChild(container);
-
-  try {
-    await new Promise(resolve =>
-      requestAnimationFrame(() =>
-        requestAnimationFrame(resolve)
-      )
-    );
-
-    if (!container.innerText.trim()) {
-      throw new Error("The export area contains no visible text.");
-    }
-
-    await window.html2pdf()
-      .set({
-        filename: "rashai-answer.pdf",
-        margin: 10,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: {
-          scale: 2,
-          backgroundColor: "#ffffff",
-          logging: true,
-          useCORS: true
-        },
-        jsPDF: {
-          unit: "mm",
-          format: "a4",
-          orientation: "portrait"
-        },
-        pagebreak: {
-          mode: ["css", "legacy"],
-          avoid: ["h1", "h2", "h3", "tr"]
-        }
-      })
-      .from(page)
-      .save();
-  } catch (error) {
-    console.error("RashAI PDF export error:", error);
-    alert("PDF export failed. Open the browser console (F12) and check the error.");
-  } finally {
-    container.remove();
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RashAI Answer</title>
+<style>
+  @page { size: A4; margin: 18mm; }
+  body {
+    font-family: Arial, sans-serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #172033;
+    background: white;
+    overflow-wrap: anywhere;
   }
+  h1, h2, h3, h4 { page-break-after: avoid; }
+  pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: #f1f5f9;
+    color: #172033;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+  }
+  code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
+  img { max-width: 100%; }
+  a { color: #3347a8; }
+</style>
+</head>
+<body>
+<h2>RashAI — Answer</h2>
+<main id="answer-content">${content}</main>
+<script>
+  window.onload = function () {
+    setTimeout(function () {
+      window.focus();
+      window.print();
+    }, 500);
+  };
+<\/script>
+</body>
+</html>`);
+  printWindow.document.close();
 }
 
 
