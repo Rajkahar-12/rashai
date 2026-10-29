@@ -153,8 +153,8 @@ header{
   background:linear-gradient(145deg,var(--user),color-mix(in srgb,var(--user) 80%,var(--accent)));
   border:1px solid var(--line);border-bottom-right-radius:6px;
 }
-.assistant .bubble{padding:2px 0;max-width:100%;width:100%}
-.msgactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:11px}
+.assistant .bubble{padding:2px 0;max-width:100%;width:100%;white-space:normal}
+.msgactions{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
 .smallbtn{
   border:1px solid var(--line);background:var(--panel);border-radius:9px;
   padding:5px 10px;font-size:12px;color:var(--muted);transition:.14s;font-weight:500;
@@ -316,6 +316,69 @@ pre { max-width:100%; }
   .sendbtn { width:36px; height:36px; }
 }
 
+/* ---------- rendered Markdown (assistant bubbles) ---------- */
+.assistant .bubble p { margin: 0 0 10px; }
+.assistant .bubble p:last-child { margin-bottom: 0; }
+.assistant .bubble h1,
+.assistant .bubble h2,
+.assistant .bubble h3,
+.assistant .bubble h4,
+.assistant .bubble h5,
+.assistant .bubble h6 {
+  margin: 16px 0 8px;
+  line-height: 1.35;
+  font-weight: 700;
+  color: var(--text);
+}
+.assistant .bubble h1 { font-size: 1.5em; }
+.assistant .bubble h2 { font-size: 1.3em; }
+.assistant .bubble h3 { font-size: 1.18em; }
+.assistant .bubble h4 { font-size: 1.08em; }
+.assistant .bubble h5 { font-size: 1em; }
+.assistant .bubble h6 { font-size: .95em; color: var(--muted); }
+.assistant .bubble ul,
+.assistant .bubble ol { margin: 8px 0 10px; padding-left: 24px; }
+.assistant .bubble li { margin: 3px 0; }
+.assistant .bubble li > ul,
+.assistant .bubble li > ol { margin: 4px 0; }
+.assistant .bubble table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 12px 0;
+  font-size: 13.5px;
+  display: block;
+  overflow-x: auto;
+}
+.assistant .bubble th,
+.assistant .bubble td {
+  border: 1px solid var(--line);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.assistant .bubble th { background: var(--panel2); font-weight: 600; }
+.assistant .bubble tr:nth-child(even) td { background: color-mix(in srgb, var(--panel2) 40%, transparent); }
+.assistant .bubble blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 10px 0;
+  padding: 6px 14px;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--panel2) 50%, transparent);
+  border-radius: 0 8px 8px 0;
+}
+.assistant .bubble hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 16px 0;
+}
+.assistant .bubble a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.assistant .bubble a:hover { color: var(--accent2); }
+.assistant .bubble pre { margin: 10px 0; }
+.assistant .bubble img { max-width: 100%; height: auto; border-radius: 8px; }
 </style>
 </head>
 <body class="empty">
@@ -396,11 +459,27 @@ pre { max-width:100%; }
   </div>
   <div class="hint">RashAI can make mistakes. Check important information.</div>
 </main>
+
+<!-- Markdown renderer + sanitizer + PDF generator -->
+<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+
 <script>
 const API_URL = "https://rashai.onrender.com/api/chat";
 const TRANSCRIBE_URL = "https://rashai.onrender.com/api/transcribe";
 const HEALTH_URL = "https://rashai.onrender.com/health";
 const $ = id => document.getElementById(id);
+
+/* Configure marked once */
+if (window.marked) {
+  marked.setOptions({
+    gfm: true,
+    breaks: true,
+    headerIds: false,
+    mangle: false
+  });
+}
 
 let history = [], attachment = null, selectedMode = "general", busy = false, currentChatId = null;
 let savedChats = [];
@@ -481,31 +560,11 @@ document.querySelectorAll(".suggestions button").forEach(b => {
   b.onclick = () => { $("prompt").value = b.dataset.prompt; $("prompt").dispatchEvent(new Event("input")); $("prompt").focus(); };
 });
 
-/* ---------- messages ---------- */
-function escapeHTML(s) {
-  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-}
-
+/* ---------- Markdown rendering ---------- */
 function formatAnswer(t) {
-  let s = escapeHTML(t);
-  const codeBlocks = [];
-
-  s = s.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, language, code) => {
-    const token = `@@RASH_CODE_${codeBlocks.length}@@`;
-    codeBlocks.push(`<pre><code>${code.trim()}</code></pre>`);
-    return token;
-  });
-
-  s = s.replace(/^(#{1,6})\s+(.+)$/gm, (_, hashes, title) => {
-    const level = Math.min(hashes.length, 4);
-    return `<h${level} class="md-heading">${title}</h${level}>`;
-  });
-
-  s = s.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-       .replace(/`([^`]+)`/g, "<code>$1</code>");
-
-  s = s.replace(/\n/g, "<br>");
-  return s.replace(/@@RASH_CODE_(\d+)@@/g, (_, index) => codeBlocks[Number(index)]);
+  if (!t) return "";
+  const rawHTML = window.marked ? marked.parse(String(t)) : "";
+  return window.DOMPurify ? DOMPurify.sanitize(rawHTML) : "";
 }
 
 function action(label, fn) {
@@ -647,7 +706,6 @@ async function send() {
   $("msgs").scrollTop = $("msgs").scrollHeight;
 
   try {
-    // Wake the free backend before sending the chat request
     await wakeServer();
 
     const r = await fetch(API_URL, {
@@ -698,7 +756,7 @@ $("prompt").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
 });
 
-/* ---------- read aloud and downloads ---------- */
+/* ---------- read aloud, TXT, PDF ---------- */
 function speak(t) {
   if (!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
@@ -713,13 +771,119 @@ function downloadText(t, n) {
   URL.revokeObjectURL(a.href);
 }
 
-function downloadPDF(t) {
-  const w = window.open("", "_blank");
-  if (!w) { alert("Allow pop-ups to print or save as PDF."); return; }
-  w.document.write(`<html><head><title>RashAI Answer</title><style>body{font:14px Arial;white-space:pre-wrap;line-height:1.6;padding:30px;color:#111}</style></head><body>${escapeHTML(t)}</body></html>`);
-  w.document.close();
-  w.focus();
-  w.print();
+async function downloadPDF(text) {
+  if (!window.html2pdf) { alert("PDF library failed to load. Check your internet connection."); return; }
+
+  // Build a hidden, print-styled container with rendered Markdown
+  const container = document.createElement("div");
+  container.style.cssText = `
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    width: 794px;
+    background: #ffffff;
+    color: #1a2233;
+    font: 14px/1.65 "Inter", "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 0;
+  `;
+  container.innerHTML = formatAnswer(text);
+
+  // Inline styles for reliable PDF capture
+  container.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(h => {
+    h.style.margin = "16px 0 8px";
+    h.style.lineHeight = "1.3";
+    h.style.fontWeight = "700";
+    h.style.color = "#1a2233";
+  });
+  container.querySelectorAll("p").forEach(p => { p.style.margin = "0 0 10px"; });
+  container.querySelectorAll("ul,ol").forEach(u => { u.style.margin = "8px 0 10px"; u.style.paddingLeft = "24px"; });
+  container.querySelectorAll("li").forEach(l => { l.style.margin = "3px 0"; });
+  container.querySelectorAll("blockquote").forEach(b => {
+    b.style.borderLeft = "3px solid #5b6bd6";
+    b.style.margin = "10px 0";
+    b.style.padding = "6px 14px";
+    b.style.color = "#4a5568";
+    b.style.background = "#f5f7fb";
+  });
+  container.querySelectorAll("table").forEach(t => {
+    t.style.borderCollapse = "collapse";
+    t.style.width = "100%";
+    t.style.fontSize = "12px";
+    t.style.margin = "12px 0";
+    t.style.pageBreakInside = "avoid";
+  });
+  container.querySelectorAll("th,td").forEach(c => {
+    c.style.border = "1px solid #cbd3e1";
+    c.style.padding = "6px 8px";
+    c.style.textAlign = "left";
+    c.style.verticalAlign = "top";
+    c.style.wordBreak = "break-word";
+  });
+  container.querySelectorAll("th").forEach(c => { c.style.background = "#eef1f8"; c.style.fontWeight = "600"; });
+  container.querySelectorAll("pre").forEach(p => {
+    p.style.whiteSpace = "pre-wrap";
+    p.style.wordBreak = "break-word";
+    p.style.fontSize = "11.5px";
+    p.style.background = "#f5f5f5";
+    p.style.padding = "10px";
+    p.style.borderRadius = "6px";
+    p.style.border = "1px solid #e2e8f4";
+    p.style.pageBreakInside = "avoid";
+  });
+  container.querySelectorAll("code").forEach(c => {
+    if (c.parentElement.tagName !== "PRE") {
+      c.style.background = "#eef1f8";
+      c.style.padding = "1px 4px";
+      c.style.borderRadius = "3px";
+      c.style.fontSize = "12.5px";
+    }
+  });
+  container.querySelectorAll("a").forEach(a => {
+    a.style.color = "#5b6bd6";
+    a.style.textDecoration = "underline";
+    a.style.wordBreak = "break-all";
+  });
+  container.querySelectorAll("hr").forEach(h => {
+    h.style.border = "0";
+    h.style.borderTop = "1px solid #dde3ef";
+    h.style.margin = "16px 0";
+  });
+  container.querySelectorAll("img").forEach(i => { i.style.maxWidth = "100%"; i.style.height = "auto"; });
+
+  // Title header
+  const titleEl = document.createElement("div");
+  titleEl.style.cssText = "font-size: 11px; color: #69748a; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 1px solid #dde3ef;";
+  titleEl.textContent = "RashAI — Answer export — " + new Date().toLocaleString();
+  container.insertBefore(titleEl, container.firstChild);
+
+  document.body.appendChild(container);
+
+  const opt = {
+    margin: [15, 15, 18, 15],
+    filename: "rashai-answer-" + Date.now() + ".pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      letterRendering: true,
+      backgroundColor: "#ffffff",
+      logging: false
+    },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: {
+      mode: ["css", "avoid-all"],
+      avoid: ["tr", "pre", "blockquote", "h1", "h2", "h3"]
+    }
+  };
+
+  try {
+    await html2pdf().set(opt).from(container).save();
+  } catch (e) {
+    console.error("PDF error:", e);
+    alert("PDF export failed: " + (e.message || "unknown error"));
+  } finally {
+    container.remove();
+  }
 }
 
 /* ---------- voice input ---------- */
@@ -751,7 +915,6 @@ function resetMic() {
 $("mic").onclick = async () => {
   if (isRecording) { mediaRecorder?.stop(); return; }
 
-  // Wake the free Render backend so transcription doesn't time out
   await wakeServer();
 
   if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) {
