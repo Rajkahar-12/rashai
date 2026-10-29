@@ -1,4 +1,4 @@
-<!doctype html>
+!<doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- KaTeX styles (equations) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <style>
 :root{
   --bg:#0b0f17;
@@ -21,6 +23,7 @@
   --accent2:#b8a4ff;
   --accentText:#0b0f17;
   --user:#1d2840;
+  --code:#c9e6d4;
   --shadow:0 18px 50px #0006;
   --radius:16px;
 }
@@ -37,6 +40,7 @@ body.light{
   --accent2:#8b7ce8;
   --accentText:#ffffff;
   --user:#e9eefb;
+  --code:#1d3b2f;
   --shadow:0 18px 50px #1a223312;
 }
 *{box-sizing:border-box}
@@ -159,9 +163,10 @@ header{
   border:1px solid var(--line);background:var(--panel);border-radius:9px;
   padding:5px 10px;font-size:12px;color:var(--muted);transition:.14s;font-weight:500;
 }
-.smallbtn:hover{color:var(--accent);border-color:var(--accent);background:var(--panel2);transform:translateY(-1px)}
+.smallbtn:hover:not(:disabled){color:var(--accent);border-color:var(--accent);background:var(--panel2);transform:translateY(-1px)}
+.smallbtn:disabled{opacity:.6}
 pre{
-  background:var(--bg2);color:#c9e6d4;padding:14px 16px;border-radius:12px;
+  background:var(--bg2);color:var(--code);padding:14px 16px;border-radius:12px;
   overflow:auto;white-space:pre;border:1px solid var(--line);font-size:13px;
   font-family:"SF Mono",Menlo,Consolas,monospace;line-height:1.55;
 }
@@ -341,13 +346,17 @@ pre { max-width:100%; }
 .assistant .bubble li { margin: 3px 0; }
 .assistant .bubble li > ul,
 .assistant .bubble li > ol { margin: 4px 0; }
+.assistant .bubble .table-wrap {
+  overflow-x: auto;
+  max-width: 100%;
+  margin: 12px 0;
+  -webkit-overflow-scrolling: touch;
+}
 .assistant .bubble table {
   border-collapse: collapse;
   width: 100%;
-  margin: 12px 0;
+  margin: 0;
   font-size: 13.5px;
-  display: block;
-  overflow-x: auto;
 }
 .assistant .bubble th,
 .assistant .bubble td {
@@ -356,6 +365,10 @@ pre { max-width:100%; }
   text-align: left;
   vertical-align: top;
 }
+.assistant .bubble th[align="center"],
+.assistant .bubble td[align="center"] { text-align: center; }
+.assistant .bubble th[align="right"],
+.assistant .bubble td[align="right"] { text-align: right; }
 .assistant .bubble th { background: var(--panel2); font-weight: 600; }
 .assistant .bubble tr:nth-child(even) td { background: color-mix(in srgb, var(--panel2) 40%, transparent); }
 .assistant .bubble blockquote {
@@ -379,6 +392,79 @@ pre { max-width:100%; }
 .assistant .bubble a:hover { color: var(--accent2); }
 .assistant .bubble pre { margin: 10px 0; }
 .assistant .bubble img { max-width: 100%; height: auto; border-radius: 8px; }
+.assistant .bubble .katex-display { margin: 10px 0; overflow-x: auto; overflow-y: hidden; }
+.assistant .bubble .math-fallback { white-space: pre-wrap; }
+.plain-fallback { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---------- PDF export: progress overlay ---------- */
+.pdf-overlay{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;
+  background:var(--bg);display:grid;place-items:center;
+}
+.pdf-overlay-box{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--text);text-align:center;padding:20px}
+.pdf-overlay-text{font-size:14px;color:var(--muted)}
+.pdf-spinner{
+  width:34px;height:34px;border-radius:50%;
+  border:3px solid var(--line);border-top-color:var(--accent);
+  animation:pdfspin .8s linear infinite;
+}
+@keyframes pdfspin{to{transform:rotate(360deg)}}
+
+/* ---------- PDF export: the document that gets captured (always light) ---------- */
+.pdf-host{position:fixed;left:0;top:0;width:680px;background:#ffffff;z-index:1;pointer-events:none}
+.pdf-doc{
+  width:680px;background:#ffffff;color:#172033;
+  font-family:"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari","Nirmala UI",Arial,sans-serif;
+  font-size:14px;line-height:1.6;
+}
+.pdf-doc *{box-sizing:border-box}
+.pdf-doc .pdf-title{font-size:22px;font-weight:700;color:#2b3a8f;margin:0 0 2px;line-height:1.3}
+.pdf-doc .pdf-date{font-size:12px;color:#69748a;margin:0}
+.pdf-doc .pdf-rule{border:0;border-top:2px solid #8b9cff;margin:10px 0 14px}
+.pdf-doc p{margin:0 0 10px}
+.pdf-doc h1,.pdf-doc h2,.pdf-doc h3,.pdf-doc h4,.pdf-doc h5,.pdf-doc h6{
+  margin:18px 0 8px;line-height:1.3;font-weight:700;color:#111a2e;
+}
+.pdf-doc h1{font-size:21px}
+.pdf-doc h2{font-size:18px}
+.pdf-doc h3{font-size:16px}
+.pdf-doc h4{font-size:15px}
+.pdf-doc h5{font-size:14px}
+.pdf-doc h6{font-size:13px;color:#56627a}
+.pdf-doc strong,.pdf-doc b{font-weight:700}
+.pdf-doc em,.pdf-doc i{font-style:italic}
+.pdf-doc ul,.pdf-doc ol{margin:6px 0 10px;padding-left:26px}
+.pdf-doc li{margin:3px 0}
+.pdf-doc li > ul,.pdf-doc li > ol{margin:4px 0}
+.pdf-doc blockquote{
+  border-left:4px solid #8b9cff;margin:10px 0;padding:6px 14px;
+  background:#f3f5fb;color:#3a4660;
+}
+.pdf-doc blockquote p:last-child{margin-bottom:0}
+.pdf-doc hr{border:0;border-top:1px solid #cbd5e1;margin:14px 0}
+.pdf-doc a{color:#3347a8;text-decoration:underline;overflow-wrap:break-word}
+.pdf-doc code{
+  background:#eef1f8;color:#33408f;padding:1px 4px;border-radius:4px;
+  font-family:Consolas,"Courier New",monospace;font-size:12.5px;overflow-wrap:break-word;
+}
+.pdf-doc pre{
+  background:#f3f5f9;color:#1b2333;border:1px solid #d5dbe7;border-radius:8px;
+  padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.5;
+  white-space:pre-wrap;overflow-wrap:break-word;overflow:visible;max-width:none;
+  font-family:Consolas,"Courier New",monospace;
+}
+.pdf-doc pre code{background:none;color:inherit;padding:0;font-size:12px}
+.pdf-doc table{border-collapse:separate;border-spacing:0;width:100%;margin:12px 0;font-size:12.5px}
+.pdf-doc th,.pdf-doc td{
+  border-right:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;
+  padding:6px 8px;text-align:left;vertical-align:top;
+}
+.pdf-doc th:first-child,.pdf-doc td:first-child{border-left:1px solid #cbd5e1}
+.pdf-doc thead th{border-top:1px solid #cbd5e1;background:#eef1f8;font-weight:700}
+.pdf-doc th[align="center"],.pdf-doc td[align="center"]{text-align:center}
+.pdf-doc th[align="right"],.pdf-doc td[align="right"]{text-align:right}
+.pdf-doc .katex-display{margin:10px 0}
+.pdf-doc .plain-fallback{white-space:pre-wrap}
 </style>
 </head>
 <body class="empty">
@@ -460,10 +546,12 @@ pre { max-width:100%; }
   <div class="hint">RashAI can make mistakes. Check important information.</div>
 </main>
 
-<!-- Markdown renderer + sanitizer + PDF generator -->
+<!-- Markdown parser + HTML sanitizer + equations + PDF libraries (pinned versions) -->
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 const API_URL = "https://rashai.onrender.com/api/chat";
@@ -471,16 +559,268 @@ const TRANSCRIBE_URL = "https://rashai.onrender.com/api/transcribe";
 const HEALTH_URL = "https://rashai.onrender.com/health";
 const $ = id => document.getElementById(id);
 
-/* Configure marked once */
+const escapeHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+  "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[c]));
+
+/* =====================================================================
+   MARKDOWN PIPELINE (shared by the chat view and the PDF export)
+   raw answer text -> preprocess (protect code + math, fix escapes)
+                   -> marked (Markdown -> HTML)
+                   -> DOMPurify (sanitize)
+                   -> KaTeX equations inserted AFTER sanitizing
+   The original answer text is never modified or replaced.
+   ===================================================================== */
+
+/* Raw HTML typed by the model is shown as text, except a few harmless inline tags (e.g. <br> in table cells). */
+const SAFE_INLINE_HTML = /^<\/?(?:br|sub|sup|b|i|u|s|strong|em|mark|small|kbd|del|ins)\s*\/?>$/i;
+
 if (window.marked) {
-  marked.setOptions({
+  marked.use({
     gfm: true,
     breaks: true,
-    headerIds: false,
-    mangle: false
+    renderer: {
+      html(html, block) {
+        if (html && typeof html === "object") { block = html.block; html = html.text; }
+        const raw = String(html ?? "");
+        const t = raw.trim();
+        if (SAFE_INLINE_HTML.test(t)) return t;
+        const esc = escapeHTML(raw);
+        return block ? "<pre><code>" + esc.replace(/\n+$/, "") + "</code></pre>" : esc;
+      },
+      image(href, title, text) {
+        if (href && typeof href === "object") { text = href.text; href = href.href; }
+        const label = escapeHTML(text || href || "image");
+        return '<a href="' + escapeHTML(href || "") + '" target="_blank" rel="noopener noreferrer">Image: ' + label + "</a>";
+      },
+      checkbox(checked) {
+        if (checked && typeof checked === "object") checked = checked.checked;
+        return checked ? "☑ " : "☐ ";
+      }
+    }
   });
 }
 
+if (window.DOMPurify) {
+  DOMPurify.addHook("afterSanitizeAttributes", node => {
+    if (node.tagName === "A") {
+      const href = node.getAttribute("href") || "";
+      if (href && href.charAt(0) !== "#") {
+        node.setAttribute("target", "_blank");
+        node.setAttribute("rel", "noopener noreferrer");
+      }
+    }
+  });
+}
+
+const PURIFY_CONFIG = {
+  FORBID_TAGS: ["style", "form", "input", "button", "textarea", "select", "option", "iframe", "object", "embed", "link", "meta", "base", "img", "svg", "math"],
+  FORBID_ATTR: ["style", "srcset"],
+  ALLOW_DATA_ATTR: false
+};
+
+/* ---- inline $...$ math finder (avoids treating currency like "$5 and $10" as math) ---- */
+function extractInlineDollar(s, add) {
+  let out = "", i = 0;
+  const n = s.length;
+  while (i < n) {
+    const c = s[i];
+    if (c === "\\") { out += s.slice(i, i + 2); i += 2; continue; }
+    if (c === "$") {
+      const prev = i > 0 ? s[i - 1] : "";
+      const next = i + 1 < n ? s[i + 1] : "";
+      if (next && next !== "$" && !/\s/.test(next) && !/\w/.test(prev)) {
+        let j = i + 1, found = -1;
+        while (j < n) {
+          const d = s[j];
+          if (d === "\\") { j += 2; continue; }
+          if (d === "\n") break;
+          if (d === "$") { found = j; break; }
+          j++;
+        }
+        if (found > i + 1) {
+          const tex = s.slice(i + 1, found);
+          const after = found + 1 < n ? s[found + 1] : "";
+          if (!/\s$/.test(tex) && !/[0-9]/.test(after)) {
+            out += add(tex);
+            i = found + 1;
+            continue;
+          }
+        }
+      }
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+/* ---- fixes for common malformed / over-escaped Markdown (applied to prose only, never to code or math) ---- */
+function cleanProse(s) {
+  // repeated backslashes before Markdown punctuation -> a single backslash
+  s = s.replace(/\\{2,}(?=[*_#|~>\-])/g, "\\");
+
+  // separator-only lines (horizontal rules and table delimiter rows): drop stray backslashes
+  s = s.split("\n").map(line => {
+    if (/^[ \t|:\\-]*$/.test(line) && /-{3,}/.test(line.replace(/\\/g, ""))) return line.replace(/\\/g, "");
+    if (/^[ \t]*(?:\\?[*_]){3,}[ \t]*$/.test(line)) return line.replace(/\\/g, "");
+    return line;
+  }).join("\n");
+
+  // escaped markers at the start of a line: \## Title, \- item, \* item, 1\. item
+  s = s.replace(/^([ \t]*)\\(#{1,6}[ \t])/gm, "$1$2");
+  s = s.replace(/^([ \t]*)\\([*+-])(?=[ \t])/gm, "$1$2");
+  s = s.replace(/^([ \t]*\d{1,3})\\\.(?=[ \t])/gm, "$1.");
+
+  // "##Title" -> "## Title"
+  s = s.replace(/^([ \t]*#{2,6})(?=[^\s#])/gm, "$1 ");
+
+  // typographic bullets -> Markdown bullets
+  s = s.replace(/^([ \t]*)[•●▪◦‣∙][ \t]+/gm, "$1- ");
+
+  // escaped emphasis: \*\*bold\*\*, \*\*\*x\*\*\*, \_\_x\_\_, \*italic\*
+  s = s.replace(/\\\*\\\*\\\*/g, "***").replace(/\\\*\\\*/g, "**").replace(/\\_\\_/g, "__");
+  s = s.replace(/\\\*([^\n*\\]+?)\\\*/g, "*$1*");
+
+  // a table that touches the paragraph above it needs a blank line before its header row
+  const delim = l => l.indexOf("|") !== -1 && /^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$/.test(l);
+  const lines = s.split("\n"), out = [];
+  for (const line of lines) {
+    if (out.length >= 2 && delim(line)) {
+      const header = out[out.length - 1], above = out[out.length - 2];
+      if (header.indexOf("|") !== -1 && !delim(header) && above.trim() !== "" && above.indexOf("|") === -1) {
+        out.splice(out.length - 1, 0, "");
+      }
+    }
+    out.push(line);
+  }
+  return out.join("\n");
+}
+
+function processProse(t, addMath) {
+  const stash = [];
+  const unstash = x => x.replace(/\uE000(\d+)\uE001/g, (m, i) => stash[+i]);
+
+  // protect inline code
+  let s = t.replace(/(`+)(?:[^`]|[^`][\s\S]*?[^`])\1(?!`)/g, m => {
+    stash.push(m);
+    return "\uE000" + (stash.length - 1) + "\uE001";
+  });
+
+  // equations -> placeholders (rendered by KaTeX after sanitizing)
+  s = s.replace(/\$\$([\s\S]+?)\$\$/g, (m, x) => addMath(unstash(x), true));
+  s = s.replace(/\\\[([\s\S]+?)\\\]/g, (m, x) => /[\\^_={]/.test(x) ? addMath(unstash(x), true) : m);
+  s = s.replace(/\\\(([\s\S]+?)\\\)/g, (m, x) => addMath(unstash(x), false));
+  s = extractInlineDollar(s, x => addMath(unstash(x), false));
+
+  s = cleanProse(s);
+  return unstash(s);
+}
+
+function preprocessMarkdown(src, tok) {
+  const maths = [];
+  const lines = String(src ?? "").replace(/\r\n?/g, "\n").split("\n");
+  const segs = [];
+  let buf = [], inFence = false, fenceCh = "", fenceLen = 0;
+  const flush = code => {
+    if (buf.length) { segs.push({ code, text: buf.join("\n") }); buf = []; }
+  };
+  for (const line of lines) {
+    if (!inFence) {
+      const m = line.match(/^[ \t]*(`{3,})[^`]*$/) || line.match(/^[ \t]*(~{3,})/);
+      if (m) { flush(false); inFence = true; fenceCh = m[1][0]; fenceLen = m[1].length; }
+      buf.push(line);
+    } else {
+      buf.push(line);
+      const m = line.match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
+      if (m && m[1][0] === fenceCh && m[1].length >= fenceLen) { flush(true); inFence = false; }
+    }
+  }
+  flush(inFence);
+
+  const addMath = (tex, display) => {
+    maths.push({ tex: tex.trim(), display });
+    return tok + (maths.length - 1) + "END";
+  };
+  const text = segs.map(sg => sg.code ? sg.text : processProse(sg.text, addMath)).join("\n");
+  return { text, maths };
+}
+
+function mathToHtml(m) {
+  if (window.katex) {
+    try {
+      return katex.renderToString(m.tex, {
+        displayMode: m.display,
+        throwOnError: false,
+        output: "html",
+        strict: "ignore",
+        trust: false
+      });
+    } catch (e) { /* fall through to plain text */ }
+  }
+  const c = escapeHTML(m.tex);
+  return m.display ? '<pre class="math-fallback">' + c + "</pre>" : '<code class="math-fallback">' + c + "</code>";
+}
+
+function renderMarkdown(src, opts) {
+  const wrapTables = !!(opts && opts.wrapTables);
+  const text = String(src ?? "");
+  const fallback = '<div class="plain-fallback">' + escapeHTML(text) + "</div>";
+  if (!window.marked || !window.DOMPurify) return fallback;
+  try {
+    const nonce = Math.random().toString(36).slice(2, 8) || "x";
+    const tok = "RASHMATH" + nonce + "N";
+    const pre = preprocessMarkdown(text, tok);
+    let html = DOMPurify.sanitize(marked.parse(pre.text), PURIFY_CONFIG);
+    if (pre.maths.length) {
+      const re = new RegExp(tok + "(\\d+)END", "g");
+      html = html.replace(re, (m, i) => {
+        const mm = pre.maths[+i];
+        return mm ? mathToHtml(mm) : m;
+      });
+    }
+    if (wrapTables) {
+      html = html.replace(/<table(?=[\s>])/g, '<div class="table-wrap"><table').replace(/<\/table>/g, "</table></div>");
+    }
+    return html;
+  } catch (err) {
+    console.error("Markdown rendering failed:", err);
+    return fallback;
+  }
+}
+
+const renderCache = new Map();
+function formatAnswer(t) {
+  const key = String(t ?? "");
+  if (!key) return "";
+  if (renderCache.has(key)) return renderCache.get(key);
+  const html = renderMarkdown(key, { wrapTables: true });
+  if (renderCache.size > 150) renderCache.delete(renderCache.keys().next().value);
+  renderCache.set(key, html);
+  return html;
+}
+
+/* plain text for reading aloud (the saved answer itself is not changed) */
+function plainText(md) {
+  return String(md ?? "")
+    .replace(/```[^\n]*\n?([\s\S]*?)```/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+    .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm, "")
+    .replace(/^[ \t]*>[ \t]?/gm, "")
+    .replace(/^[ \t]*[-*+][ \t]+/gm, "")
+    .replace(/^[ \t]*\|?[ \t:|-]+\|?[ \t]*$/gm, "")
+    .replace(/\|/g, ", ")
+    .replace(/(\*\*|__|\*|~~)/g, "")
+    .replace(/\\([^\w\s])/g, "$1")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/* =====================================================================
+   APP STATE
+   ===================================================================== */
 let history = [], attachment = null, selectedMode = "general", busy = false, currentChatId = null;
 let savedChats = [];
 try { savedChats = JSON.parse(localStorage.getItem("rashai") || "[]"); } catch { savedChats = []; }
@@ -560,13 +900,7 @@ document.querySelectorAll(".suggestions button").forEach(b => {
   b.onclick = () => { $("prompt").value = b.dataset.prompt; $("prompt").dispatchEvent(new Event("input")); $("prompt").focus(); };
 });
 
-/* ---------- Markdown rendering ---------- */
-function formatAnswer(t) {
-  if (!t) return "";
-  const rawHTML = window.marked ? marked.parse(String(t)) : "";
-  return window.DOMPurify ? DOMPurify.sanitize(rawHTML) : "";
-}
-
+/* ---------- message actions ---------- */
 function action(label, fn) {
   const b = document.createElement("button");
   b.className = "smallbtn";
@@ -621,7 +955,7 @@ function renderMessages() {
         action("Copy", btn => copyText(m.content || "", btn)),
         action("Read aloud", () => speak(m.content || "")),
         action("Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
-        action("Download PDF", () => downloadPDF(m.content || ""))
+        action("Download PDF", btn => downloadPDF(m.content || "", btn))
       );
       bubble.appendChild(a);
     }
@@ -756,106 +1090,315 @@ $("prompt").addEventListener("keydown", e => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
 });
 
-/* ---------- read aloud, TXT, PDF ---------- */
+/* ---------- read aloud, TXT ---------- */
 function speak(t) {
   if (!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();
-  speechSynthesis.speak(new SpeechSynthesisUtterance(t));
+  speechSynthesis.speak(new SpeechSynthesisUtterance(plainText(t)));
+}
+
+function saveBlob(blob, name) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  a.rel = "noopener";
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60000);
 }
 
 function downloadText(t, n) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(new Blob([t], { type: "text/plain" }));
-  a.download = n;
-  a.click();
-  URL.revokeObjectURL(a.href);
+  saveBlob(new Blob([t], { type: "text/plain;charset=utf-8" }), n);
 }
 
+/* =====================================================================
+   PDF EXPORT (client-side, no server needed)
+   The answer is rendered with the SAME pipeline as the chat, laid out as
+   an A4 document, then captured page by page (html2canvas) and assembled
+   into a real PDF (jsPDF). Browser rendering is used so Unicode and Indian
+   scripts display correctly. Text in the PDF is an image (not selectable).
+   ===================================================================== */
+const PDF_CFG = { pageW: 210, pageH: 297, marginX: 15, marginTop: 16, marginBottom: 20, docPx: 680, scale: 2 };
+let pdfBusy = false;
 
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Failed to load " + src));
+    document.head.appendChild(s);
+  });
+}
 
+async function ensureLib(isReady, urls) {
+  if (isReady()) return;
+  for (const u of urls) {
+    try { await loadScript(u); } catch (e) { continue; }
+    if (isReady()) return;
+  }
+  throw new Error("A PDF library could not be loaded. Check your internet connection and try again.");
+}
 
-async function downloadPDF(text) {
+async function ensurePdfLibs() {
+  await ensureLib(() => typeof window.html2canvas === "function",
+    ["https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"]);
+  await ensureLib(() => !!(window.jspdf && window.jspdf.jsPDF),
+    ["https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"]);
+}
+
+function showPdfOverlay(msg) {
+  const o = document.createElement("div");
+  o.className = "pdf-overlay";
+  o.innerHTML = '<div class="pdf-overlay-box"><div class="pdf-spinner"></div><div class="pdf-overlay-text"></div></div>';
+  o.querySelector(".pdf-overlay-text").textContent = msg;
+  document.body.appendChild(o);
+  return o;
+}
+
+function setPdfOverlay(o, msg) {
+  const t = o && o.querySelector(".pdf-overlay-text");
+  if (t) t.textContent = msg;
+}
+
+async function waitForFonts() {
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+  await new Promise(r => setTimeout(r, 250));
+  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+}
+
+/* Decide where each PDF page starts so lines, list items, table rows and code are not cut in half.
+   All numbers are CSS pixels inside the 680px-wide document. */
+function paginateDoc(doc, pageH) {
+  const rootTop = doc.getBoundingClientRect().top;
+  const rel = el => {
+    const r = el.getBoundingClientRect();
+    return { top: r.top - rootTop, bottom: r.bottom - rootTop };
+  };
+  const atoms = [];
+  const heads = new Map();
+
+  const push = (el, top, bottom, extra) => {
+    if (bottom - top < 0.5) return;
+    const cs = getComputedStyle(el);
+    let lh = parseFloat(cs.lineHeight);
+    if (!isFinite(lh) || lh <= 0) lh = (parseFloat(cs.fontSize) || 14) * 1.4;
+    const pt = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.borderTopWidth) || 0);
+    atoms.push(Object.assign({ top, bottom, lh, ft: top + pt }, extra || {}));
+  };
+
+  const walk = el => {
+    const tag = el.tagName;
+    const r = rel(el);
+
+    if (tag === "TABLE") {
+      const thead = el.tHead;
+      if (thead) {
+        const hr = rel(thead);
+        heads.set(el, { top: hr.top, bottom: hr.bottom });
+      }
+      Array.from(el.rows).forEach(row => {
+        const rr = rel(row);
+        const inHead = !!thead && thead.contains(row);
+        push(row, rr.top, rr.bottom, { row: true, table: el, head: inHead, keep: inHead, lh: 0 });
+      });
+      return;
+    }
+
+    if (tag === "UL" || tag === "OL") {
+      Array.from(el.children).forEach(li => {
+        const q = rel(li);
+        if (li.tagName !== "LI") { push(li, q.top, q.bottom); return; }
+        const nested = Array.from(li.children).find(c => c.tagName === "UL" || c.tagName === "OL");
+        if (nested && (q.bottom - q.top) > pageH * 0.35) {
+          const nq = rel(nested);
+          push(li, q.top, nq.top);
+          walk(nested);
+        } else {
+          push(li, q.top, q.bottom);
+        }
+      });
+      return;
+    }
+
+    if (tag === "BLOCKQUOTE" && (r.bottom - r.top) > pageH * 0.5) {
+      Array.from(el.children).forEach(walk);
+      return;
+    }
+
+    const isHeading = /^H[1-6]$/.test(tag);
+    push(el, r.top, r.bottom, { keep: isHeading });
+  };
+
+  Array.from(doc.children).forEach(walk);
+
+  const total = Math.ceil(doc.getBoundingClientRect().height);
+  const pages = [];
+  let cur = { start: 0, head: null, cap: pageH };
+
+  for (let i = 0; i < atoms.length; i++) {
+    const a = atoms[i];
+    let need = a.bottom;
+    if (a.keep && atoms[i + 1]) {
+      const n = atoms[i + 1];
+      need = Math.max(need, Math.min(n.bottom, n.top + 80));
+    }
+    const hasContent = a.top - cur.start > 2;
+
+    if (need - cur.start > cur.cap && hasContent) {
+      const s = Math.round(a.top);
+      pages.push({ start: cur.start, end: Math.min(s, cur.start + cur.cap), head: cur.head });
+      const hd = (a.row && !a.head) ? heads.get(a.table) : null;
+      let head = null;
+      if (hd) {
+        const ht = Math.round(hd.top);
+        head = { top: ht, h: Math.round(hd.bottom) - ht };
+      }
+      cur = { start: s, head, cap: pageH - (head ? head.h : 0) };
+    }
+
+    // an item taller than a page is split (on line boundaries when possible)
+    while (a.bottom - cur.start > cur.cap + 0.5) {
+      let limit = cur.start + cur.cap;
+      if (a.lh > 4) {
+        const b = a.ft + Math.floor((limit - a.ft) / a.lh) * a.lh;
+        if (b > cur.start + a.lh) limit = b;
+      }
+      limit = Math.round(limit);
+      if (limit <= cur.start) limit = cur.start + Math.max(1, Math.floor(cur.cap));
+      pages.push({ start: cur.start, end: limit, head: cur.head });
+      cur = { start: limit, head: null, cap: pageH };
+    }
+  }
+
+  while (total - cur.start > cur.cap + 1) {
+    const end = cur.start + Math.max(1, Math.floor(cur.cap));
+    pages.push({ start: cur.start, end, head: cur.head });
+    cur = { start: end, head: null, cap: pageH };
+  }
+  pages.push({ start: cur.start, end: total, head: cur.head });
+
+  return { pages: pages.filter(p => p.end - p.start >= 2), total };
+}
+
+async function downloadPDF(text, btn) {
   const answer = String(text ?? "").trim();
-
   if (!answer) {
     alert("No answer text was found.");
     return;
   }
+  if (pdfBusy) return;
+  pdfBusy = true;
 
-  // Open immediately so the browser is less likely to block the window.
-  const printWindow = window.open("", "_blank");
+  const C = PDF_CFG;
+  const oldLabel = btn ? btn.textContent : "";
+  if (btn) { btn.textContent = "Creating PDF…"; btn.disabled = true; }
 
-  if (!printWindow) {
-    alert("Your browser blocked the print window. Allow pop-ups for RashAI and try again.");
-    return;
+  let overlay = null, host = null;
+  try {
+    overlay = showPdfOverlay("Preparing PDF…");
+    await ensurePdfLibs();
+
+    // build the A4 document from the shared Markdown pipeline
+    host = document.createElement("div");
+    host.id = "pdfHost";
+    host.className = "pdf-host";
+    const doc = document.createElement("div");
+    doc.className = "pdf-doc";
+    const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    doc.innerHTML =
+      '<div class="pdf-title">RashAI — Answer</div>' +
+      '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
+      '<hr class="pdf-rule">' +
+      renderMarkdown(answer);
+    host.appendChild(doc);
+    document.body.appendChild(host);
+    void host.offsetHeight;
+    await waitForFonts();
+
+    const contentWmm = C.pageW - 2 * C.marginX;
+    const pxPerMm = C.docPx / contentWmm;
+    const pageH = Math.floor((C.pageH - C.marginTop - C.marginBottom) * pxPerMm);
+
+    const { pages, total } = paginateDoc(doc, pageH);
+    if (!pages.length) throw new Error("There is nothing to export.");
+
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait", compress: true });
+    pdf.setProperties({ title: "RashAI Answer", creator: "RashAI" });
+
+    const baseOpts = {
+      scale: C.scale,
+      backgroundColor: "#ffffff",
+      logging: false,
+      useCORS: false,
+      allowTaint: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: Math.max(C.docPx, window.innerWidth),
+      windowHeight: Math.max(window.innerHeight, total + 50),
+      onclone: cd => {
+        Array.from(cd.body.children).forEach(ch => { if (ch.id !== "pdfHost") ch.remove(); });
+      }
+    };
+    const grab = (y, h) => html2canvas(doc, Object.assign({}, baseOpts, { x: 0, y, width: C.docPx, height: h }));
+
+    for (let p = 0; p < pages.length; p++) {
+      const pg = pages[p];
+      setPdfOverlay(overlay, "Creating PDF… page " + (p + 1) + " of " + pages.length);
+      await new Promise(r => setTimeout(r, 0));
+
+      let canvas = await grab(pg.start, pg.end - pg.start);
+
+      if (pg.head && pg.head.h > 0) {
+        // repeat the table header row at the top of a continued table
+        const hc = await grab(pg.head.top, pg.head.h);
+        const comp = document.createElement("canvas");
+        comp.width = canvas.width;
+        comp.height = hc.height + canvas.height;
+        const ctx = comp.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, comp.width, comp.height);
+        ctx.drawImage(hc, 0, 0);
+        ctx.drawImage(canvas, 0, hc.height);
+        canvas = comp;
+      }
+
+      if (p > 0) pdf.addPage();
+      const imgData = canvas.toDataURL("image/jpeg", 0.92);
+      const hMm = (canvas.height / C.scale) / pxPerMm;
+      pdf.addImage(imgData, "JPEG", C.marginX, C.marginTop, contentWmm, hMm, undefined, "FAST");
+      canvas.width = 0; canvas.height = 0;
+    }
+
+    // footer: app name + page numbers
+    const n = pdf.getNumberOfPages();
+    for (let i = 1; i <= n; i++) {
+      pdf.setPage(i);
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(8);
+      pdf.setTextColor(120, 130, 150);
+      pdf.text("RashAI", C.marginX, C.pageH - 9);
+      pdf.text("Page " + i + " of " + n, C.pageW - C.marginX, C.pageH - 9, { align: "right" });
+    }
+
+    setPdfOverlay(overlay, "Saving PDF…");
+    const d = new Date();
+    const p2 = v => String(v).padStart(2, "0");
+    const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+    saveBlob(pdf.output("blob"), "rashai-answer-" + stamp + ".pdf");
+  } catch (err) {
+    console.error("PDF export failed:", err);
+    alert("Could not create the PDF.\n" + (err && err.message ? err.message : "Please try again."));
+  } finally {
+    if (host) host.remove();
+    if (overlay) overlay.remove();
+    if (btn) { btn.textContent = oldLabel || "Download PDF"; btn.disabled = false; }
+    pdfBusy = false;
   }
-
-  let content;
-
-  if (window.marked && window.DOMPurify) {
-    content = DOMPurify.sanitize(marked.parse(answer));
-  } else {
-    const escapeHTML = value =>
-      value.replace(/[&<>"']/g, ch => ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[ch]);
-
-    content = "<pre>" + escapeHTML(answer) + "</pre>";
-  }
-
-  printWindow.document.open();
-  printWindow.document.write(`<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<title>RashAI Answer</title>
-<style>
-  @page { size: A4; margin: 18mm; }
-  body {
-    font-family: Arial, sans-serif;
-    font-size: 12pt;
-    line-height: 1.6;
-    color: #172033;
-    background: white;
-    overflow-wrap: anywhere;
-  }
-  h1, h2, h3, h4 { page-break-after: avoid; }
-  pre {
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-    background: #f1f5f9;
-    color: #172033;
-    padding: 12px;
-    border: 1px solid #cbd5e1;
-  }
-  code { white-space: pre-wrap; overflow-wrap: anywhere; }
-  table { width: 100%; border-collapse: collapse; }
-  th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; }
-  img { max-width: 100%; }
-  a { color: #3347a8; }
-</style>
-</head>
-<body>
-<h2>RashAI — Answer</h2>
-<main id="answer-content">${content}</main>
-<script>
-  window.onload = function () {
-    setTimeout(function () {
-      window.focus();
-      window.print();
-    }, 500);
-  };
-<\/script>
-</body>
-</html>`);
-  printWindow.document.close();
 }
-
-
 
 /* ---------- voice input ---------- */
 let mediaRecorder = null, audioChunks = [], recordingStream = null;
