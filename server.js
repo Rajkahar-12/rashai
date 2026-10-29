@@ -2,7 +2,7 @@
 
 const http = require("http");
 const mammoth = require("mammoth");
-const { extractText } = require("unpdf");
+const pdfParse = require("pdf-parse");
 
 const PORT = Number(process.env.PORT) || 3000;
 const API_KEY = process.env.OPENROUTER_API_KEY;
@@ -260,24 +260,8 @@ async function extractAttachment(attachment) {
   const lowerName = name.toLowerCase();
 
   if (lowerName.endsWith(".pdf") || type.includes("pdf")) {
-    try {
-      const { text } = await extractText(new Uint8Array(buffer), { mergePages: true });
-
-      if (!text || !text.trim()) {
-        return {
-          text: `[The PDF "${name}" was uploaded, but no selectable text was found. It may be a scanned image PDF.]`,
-          image: null
-        };
-      }
-
-      return { text: text.slice(0, 100000), image: null };
-    } catch (pdfError) {
-      console.error("PDF extraction failed:", pdfError && pdfError.message ? pdfError.message : pdfError);
-      return {
-        text: `[The PDF "${name}" was uploaded, but its text could not be extracted due to a parsing error.]`,
-        image: null
-      };
-    }
+    const result = await pdfParse(buffer);
+    return { text: result.text.slice(0, 100000), image: null };
   }
 
   if (lowerName.endsWith(".docx") || type.includes("wordprocessingml")) {
