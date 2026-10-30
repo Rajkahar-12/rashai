@@ -1,4 +1,3 @@
-
 {
   "name": "rashai",
   "version": "2.0.1",
@@ -14,6 +13,6 @@
   },
   "dependencies": {
     "mammoth": "^1.10.0",
-    "unpdf": "^0.12.1"
+    "pdf-parse": "1.1.1"
   }
 }
