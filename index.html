@@ -421,13 +421,13 @@ main{min-width:0;min-height:0}
       <div class="orb">R</div>
       <h1>What are we <span>studying?</span></h1>
       <p>A focused study companion for concepts, exams, code, and revision.</p>
-<div class="suggestions">
-  <button data-prompt="Explain a concept: Quantum entanglement, clearly and simply.">Explain a Concept</button>
-  <button data-prompt="Prepare a 5-mark exam answer on the causes of the French Revolution.">Prepare a 5-Mark Answer</button>
-  <button data-prompt="Practice programming: give me a beginner Python exercise on loops, then wait for my attempt.">Practice Programming</button>
-  <button data-prompt="Create revision notes on photosynthesis for a Class 10 student.">Revision Notes</button>
-  <button data-prompt="Test my knowledge: ask me 5 questions on Newton's laws, one at a time.">Test Your Knowledge</button>
-</div>
+      <div class="suggestions">
+        <button data-prompt="Explain a concept: Quantum entanglement, clearly and simply.">Explain a Concept</button>
+        <button data-prompt="Prepare a 5-mark exam answer on the causes of the French Revolution.">Prepare a 5-Mark Answer</button>
+        <button data-prompt="Practice programming: give me a beginner Python exercise on loops, then wait for my attempt.">Practice Programming</button>
+        <button data-prompt="Create revision notes on photosynthesis for a Class 10 student.">Revision Notes</button>
+        <button data-prompt="Test my knowledge: ask me 5 questions on Newton's laws, one at a time.">Test Your Knowledge</button>
+      </div>
     </div>
     <div id="wrap"></div>
   </section>
@@ -1252,12 +1252,6 @@ async function downloadPDF(text, btn) {
     const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
     saveBlob(pdf.output("blob"), "rashai-study-answer-" + stamp + ".pdf");
   } catch (err) {
-<div class="suggestions">
-  <button data-prompt="Create revision notes on photosynthesis for a Class 10 student.">Revision Notes</button>
-  <button data-prompt="Test my knowledge: ask me 5 questions on Newton's laws, one at a time.">Test Your Knowledge</button>
-</div>
-
-
     console.error("PDF export failed:", err);
     alert("Could not create the PDF.\n" + (err && err.message ? err.message : "Please try again."));
   } finally {
