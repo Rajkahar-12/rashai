@@ -26,6 +26,35 @@ const RATE_WINDOW = 60 * 1000;
 // OpenRouter selects an available free model.
 const MODEL = "openrouter/free";
 
+/* ---------- long-answer settings (NEW) ----------
+   openrouter/free is a ROUTER: it picks a different free model each time,
+   so there is no single guaranteed output limit. Public listings say "up to
+   about 8K output tokens", so we default to a safe 4096 per call and never
+   allow more than 8000. You can change these on Render WITHOUT editing code
+   by adding optional environment variables:
+     MAX_OUTPUT_TOKENS  (default 4096, allowed 512-8000)
+     MAX_CONTINUATIONS  (default 3,    allowed 0-5)
+*/
+function readIntEnv(name, fallback, min, max) {
+  const n = Number.parseInt(process.env[name], 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
+
+const MAX_OUTPUT_TOKENS = readIntEnv("MAX_OUTPUT_TOKENS", 4096, 512, 8000);
+const MAX_CONTINUATIONS = readIntEnv("MAX_CONTINUATIONS", 3, 0, 5);
+// Stop starting new continuation calls after this much total time.
+const GEN_TIME_BUDGET_MS = 120 * 1000;
+// How much of an unfinished answer we show the model when asking it to continue.
+const MAX_CONTEXT_PARTIAL_CHARS = 30000;
+
+const CONTINUE_PROMPT =
+  "Your previous reply was cut off because it reached the output limit. " +
+  "Continue EXACTLY from the last character you wrote. " +
+  "Do not repeat or summarise anything already written, do not add an introduction, and do not restart the file. " +
+  "If you stopped in the middle of a code block, carry on with the code itself and do not open a new code block. " +
+  "When everything is finished, close any open code block and stop.";
+
 // Voice transcription.
 const STT_MODEL = "whisper-large-v3-turbo";
 const STT_LANGUAGES = new Set([
@@ -76,6 +105,16 @@ PROGRAMMING
 - Give: a short approach, the algorithm or steps, complete code in a code block, sample input and output, and an explanation of important lines.
 - Mention common mistakes and how to fix them. Avoid unnecessary rewrites when a small fix is enough.
 - Never say code was run or tested unless it actually was.
+
+COMPLETE CODE AND PROJECT FILES
+- When the student asks for complete code (for example a full website or app), write ALL of the code that is needed: every HTML, CSS, JavaScript and backend part. Do not leave out important sections.
+- Never use placeholders such as "..." or "rest of the code here" or "add your code here" instead of real code.
+- Never stop in the middle of a function, HTML tag, CSS rule or statement. Always finish the line you are writing and close every code block.
+- For large code requests, keep the explanation short and put the code first, so that most of your output space is used for the code itself.
+- If the code is too large for one reply, split it into clearly numbered parts (Part 1 of 3, Part 2 of 3 ...). Split only between complete files or complete functions, never in the middle of one. End the part with a short line saying that more parts follow and that the student can say "continue".
+- If your reply is incomplete for any reason, say so clearly. Never claim partial code is complete.
+- When the answer has more than one file, write a line in exactly this form immediately before each code block: File: folder/filename.ext (for example File: index.html or File: static/style.css). Use only real file names, one code block per file.
+- The RashAI website automatically shows download buttons for finished code blocks that have a File: line. You cannot create, save or send files yourself, so never say that you created a file, a ZIP, or a download link. You may say that download buttons appear under the answer when the code blocks are complete.
 
 TRUTHFULNESS
 - Never knowingly invent facts, statistics, quotations, sources or citations.
@@ -364,10 +403,15 @@ function makeMessages(history, attachmentText, image) {
   return messages;
 }
 
-async function callOpenRouter(messages) {
+/* ---------- calling OpenRouter (UPDATED: max_tokens, finish reason, graceful limit errors) ---------- */
+
+async function callOpenRouter(messages, maxTokens) {
+  let tokens = maxTokens || MAX_OUTPUT_TOKENS;
+  let retried = false;   // one normal retry for network / 429 / 5xx problems
+  let shrinks = 0;       // how many times we lowered max_tokens after a 400 error
   let lastStatus = null;
 
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let round = 0; round < 5; round++) {
     let response;
 
     try {
@@ -383,14 +427,15 @@ async function callOpenRouter(messages) {
           model: MODEL,
           messages,
           temperature: 0.4,
-          max_tokens: 1800
+          max_tokens: tokens
         }),
         signal: AbortSignal.timeout(90000)
       });
     } catch (error) {
       console.error("OpenRouter connection error:", error.message);
 
-      if (attempt === 0) {
+      if (!retried) {
+        retried = true;
         await sleep(1000);
         continue;
       }
@@ -401,13 +446,25 @@ async function callOpenRouter(messages) {
     const data = await response.json().catch(() => ({}));
 
     if (response.ok) {
-      const answer = data?.choices?.[0]?.message?.content;
+      const choice = data?.choices?.[0];
+      const answer = choice?.message?.content;
 
       if (typeof answer !== "string" || !answer.trim()) {
         throw new Error("EMPTY_AI_RESPONSE");
       }
 
-      return { text: answer.trim(), model: data.model || MODEL };
+      // OpenRouter reports WHY the model stopped. "length" = it ran out of output tokens.
+      const finish = String(choice?.finish_reason || "").toLowerCase();
+      const nativeFinish = String(choice?.native_finish_reason || "").toLowerCase();
+      const hitLimit =
+        finish === "length" || nativeFinish === "length" || nativeFinish === "max_tokens";
+
+      return {
+        text: answer, // NOT trimmed: leading/trailing spaces matter when joining continuations
+        model: data.model || MODEL,
+        finishReason: hitLimit ? "length" : (finish || "stop"),
+        maxTokensUsed: tokens
+      };
     }
 
     const details = getErrorDetails(data);
@@ -422,15 +479,27 @@ async function callOpenRouter(messages) {
     });
 
     if (response.status === 401 || response.status === 403) throw new Error("AI_AUTH_ERROR");
-    if (response.status === 400) throw new Error("AI_REQUEST_ERROR");
+
+    if (response.status === 400) {
+      // If the error is about token limits, try again with a smaller max_tokens.
+      const text = `${details.message} ${details.raw || ""}`;
+      if (shrinks < 2 && tokens > 1024 && /token|max_tokens|output|completion|context/i.test(text)) {
+        tokens = Math.max(1024, Math.floor(tokens / 2));
+        shrinks++;
+        console.warn(`Lowering max_tokens to ${tokens} and retrying.`);
+        continue;
+      }
+      throw new Error("AI_REQUEST_ERROR");
+    }
 
     const retryable = [429, 502, 503, 504].includes(response.status);
     const message = details.message.toLowerCase();
     const dailyLimit =
       message.includes("daily") || message.includes("per day") || message.includes("quota");
 
-    if (attempt === 0 && retryable && !dailyLimit) {
-      await sleep(getRetryDelay(response, attempt));
+    if (!retried && retryable && !dailyLimit) {
+      retried = true;
+      await sleep(getRetryDelay(response, 0));
       continue;
     }
 
@@ -440,6 +509,166 @@ async function callOpenRouter(messages) {
   }
 
   throw new Error(lastStatus === 429 ? "AI_RATE_LIMITED" : "AI_TEMPORARILY_UNAVAILABLE");
+}
+
+/* ---------- long answers: detect cut-off and continue safely (NEW) ---------- */
+
+// Returns {ch, len} if the text ends while a ``` code block is still open, otherwise null.
+function findOpenFence(text) {
+  let open = null;
+
+  for (const line of String(text || "").split("\n")) {
+    if (!open) {
+      const m = line.match(/^[ \t]*(`{3,})[^`]*$/) || line.match(/^[ \t]*(~{3,})/);
+      if (m) open = { ch: m[1][0], len: m[1].length };
+    } else {
+      const m = line.match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
+      if (m && m[1][0] === open.ch && m[1].length >= open.len) open = null;
+    }
+  }
+
+  return open;
+}
+
+// Joins the first part and the continuation without duplicating code.
+function mergeContinuation(base, extra) {
+  let add = String(extra || "").replace(/^\uFEFF/, "");
+  if (!add.trim()) return base;
+
+  // If we are inside a code block and the model opened a NEW block (for example
+  // "```html"), remove that opening line so the code stays in one block.
+  if (findOpenFence(base)) {
+    const lead = add.match(/^(?:[ \t]*\r?\n)*/)[0];
+    const rest = add.slice(lead.length);
+    const nl = rest.indexOf("\n");
+    const first = nl === -1 ? rest : rest.slice(0, nl);
+    const opening = first.match(/^[ \t]*(?:`{3,}|~{3,})(.*)$/);
+    if (opening && opening[1].trim() !== "" && !opening[1].includes("`")) {
+      add = nl === -1 ? "" : rest.slice(nl + 1);
+    }
+  }
+
+  // If the model repeated the end of the first part, remove the repeated piece.
+  const max = Math.min(600, base.length, add.length);
+  for (let k = max; k >= 16; k--) {
+    if (base.endsWith(add.slice(0, k))) {
+      add = add.slice(k);
+      break;
+    }
+  }
+
+  return base + add;
+}
+
+function withContinuePrompt(baseMessages, partialText) {
+  const shown =
+    partialText.length > MAX_CONTEXT_PARTIAL_CHARS
+      ? partialText.slice(-MAX_CONTEXT_PARTIAL_CHARS)
+      : partialText;
+
+  return [
+    ...baseMessages,
+    { role: "assistant", content: shown },
+    { role: "user", content: CONTINUE_PROMPT }
+  ];
+}
+
+// Helps the user see WHAT is unfinished.
+function describeUnfinished(text) {
+  const lines = String(text || "").split("\n").map(l => l.trim()).filter(Boolean);
+  const lastLine = (lines[lines.length - 1] || "").slice(0, 90);
+
+  let lastFile = "";
+  const re = /^[ \t]*(?:\*\*)?File:[ \t]*(.+?)(?:\*\*)?[ \t]*$/gim;
+  let m;
+  while ((m = re.exec(text)) !== null) lastFile = m[1].replace(/[`*]/g, "").trim();
+
+  let note =
+    "⚠️ This answer is INCOMPLETE. The AI reached its output limit and could not finish it" +
+    " (RashAI already tried to continue automatically).";
+  if (lastFile) note += `\nThe unfinished file looks like: ${lastFile}`;
+  if (lastLine) note += `\nIt stopped near: ${lastLine}`;
+  note += "\nPress “Continue generating” to ask it to carry on from there.";
+  return note;
+}
+
+/*
+  Generates an answer. If the model stops because it ran out of tokens
+  (finish_reason = "length"), or leaves a code block open, we ask it to continue
+  - at most MAX_CONTINUATIONS times, and never longer than GEN_TIME_BUDGET_MS.
+  startText is only used when the user presses "Continue generating".
+*/
+async function generateComplete(baseMessages, startText) {
+  const startedAt = Date.now();
+  let text = startText || "";
+  let continuing = Boolean(startText);
+  let maxTokens = MAX_OUTPUT_TOKENS;
+  let model = MODEL;
+  let continuations = 0;
+  let finishReason = "stop";
+
+  while (true) {
+    const callMessages = continuing ? withContinuePrompt(baseMessages, text) : baseMessages;
+    const result = await callOpenRouter(callMessages, maxTokens);
+
+    maxTokens = result.maxTokensUsed; // keep a lowered value if the provider forced one
+    model = result.model;
+    finishReason = result.finishReason;
+
+    let stalled = false;
+    if (continuing) {
+      const merged = mergeContinuation(text, result.text);
+      stalled = merged.length === text.length; // nothing new was added
+      text = merged;
+      continuations++;
+    } else {
+      text = result.text;
+    }
+
+    const hitLimit = finishReason === "length";
+    const dangling = Boolean(findOpenFence(text));
+
+    // Finished normally. (If the model already had one chance to continue and said
+    // "stop" again, believe it and just close any open code block.)
+    if (!hitLimit && (!dangling || continuing)) {
+      return finish(true);
+    }
+
+    const outOfRoom =
+      stalled ||
+      continuations >= MAX_CONTINUATIONS ||
+      Date.now() - startedAt > GEN_TIME_BUDGET_MS;
+
+    if (outOfRoom) {
+      // The model said "stop" but forgot to close a code block: treat as finished.
+      // The model ran out of space: report honestly that it is incomplete.
+      return finish(!hitLimit);
+    }
+
+    continuing = true;
+  }
+
+  function finish(complete) {
+    let out = text;
+
+    if (complete) {
+      out = out.trim();
+      const open = findOpenFence(out);
+      if (open) out += "\n" + open.ch.repeat(Math.max(3, open.len));
+    } else {
+      // keep trailing whitespace so a later "Continue" joins correctly
+      out = out.replace(/^\s+/, "");
+    }
+
+    return {
+      text: out,
+      model,
+      complete,
+      finishReason,
+      continuations,
+      note: complete ? "" : describeUnfinished(out)
+    };
+  }
 }
 
 async function handleChat(req, res) {
@@ -479,15 +708,36 @@ async function handleChat(req, res) {
       return send(res, 400, { error: "This conversation is too long. Start a new chat." });
     }
 
+    // Normal chat: the last message is the user's. "Continue generating": the last
+    // message is the unfinished assistant answer.
+    const wantsContinue = body.continue === true;
     const latest = history[history.length - 1];
 
     if (
       !latest ||
-      latest.role !== "user" ||
+      latest.role !== (wantsContinue ? "assistant" : "user") ||
       typeof latest.content !== "string" ||
       !latest.content.trim()
     ) {
-      return send(res, 400, { error: "Your latest message is missing or invalid." });
+      return send(res, 400, {
+        error: wantsContinue
+          ? "There is no unfinished answer to continue."
+          : "Your latest message is missing or invalid."
+      });
+    }
+
+    let modelHistory = history;
+    let startText = "";
+
+    if (wantsContinue) {
+      modelHistory = history.slice(0, -1);
+      const before = modelHistory[modelHistory.length - 1];
+
+      if (!before || before.role !== "user") {
+        return send(res, 400, { error: "There is no unfinished answer to continue." });
+      }
+
+      startText = latest.content;
     }
 
     let attachmentText = "";
@@ -499,10 +749,17 @@ async function handleChat(req, res) {
       image = extracted.image;
     }
 
-    const messages = makeMessages(history, attachmentText, image);
-    const result = await callOpenRouter(messages);
+    const messages = makeMessages(modelHistory, attachmentText, image);
+    const result = await generateComplete(messages, startText);
 
-    return send(res, 200, { text: result.text, model: result.model });
+    return send(res, 200, {
+      text: result.text,
+      model: result.model,
+      complete: result.complete,
+      finishReason: result.finishReason,
+      continuations: result.continuations,
+      note: result.note
+    });
   } catch (error) {
     console.error("Chat request failed:", error.message);
 
@@ -687,7 +944,9 @@ const server = http.createServer(async (req, res) => {
       status: "ok",
       uptime: Math.round(process.uptime()),
       stt: Boolean(GROQ_API_KEY),
-      chat: Boolean(API_KEY)
+      chat: Boolean(API_KEY),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
+      maxContinuations: MAX_CONTINUATIONS
     });
   }
 
