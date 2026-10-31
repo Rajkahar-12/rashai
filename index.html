@@ -207,6 +207,19 @@ pre code{background:none;padding:0;color:inherit}
 .typing i:nth-child(3){animation-delay:.3s}
 @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 
+/* NEW: incomplete-answer warning, download bar, continue button */
+.notewarn{
+  margin-top:14px;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.55;
+  white-space:pre-wrap;overflow-wrap:anywhere;color:#fbbf24;
+  background:color-mix(in srgb,#f59e0b 12%,transparent);
+  border:1px solid color-mix(in srgb,#f59e0b 42%,transparent);
+}
+body.light .notewarn{color:#92400e}
+.filebar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.filebar .filelabel{font-size:12px;color:var(--muted);font-weight:600;margin-right:2px}
+.filebar + .msgactions{margin-top:10px;padding-top:0;border-top:0}
+.smallbtn.primary{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+
 /* ---------- composer ---------- */
 #bar{
   width:min(820px,calc(100% - 28px));margin:0 auto 12px;padding:10px 12px;
@@ -478,7 +491,8 @@ main{min-width:0;min-height:0}
 <script>
 /* ============================================================
    BACKEND CONTRACT — DO NOT CHANGE WITHOUT UPDATING server.js
-   POST /api/chat         { messages:[{role,content}], attachment, mode }
+   POST /api/chat         { messages:[{role,content}], attachment, mode, continue? }
+                          -> { text, model, complete, finishReason, continuations, note }
    POST /api/transcribe   { audio, mimeType, language }
    GET  /health
    The study focus lives on the server via SYSTEM_PROMPT, so the
@@ -486,6 +500,8 @@ main{min-width:0;min-height:0}
    in the payload (set to "study") so that if server.js requires
    a mode field, it stays satisfied — and it is a harmless no-op
    if the server ignores it.
+   NEW: when `continue` is true, the last message in `messages` is the
+   unfinished assistant answer and the server returns the FULL joined text.
    ============================================================ */
 const API_URL = "https://rashai.onrender.com/api/chat";
 const TRANSCRIBE_URL = "https://rashai.onrender.com/api/transcribe";
@@ -719,6 +735,177 @@ function plainText(md) {
 }
 
 /* =====================================================================
+   PROJECT FILES (NEW): find "File: name.ext" + code block pairs in an
+   answer, then offer single-file downloads and a ZIP. Only code blocks
+   that are properly CLOSED are offered, so a cut-off file is never
+   presented as if it were complete.
+   ===================================================================== */
+/* ---- PROJECT FILES START ---- */
+function cleanFilePath(raw) {
+  let s = String(raw || "").trim().replace(/\\/g, "/");
+  s = s.replace(/^[\s`"'*_#>-]+/, "").replace(/[\s`"'*_:]+$/, "");
+  const parts = s.split("/").map(x => x.trim()).filter(x => x && x !== "." && x !== "..");
+  if (!parts.length || parts.length > 6) return "";
+  if (!parts.every(x => /^[A-Za-z0-9_][A-Za-z0-9_.@() +-]{0,99}$/.test(x))) return "";
+  const last = parts[parts.length - 1];
+  if (!/\.[A-Za-z0-9]{1,10}$/.test(last) && !/^(Dockerfile|Makefile|Procfile|LICENSE)$/.test(last)) return "";
+  return parts.join("/");
+}
+
+function labelFromLine(line) {
+  // "File: index.html"  /  "**File: `index.html`**"  /  "### File: static/style.css"
+  let m = line.match(/^[ \t]*(?:[-*>#]+[ \t]*)?(?:\*\*|__)?(?:File(?:name)?|Path)[ \t]*[:：][ \t]*(.+?)(?:\*\*|__)?[ \t]*$/i);
+  if (m) return cleanFilePath(m[1]);
+  // A line that is only a file name: "### index.html", "**style.css**", "1. `server.js`"
+  m = line.match(/^[ \t]*(?:#{1,6}[ \t]+|\d+[.)][ \t]+|[-*][ \t]+)?(?:\*\*|__)?`?([A-Za-z0-9_][\w .\/@()+-]*\.[A-Za-z0-9]{1,10})`?(?:\*\*|__)?[ \t]*:?[ \t]*$/);
+  if (m) return cleanFilePath(m[1]);
+  return "";
+}
+
+function labelFromInfo(info) {
+  // ```js title="app.js"   ```html index.html   ```js:app.js
+  const s = String(info || "").trim();
+  let m = s.match(/(?:title|file|filename)\s*=\s*["']?([^"'\s]+)/i);
+  if (m) return cleanFilePath(m[1]);
+  m = s.match(/^[\w+#-]+:(\S+)$/);
+  if (m) return cleanFilePath(m[1]);
+  const words = s.split(/\s+/);
+  if (words.length > 1) return cleanFilePath(words[1]);
+  return "";
+}
+
+function extractProjectFiles(md) {
+  const lines = String(md ?? "").replace(/\r\n?/g, "\n").split("\n");
+  const byPath = new Map();
+  let prevLabel = "";
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const open = line.match(/^[ \t]*(`{3,}|~{3,})(.*)$/);
+
+    if (!open || (open[1][0] === "`" && open[2].indexOf("`") !== -1)) {
+      if (line.trim()) prevLabel = labelFromLine(line);
+      i++;
+      continue;
+    }
+
+    const ch = open[1][0], len = open[1].length;
+    let j = i + 1, closed = false;
+    while (j < lines.length) {
+      const c = lines[j].match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
+      if (c && c[1][0] === ch && c[1].length >= len) { closed = true; break; }
+      j++;
+    }
+    if (!closed) break; // unfinished block: never offer it as a file
+
+    const path = prevLabel || labelFromInfo(open[2]);
+    const code = lines.slice(i + 1, j).join("\n");
+    if (path && code.trim()) byPath.set(path, { path, code }); // a later block with the same name wins
+    prevLabel = "";
+    i = j + 1;
+  }
+
+  return Array.from(byPath.values());
+}
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+// Builds a standard .zip file (no compression) completely inside the browser.
+function buildZipBlob(entries) {
+  const enc = new TextEncoder();
+  const chunks = [], central = [];
+  let offset = 0;
+  const now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((Math.max(1980, now.getFullYear()) - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+
+  entries.forEach(e => {
+    const nameBytes = enc.encode(e.name);
+    const data = e.data;
+    const crc = crc32(data), size = data.length;
+
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true);
+    lh.setUint16(4, 20, true);
+    lh.setUint16(6, 0x0800, true);          // UTF-8 file names
+    lh.setUint16(8, 0, true);               // stored (no compression)
+    lh.setUint16(10, dosTime, true);
+    lh.setUint16(12, dosDate, true);
+    lh.setUint32(14, crc, true);
+    lh.setUint32(18, size, true);
+    lh.setUint32(22, size, true);
+    lh.setUint16(26, nameBytes.length, true);
+    lh.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(lh.buffer), nameBytes, data);
+
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true);
+    ch.setUint16(4, 20, true);
+    ch.setUint16(6, 20, true);
+    ch.setUint16(8, 0x0800, true);
+    ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true);
+    ch.setUint16(14, dosDate, true);
+    ch.setUint32(16, crc, true);
+    ch.setUint32(20, size, true);
+    ch.setUint32(24, size, true);
+    ch.setUint16(28, nameBytes.length, true);
+    ch.setUint16(30, 0, true);
+    ch.setUint16(32, 0, true);
+    ch.setUint16(34, 0, true);
+    ch.setUint16(36, 0, true);
+    ch.setUint32(38, 0, true);
+    ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nameBytes);
+
+    offset += 30 + nameBytes.length + size;
+  });
+
+  const cdSize = central.reduce((s, c) => s + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(4, 0, true);
+  end.setUint16(6, 0, true);
+  end.setUint16(8, entries.length, true);
+  end.setUint16(10, entries.length, true);
+  end.setUint32(12, cdSize, true);
+  end.setUint32(16, offset, true);
+  end.setUint16(20, 0, true);
+
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+/* ---- PROJECT FILES END ---- */
+
+function downloadProjectFile(f) {
+  const name = f.path.split("/").pop();
+  saveBlob(new Blob([f.code + "\n"], { type: "text/plain;charset=utf-8" }), name);
+}
+
+function downloadProjectZip(files) {
+  const enc = new TextEncoder();
+  const entries = files.map(f => ({ name: "rashai-project/" + f.path, data: enc.encode(f.code + "\n") }));
+  const d = new Date();
+  const p2 = v => String(v).padStart(2, "0");
+  const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+  saveBlob(buildZipBlob(entries), "rashai-project-" + stamp + ".zip");
+}
+
+/* =====================================================================
    APP STATE
    ===================================================================== */
 let history = [], attachment = null, busy = false, currentChatId = null;
@@ -835,7 +1022,7 @@ function renderMessages() {
   document.body.classList.toggle("empty", history.length === 0);
   $("hello").style.display = history.length ? "none" : "block";
 
-  history.forEach(m => {
+  history.forEach((m, idx) => {
     const row = document.createElement("div");
     row.className = "msgrow " + (m.role === "user" ? "user" : "assistant");
     const bubble = document.createElement("div");
@@ -847,6 +1034,34 @@ function renderMessages() {
     row.appendChild(bubble);
 
     if (m.role === "assistant") {
+      // NEW: honest warning when the answer is unfinished
+      if (m.note) {
+        const warn = document.createElement("div");
+        warn.className = "notewarn";
+        warn.textContent = m.note;
+        bubble.appendChild(warn);
+      }
+
+      // NEW: download buttons for finished "File: name.ext" code blocks
+      const files = m.error ? [] : extractProjectFiles(m.content || "");
+      if (files.length) {
+        const fb = document.createElement("div");
+        fb.className = "filebar";
+        const label = document.createElement("span");
+        label.className = "filelabel";
+        label.textContent = m.incomplete ? "Finished files so far:" : "Files in this answer:";
+        fb.appendChild(label);
+        files.slice(0, 12).forEach(f => {
+          fb.appendChild(action("⬇ " + f.path, () => downloadProjectFile(f)));
+        });
+        if (files.length > 1) {
+          const z = action("⬇ Download all (ZIP)", () => downloadProjectZip(files));
+          z.classList.add("primary");
+          fb.appendChild(z);
+        }
+        bubble.appendChild(fb);
+      }
+
       const a = document.createElement("div");
       a.className = "msgactions";
       a.append(
@@ -855,6 +1070,14 @@ function renderMessages() {
         action("Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
         action("Download PDF", btn => downloadPDF(m.content || "", btn))
       );
+
+      // NEW: let the user ask the AI to carry on from where it stopped
+      if (m.incomplete && idx === history.length - 1) {
+        const c = action("Continue generating", () => continueGeneration());
+        c.classList.add("primary");
+        a.prepend(c);
+      }
+
       bubble.appendChild(a);
     }
 
@@ -908,12 +1131,26 @@ async function send() {
   renderMessages();
   $("prompt").value = "";
   $("prompt").style.height = "40px";
+
+  await requestAnswer(false);
+}
+
+// "Continue generating" button: asks the server to carry on the unfinished answer.
+async function continueGeneration() {
+  if (busy) return;
+  const last = history[history.length - 1];
+  if (!last || last.role !== "assistant" || !last.incomplete) return;
+  await requestAnswer(true);
+}
+
+// Shared by send() and continueGeneration().
+async function requestAnswer(isContinue) {
   busy = true;
   $("send").disabled = true;
 
   const loading = document.createElement("div");
   loading.className = "typing";
-  loading.innerHTML = "<i></i><i></i><i></i> RashAI is thinking…";
+  loading.innerHTML = "<i></i><i></i><i></i> " + (isContinue ? "RashAI is continuing…" : "RashAI is thinking…");
   $("wrap").appendChild(loading);
   $("msgs").scrollTop = $("msgs").scrollHeight;
 
@@ -926,28 +1163,46 @@ async function send() {
       body: JSON.stringify({
         messages: history.filter(m => !m.error).map(m => ({ role: m.role, content: m.content })),
         attachment,
-        mode: STUDY_MODE
+        mode: STUDY_MODE,
+        continue: isContinue
       })
     });
 
     const d = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(d.error || "Server returned " + r.status);
 
-    history.push({
-      role: "assistant",
-      content: d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again."
-    });
+    const answer = d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again.";
+    const incomplete = d.complete === false;
+
+    if (isContinue) {
+      // Replace the unfinished answer with the longer, joined one.
+      const last = history[history.length - 1];
+      last.content = answer;
+      last.incomplete = incomplete;
+      last.note = incomplete ? (d.note || "") : "";
+    } else {
+      history.push({
+        role: "assistant",
+        content: answer,
+        incomplete,
+        note: incomplete ? (d.note || "") : ""
+      });
+    }
     renderMessages();
     saveCurrentChat();
   } catch (e) {
     const offline = e instanceof TypeError;
-    history.push({
-      role: "assistant",
-      error: true,
-      content: offline
-        ? "Sorry, I couldn't reach RashAI. The free server may be waking up — wait about a minute and try again."
-        : "Sorry, something went wrong.\n\n" + e.message
-    });
+    const errText = offline
+      ? "Sorry, I couldn't reach RashAI. The free server may be waking up — wait about a minute and try again."
+      : "Sorry, something went wrong.\n\n" + e.message;
+
+    if (isContinue) {
+      // Keep the unfinished answer; just explain why continuing failed.
+      const last = history[history.length - 1];
+      last.note = "⚠️ Could not continue: " + errText;
+    } else {
+      history.push({ role: "assistant", error: true, content: errText });
+    }
     renderMessages();
   } finally {
     attachment = null;
