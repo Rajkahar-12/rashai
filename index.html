@@ -41,18 +41,18 @@ body{
 body:before{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:-2;
   background:
-    linear-gradient(180deg,#f7fcff 0%, #e6f4ff 100%),
+    linear-gradient(180deg,#bce2ff 0%, #eaf6ff 100%),
     radial-gradient(900px 600px at 8% -10%, rgba(126,196,255,.55), transparent 62%),
     radial-gradient(700px 520px at 108% 8%, rgba(176,224,255,.55), transparent 60%),
     radial-gradient(1000px 700px at 50% 118%, rgba(214,240,255,.80), transparent 65%);
 }
 body:after{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
-  background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 100%);
+  background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.3) 100%);
   opacity:.6;
 }
 
-/* ---------- MOVING CLOUDS ---------- */
+/* ---------- VISUAL MOVING CLOUDS ---------- */
 .cloud-layer {
   position: fixed;
   inset: 0;
@@ -62,38 +62,21 @@ body:after{
 }
 .cloud {
   position: absolute;
-  background: #ffffff;
-  border-radius: 100px;
-  filter: blur(8px);
-  opacity: 0.8;
+  fill: #ffffff;
+  filter: drop-shadow(0px 15px 25px rgba(30, 90, 145, 0.15)) blur(0.5px);
   animation: floatCloud linear infinite;
   will-change: transform;
 }
-.cloud::before, .cloud::after {
-  content: '';
-  position: absolute;
-  background: inherit;
-  border-radius: 50%;
-}
-.c1 { width: 240px; height: 60px; top: 15%; left: -30vw; animation-duration: 75s; opacity: 0.7; }
-.c1::before { width: 100px; height: 100px; top: -50px; left: 30px; }
-.c1::after { width: 80px; height: 80px; top: -30px; left: 120px; }
 
-.c2 { width: 320px; height: 80px; top: 35%; left: -30vw; animation-duration: 110s; animation-delay: -25s; opacity: 0.5; filter: blur(12px); }
-.c2::before { width: 120px; height: 120px; top: -60px; left: 50px; }
-.c2::after { width: 100px; height: 100px; top: -40px; left: 160px; }
-
-.c3 { width: 200px; height: 50px; top: 65%; left: -30vw; animation-duration: 90s; animation-delay: -50s; opacity: 0.6; }
-.c3::before { width: 90px; height: 90px; top: -45px; left: 20px; }
-.c3::after { width: 70px; height: 70px; top: -25px; left: 90px; }
-
-.c4 { width: 180px; height: 40px; top: 80%; left: -30vw; animation-duration: 60s; animation-delay: -15s; opacity: 0.4; filter: blur(16px); }
-.c4::before { width: 80px; height: 80px; top: -40px; left: 20px; }
-.c4::after { width: 60px; height: 60px; top: -20px; left: 80px; }
+.c1 { width: 350px; top: 5%; left: -40vw; animation-duration: 80s; opacity: 0.9; }
+.c2 { width: 450px; top: 25%; left: -40vw; animation-duration: 130s; animation-delay: -30s; opacity: 0.6; }
+.c3 { width: 250px; top: 55%; left: -40vw; animation-duration: 90s; animation-delay: -60s; opacity: 0.8; }
+.c4 { width: 400px; top: 75%; left: -40vw; animation-duration: 110s; animation-delay: -15s; opacity: 0.5; }
+.c5 { width: 200px; top: 40%; left: -40vw; animation-duration: 65s; animation-delay: -45s; opacity: 0.7; }
 
 @keyframes floatCloud {
   0% { transform: translateX(0); }
-  100% { transform: translateX(140vw); }
+  100% { transform: translateX(150vw); }
 }
 
 button,textarea,select{font:inherit}
@@ -210,13 +193,43 @@ header{
   background:linear-gradient(180deg,var(--panel) 0%, color-mix(in srgb,var(--panel) 82%,var(--bg)) 100%);
   border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(30,90,145,.12);
 }
-.msgactions{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.smallbtn{
-  border:1px solid var(--line);background:var(--panel2);border-radius:9px;
-  padding:6px 11px;font-size:12px;color:var(--muted);transition:.14s;font-weight:500;
+
+/* --- NEW ChatGPT Style Action Bar --- */
+.msgactions{
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  align-items: center;
 }
-.smallbtn:hover:not(:disabled){color:var(--accent);border-color:var(--accent);background:var(--panel3);transform:translateY(-1px)}
-.smallbtn:disabled{opacity:.6}
+.icon-action {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  color: var(--muted);
+  transition: all 0.15s ease;
+}
+.icon-action:hover:not(:disabled) {
+  background: var(--panel2);
+  color: var(--text);
+}
+.icon-action svg {
+  width: 16px;
+  height: 16px;
+}
+.icon-action:disabled { opacity: 0.5; }
+.icon-action.primary {
+  color: var(--accent);
+  background: var(--panel2);
+  border: 1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+}
+.icon-action.primary:hover {
+  background: var(--panel3);
+}
+
 pre{
   background:var(--bg2);color:var(--code);padding:14px 16px;border-radius:12px;
   overflow:auto;white-space:pre;border:1px solid var(--line);font-size:13px;
@@ -239,7 +252,6 @@ pre code{background:none;padding:0;color:inherit}
 .filebar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .filebar .filelabel{font-size:12px;color:var(--muted);font-weight:600;margin-right:2px}
 .filebar + .msgactions{margin-top:10px;padding-top:0;border-top:0}
-.smallbtn.primary{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
 
 /* ---------- composer ---------- */
 #bar{
@@ -279,41 +291,13 @@ pre code{background:none;padding:0;color:inherit}
 #file{display:none}
 
 /* ---------- EMPTY STATE (PERFECTLY CENTERED) ---------- */
-body.empty main {
-  justify-content: center;
-}
-body.empty header {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  background: transparent;
-  border-bottom: none;
-  z-index: 10;
-}
-body.empty #msgs {
-  flex: 0 1 auto;
-  padding: 0;
-  overflow: visible;
-  margin-bottom: 40px; /* Creates the exact gap between text and search bar */
-}
-body.empty .hello {
-  margin: 0 auto;
-  transform: none;
-}
-body.empty #wrap {
-  display: none;
-}
-body.empty #bar {
-  position: relative;
-  top: auto; left: auto;
-  transform: none;
-  margin: 0 auto 12px;
-  flex-shrink: 0;
-}
-body.empty .hint {
-  position: absolute;
-  bottom: 10px; left: 0; right: 0;
-  padding: 0;
-}
+body.empty main { justify-content: center; }
+body.empty header { position: absolute; top: 0; left: 0; right: 0; background: transparent; border-bottom: none; z-index: 10; }
+body.empty #msgs { flex: 0 1 auto; padding: 0; overflow: visible; margin-bottom: 40px; }
+body.empty .hello { margin: 0 auto; transform: none; }
+body.empty #wrap { display: none; }
+body.empty #bar { position: relative; top: auto; left: auto; transform: none; margin: 0 auto 12px; flex-shrink: 0; }
+body.empty .hint { position: absolute; bottom: 10px; left: 0; right: 0; padding: 0; }
 
 /* Responsive adjustments */
 @media(max-width:600px){
@@ -332,31 +316,12 @@ body.empty .hint {
   .sendbtn {width:36px;height:36px}
   #prompt {padding:8px 10px}
   
-  /* Mobile Empty State */
   body.empty main { justify-content: flex-start; }
-  body.empty header {
-    position: relative;
-    background: color-mix(in srgb,var(--bg) 78%,transparent);
-    border-bottom: 1px solid var(--line);
-  }
-  body.empty #msgs {
-    flex: 1;
-    padding: 22px 10px 16px;
-    overflow-y: auto;
-    margin-bottom: 0;
-  }
-  body.empty .hello {
-    margin: 18px auto 22px;
-    width: 100%;
-  }
-  body.empty #bar {
-    margin: 0 auto 8px;
-    width: calc(100% - 16px);
-  }
-  body.empty .hint {
-    position: relative;
-    bottom: auto;
-  }
+  body.empty header { position: relative; background: color-mix(in srgb,var(--bg) 78%,transparent); border-bottom: 1px solid var(--line); }
+  body.empty #msgs { flex: 1; padding: 22px 10px 16px; overflow-y: auto; margin-bottom: 0; }
+  body.empty .hello { margin: 18px auto 22px; width: 100%; }
+  body.empty #bar { margin: 0 auto 8px; width: calc(100% - 16px); }
+  body.empty .hint { position: relative; bottom: auto; }
 }
 
 /* mobile fixes */
@@ -370,7 +335,6 @@ main{min-width:0;min-height:0}
   #bar{width:calc(100% - 16px)}
   .hint{padding-bottom:6px}
   .msgactions{gap:6px}
-  .smallbtn{min-height:34px}
 }
 @media (max-width:360px){
   header{gap:7px}
@@ -432,11 +396,23 @@ main{min-width:0;min-height:0}
 @keyframes pdfspin{to{transform:rotate(360deg)}}
 
 /* PDF export: captured document (always light) */
-.pdf-host{position:fixed;left:0;top:0;width:680px;background:#ffffff;z-index:1;pointer-events:none}
-.pdf-doc{
-  width:680px;background:#ffffff;color:#172033;
-  font-family:"Segoe UI",Roboto,"Noto Sans","Noto Sans Devanagari","Nirmala UI",Arial,sans-serif;
-  font-size:14px;line-height:1.6;
+.pdf-host {
+  position: fixed;
+  left: -9999px;
+  top: 0;
+  width: 700px;
+  background: #ffffff;
+  z-index: -1;
+  pointer-events: none;
+}
+.pdf-doc {
+  width: 700px;
+  background: #ffffff;
+  color: #172033;
+  font-family: "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", "Nirmala UI", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 40px;
 }
 .pdf-doc *{box-sizing:border-box}
 .pdf-doc .pdf-title{font-size:22px;font-weight:700;color:#2b3a8f;margin:0 0 2px;line-height:1.3}
@@ -521,12 +497,13 @@ main{min-width:0;min-height:0}
 </head>
 <body class="empty">
 
-<!-- MOVING CLOUDS BACKGROUND -->
+<!-- VISUAL MOVING CLOUDS BACKGROUND -->
 <div class="cloud-layer">
-  <div class="cloud c1"></div>
-  <div class="cloud c2"></div>
-  <div class="cloud c3"></div>
-  <div class="cloud c4"></div>
+  <svg class="cloud c1" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg"><path d="M 340 140 L 60 140 C 20 140 10 100 40 70 C 60 30 120 30 160 60 C 180 10 260 20 280 70 C 330 70 380 100 340 140 Z" fill="#ffffff" /></svg>
+  <svg class="cloud c2" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg"><path d="M 360 130 L 40 130 C 10 130 0 80 40 50 C 70 20 150 20 190 50 C 220 10 300 10 330 50 C 380 50 400 100 360 130 Z" fill="#ffffff" /></svg>
+  <svg class="cloud c3" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg"><path d="M 330 130 L 70 130 C 30 130 20 90 50 60 C 70 20 130 20 160 50 C 180 10 250 10 280 50 C 330 50 370 90 330 130 Z" fill="#ffffff" /></svg>
+  <svg class="cloud c4" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg"><path d="M 350 140 L 50 140 C 20 140 10 90 40 60 C 60 30 140 20 180 50 C 210 10 290 10 320 50 C 370 50 390 100 350 140 Z" fill="#ffffff" /></svg>
+  <svg class="cloud c5" viewBox="0 0 400 160" xmlns="http://www.w3.org/2000/svg"><path d="M 260 100 L 50 100 C 20 100 10 70 30 50 C 50 30 90 30 110 50 C 130 20 180 20 200 50 C 240 50 270 70 260 100 Z" fill="#ffffff" /></svg>
 </div>
 
 <div id="overlay"></div>
@@ -896,7 +873,7 @@ function plainText(md) {
 }
 
 /* =====================================================================
-   PROJECT FILES (NEW)
+   PROJECT FILES
    ===================================================================== */
 function cleanFilePath(raw) {
   let s = String(raw || "").trim().replace(/\\/g, "/");
@@ -1174,6 +1151,24 @@ function action(label, fn) {
   return b;
 }
 
+// ChatGPT-style SVG Icons
+const ICONS = {
+  copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+  check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+  speaker: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
+  fileText: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+  filePdf: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
+};
+
+function iconAction(iconSvg, title, fn, extraClass) {
+  const b = document.createElement("button");
+  b.className = "icon-action " + (extraClass || "");
+  b.innerHTML = iconSvg;
+  b.title = title;
+  b.onclick = () => fn(b);
+  return b;
+}
+
 async function copyText(text, btn) {
   let ok = false;
   try {
@@ -1188,9 +1183,9 @@ async function copyText(text, btn) {
     t.remove();
   }
   if (btn) {
-    const old = btn.textContent;
-    btn.textContent = ok ? "Copied ✓" : "Copy failed";
-    setTimeout(() => { btn.textContent = old; }, 1500);
+    const oldHtml = btn.innerHTML;
+    btn.innerHTML = ok ? ICONS.check : oldHtml;
+    setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
   }
 }
 
@@ -1238,18 +1233,19 @@ function renderMessages() {
         bubble.appendChild(fb);
       }
 
+      // CHATGPT STYLE ICON TOOLBAR
       const a = document.createElement("div");
       a.className = "msgactions";
       a.append(
-        action("Copy", btn => copyText(m.content || "", btn)),
-        action("Read aloud", () => speak(m.content || "")),
-        action("Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
-        action("Download PDF", btn => downloadPDF(m.content || "", btn))
+        iconAction(ICONS.copy, "Copy", btn => copyText(m.content || "", btn)),
+        iconAction(ICONS.speaker, "Read aloud", () => speak(m.content || "")),
+        iconAction(ICONS.fileText, "Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
+        iconAction(ICONS.filePdf, "Download PDF", btn => downloadPDF(m.content || "", btn))
       );
 
       if (m.incomplete && idx === history.length - 1) {
         const c = action("Continue generating", () => continueGeneration());
-        c.classList.add("primary");
+        c.className = "smallbtn primary";
         a.prepend(c);
       }
 
@@ -1416,9 +1412,8 @@ function downloadText(t, n) {
 }
 
 /* =====================================================================
-   PDF EXPORT
+   PDF EXPORT (Completely Rewritten for clean PDFs, no blank pages)
    ===================================================================== */
-const PDF_CFG = { pageW: 210, pageH: 297, marginX: 15, marginTop: 16, marginBottom: 20, docPx: 680, scale: 2 };
 let pdfBusy = false;
 
 function loadScript(src) {
@@ -1467,223 +1462,111 @@ async function waitForFonts() {
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
 }
 
-function paginateDoc(doc, pageH) {
-  const rootTop = doc.getBoundingClientRect().top;
-  const rel = el => {
-    const r = el.getBoundingClientRect();
-    return { top: r.top - rootTop, bottom: r.bottom - rootTop };
-  };
-  const atoms = [];
-  const heads = new Map();
-
-  const push = (el, top, bottom, extra) => {
-    if (bottom - top < 0.5) return;
-    const cs = getComputedStyle(el);
-    let lh = parseFloat(cs.lineHeight);
-    if (!isFinite(lh) || lh <= 0) lh = (parseFloat(cs.fontSize) || 14) * 1.4;
-    const pt = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.borderTopWidth) || 0);
-    atoms.push(Object.assign({ top, bottom, lh, ft: top + pt }, extra || {}));
-  };
-
-  const walk = el => {
-    const tag = el.tagName;
-    const r = rel(el);
-
-    if (tag === "TABLE") {
-      const thead = el.tHead;
-      if (thead) {
-        const hr = rel(thead);
-        heads.set(el, { top: hr.top, bottom: hr.bottom });
-      }
-      Array.from(el.rows).forEach(row => {
-        const rr = rel(row);
-        const inHead = !!thead && thead.contains(row);
-        push(row, rr.top, rr.bottom, { row: true, table: el, head: inHead, keep: inHead, lh: 0 });
-      });
-      return;
-    }
-
-    if (tag === "UL" || tag === "OL") {
-      Array.from(el.children).forEach(li => {
-        const q = rel(li);
-        if (li.tagName !== "LI") { push(li, q.top, q.bottom); return; }
-        const nested = Array.from(li.children).find(c => c.tagName === "UL" || c.tagName === "OL");
-        if (nested && (q.bottom - q.top) > pageH * 0.35) {
-          const nq = rel(nested);
-          push(li, q.top, nq.top);
-          walk(nested);
-        } else {
-          push(li, q.top, q.bottom);
-        }
-      });
-      return;
-    }
-
-    if (tag === "BLOCKQUOTE" && (r.bottom - r.top) > pageH * 0.5) {
-      Array.from(el.children).forEach(walk);
-      return;
-    }
-
-    const isHeading = /^H[1-6]$/.test(tag);
-    push(el, r.top, r.bottom, { keep: isHeading });
-  };
-
-  Array.from(doc.children).forEach(walk);
-
-  const total = Math.ceil(doc.getBoundingClientRect().height);
-  const pages = [];
-  let cur = { start: 0, head: null, cap: pageH };
-
-  for (let i = 0; i < atoms.length; i++) {
-    const a = atoms[i];
-    let need = a.bottom;
-    if (a.keep && atoms[i + 1]) {
-      const n = atoms[i + 1];
-      need = Math.max(need, Math.min(n.bottom, n.top + 80));
-    }
-    const hasContent = a.top - cur.start > 2;
-
-    if (need - cur.start > cur.cap && hasContent) {
-      const s = Math.round(a.top);
-      pages.push({ start: cur.start, end: Math.min(s, cur.start + cur.cap), head: cur.head });
-      const hd = (a.row && !a.head) ? heads.get(a.table) : null;
-      let head = null;
-      if (hd) {
-        const ht = Math.round(hd.top);
-        head = { top: ht, h: Math.round(hd.bottom) - ht };
-      }
-      cur = { start: s, head, cap: pageH - (head ? head.h : 0) };
-    }
-
-    while (a.bottom - cur.start > cur.cap + 0.5) {
-      let limit = cur.start + cur.cap;
-      if (a.lh > 4) {
-        const b = a.ft + Math.floor((limit - a.ft) / a.lh) * a.lh;
-        if (b > cur.start + a.lh) limit = b;
-      }
-      limit = Math.round(limit);
-      if (limit <= cur.start) limit = cur.start + Math.max(1, Math.floor(cur.cap));
-      pages.push({ start: cur.start, end: limit, head: cur.head });
-      cur = { start: limit, head: null, cap: pageH };
-    }
-  }
-
-  while (total - cur.start > cur.cap + 1) {
-    const end = cur.start + Math.max(1, Math.floor(cur.cap));
-    pages.push({ start: cur.start, end, head: cur.head });
-    cur = { start: end, head: null, cap: pageH };
-  }
-  pages.push({ start: cur.start, end: total, head: cur.head });
-
-  return { pages: pages.filter(p => p.end - p.start >= 2), total };
-}
-
 async function downloadPDF(text, btn) {
   const answer = String(text ?? "").trim();
   if (!answer) { alert("No answer text was found."); return; }
   if (pdfBusy) return;
   pdfBusy = true;
 
-  const C = PDF_CFG;
-  const oldLabel = btn ? btn.textContent : "";
-  if (btn) { btn.textContent = "Creating PDF…"; btn.disabled = true; }
-
+  const oldHtml = btn ? btn.innerHTML : "";
+  if (btn) { btn.disabled = true; }
   let overlay = null, host = null;
+
   try {
     overlay = showPdfOverlay("Preparing PDF…");
     await ensurePdfLibs();
 
     host = document.createElement("div");
-    host.id = "pdfHost";
     host.className = "pdf-host";
     const doc = document.createElement("div");
     doc.className = "pdf-doc";
     const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    
+    // Strictly render ONLY the markdown content
     doc.innerHTML =
       '<div class="pdf-title">RashAI — Study Answer</div>' +
       '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
       '<hr class="pdf-rule">' +
       renderMarkdown(answer);
+      
     host.appendChild(doc);
     document.body.appendChild(host);
     void host.offsetHeight;
     await waitForFonts();
 
-    const contentWmm = C.pageW - 2 * C.marginX;
-    const pxPerMm = C.docPx / contentWmm;
-    const pageH = Math.floor((C.pageH - C.marginTop - C.marginBottom) * pxPerMm);
-
-    const { pages, total } = paginateDoc(doc, pageH);
-    if (!pages.length) throw new Error("There is nothing to export.");
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait", compress: true });
-    pdf.setProperties({ title: "RashAI Study Answer", creator: "RashAI" });
-
-    const baseOpts = {
-      scale: C.scale,
+    setPdfOverlay(overlay, "Generating layout…");
+    
+    // Capture the doc as a single massive canvas first
+    const canvas = await html2canvas(doc, {
+      scale: 2,
       backgroundColor: "#ffffff",
       logging: false,
       useCORS: false,
       allowTaint: false,
       scrollX: 0, scrollY: 0,
-      windowWidth: Math.max(C.docPx, window.innerWidth),
-      windowHeight: Math.max(window.innerHeight, total + 50),
-      onclone: cd => {
-        Array.from(cd.body.children).forEach(ch => { if (ch.id !== "pdfHost") ch.remove(); });
-      }
-    };
-    const grab = (y, h) => html2canvas(doc, Object.assign({}, baseOpts, { x: 0, y, width: C.docPx, height: h }));
+      windowWidth: 800,
+      windowHeight: doc.offsetHeight + 100
+    });
 
-    for (let p = 0; p < pages.length; p++) {
-      const pg = pages[p];
-      setPdfOverlay(overlay, "Creating PDF… page " + (p + 1) + " of " + pages.length);
-      await new Promise(r => setTimeout(r, 0));
+    const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
+    const pageW = pdf.internal.pageSize.getWidth();
+    const pageH = pdf.internal.pageSize.getHeight();
+    
+    // We use 10mm margins all around
+    const margin = 10;
+    const usableW = pageW - (margin * 2);
+    const usableH = pageH - (margin * 2);
 
-      let canvas = await grab(pg.start, pg.end - pg.start);
+    const imgWidth = usableW;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    
+    // Slice the massive canvas into page-sized chunks
+    const pageCanvas = document.createElement("canvas");
+    const ctx = pageCanvas.getContext("2d");
+    
+    // Convert usableH to canvas pixels
+    const pagePxH = (usableH / imgWidth) * canvas.width;
+    let heightLeft = canvas.height;
+    let position = 0;
 
-      if (pg.head && pg.head.h > 0) {
-        const hc = await grab(pg.head.top, pg.head.h);
-        const comp = document.createElement("canvas");
-        comp.width = canvas.width;
-        comp.height = hc.height + canvas.height;
-        const ctx = comp.getContext("2d");
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, comp.width, comp.height);
-        ctx.drawImage(hc, 0, 0);
-        ctx.drawImage(canvas, 0, hc.height);
-        canvas = comp;
-      }
+    pageCanvas.width = canvas.width;
+    pageCanvas.height = pagePxH;
 
-      if (p > 0) pdf.addPage();
-      const imgData = canvas.toDataURL("image/jpeg", 0.92);
-      const hMm = (canvas.height / C.scale) / pxPerMm;
-      pdf.addImage(imgData, "JPEG", C.marginX, C.marginTop, contentWmm, hMm, undefined, "FAST");
-      canvas.width = 0; canvas.height = 0;
+    while (heightLeft > 0) {
+      setPdfOverlay(overlay, "Saving page " + (pdf.internal.getNumberOfPages()) + "…");
+      
+      // Clear previous page
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+      
+      // Draw slice onto pageCanvas
+      ctx.drawImage(
+        canvas,
+        0, position, canvas.width, pagePxH,
+        0, 0, canvas.width, pagePxH
+      );
+
+      const pageData = pageCanvas.toDataURL("image/jpeg", 0.95);
+      
+      if (position > 0) pdf.addPage();
+      pdf.addImage(pageData, "JPEG", margin, margin, imgWidth, usableH);
+
+      heightLeft -= pagePxH;
+      position += pagePxH;
     }
 
-    const n = pdf.getNumberOfPages();
-    for (let i = 1; i <= n; i++) {
-      pdf.setPage(i);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(8);
-      pdf.setTextColor(120, 130, 150);
-      pdf.text("RashAI", C.marginX, C.pageH - 9);
-      pdf.text("Page " + i + " of " + n, C.pageW - C.marginX, C.pageH - 9, { align: "right" });
-    }
-
-    setPdfOverlay(overlay, "Saving PDF…");
     const d = new Date();
     const p2 = v => String(v).padStart(2, "0");
     const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
-    saveBlob(pdf.output("blob"), "rashai-study-answer-" + stamp + ".pdf");
+    saveBlob(pdf.output("blob"), "rashai-answer-" + stamp + ".pdf");
+
   } catch (err) {
     console.error("PDF export failed:", err);
     alert("Could not create the PDF.\n" + (err && err.message ? err.message : "Please try again."));
   } finally {
     if (host) host.remove();
     if (overlay) overlay.remove();
-    if (btn) { btn.textContent = oldLabel || "Download PDF"; btn.disabled = false; }
+    if (btn) { btn.innerHTML = oldHtml; btn.disabled = false; }
     pdfBusy = false;
   }
 }
