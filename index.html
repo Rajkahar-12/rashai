@@ -388,65 +388,6 @@ main{min-width:0;min-height:0}
 .plain-fallback{white-space:pre-wrap;overflow-wrap:anywhere}
 .md-heading{display:block;margin:16px 0 8px;font-size:1.15em;line-height:1.35;font-weight:700;color:var(--text)}
 
-/* PDF export: progress overlay */
-.pdf-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:grid;place-items:center}
-.pdf-overlay-box{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--text);text-align:center;padding:20px}
-.pdf-overlay-text{font-size:14px;color:var(--muted)}
-.pdf-spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:pdfspin .8s linear infinite}
-@keyframes pdfspin{to{transform:rotate(360deg)}}
-
-/* PDF export: captured document (always light) */
-.pdf-host {
-  position: fixed;
-  left: -9999px;
-  top: 0;
-  width: 700px;
-  background: #ffffff;
-  z-index: -1;
-  pointer-events: none;
-}
-.pdf-doc {
-  width: 700px;
-  background: #ffffff;
-  color: #172033;
-  font-family: "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", "Nirmala UI", Arial, sans-serif;
-  font-size: 14px;
-  line-height: 1.6;
-  padding: 40px;
-}
-.pdf-doc *{box-sizing:border-box}
-.pdf-doc .pdf-title{font-size:22px;font-weight:700;color:#2b3a8f;margin:0 0 2px;line-height:1.3}
-.pdf-doc .pdf-date{font-size:12px;color:#69748a;margin:0}
-.pdf-doc .pdf-rule{border:0;border-top:2px solid #8b9cff;margin:10px 0 14px}
-.pdf-doc p{margin:0 0 10px}
-.pdf-doc h1,.pdf-doc h2,.pdf-doc h3,.pdf-doc h4,.pdf-doc h5,.pdf-doc h6{margin:18px 0 8px;line-height:1.3;font-weight:700;color:#111a2e}
-.pdf-doc h1{font-size:21px}
-.pdf-doc h2{font-size:18px}
-.pdf-doc h3{font-size:16px}
-.pdf-doc h4{font-size:15px}
-.pdf-doc h5{font-size:14px}
-.pdf-doc h6{font-size:13px;color:#56627a}
-.pdf-doc strong,.pdf-doc b{font-weight:700}
-.pdf-doc em,.pdf-doc i{font-style:italic}
-.pdf-doc ul,.pdf-doc ol{margin:6px 0 10px;padding-left:26px}
-.pdf-doc li{margin:3px 0}
-.pdf-doc li > ul,.pdf-doc li > ol{margin:4px 0}
-.pdf-doc blockquote{border-left:4px solid #8b9cff;margin:10px 0;padding:6px 14px;background:#f3f5fb;color:#3a4660}
-.pdf-doc blockquote p:last-child{margin-bottom:0}
-.pdf-doc hr{border:0;border-top:1px solid #cbd5e1;margin:14px 0}
-.pdf-doc a{color:#3347a8;text-decoration:underline;overflow-wrap:break-word}
-.pdf-doc code{background:#eef1f8;color:#33408f;padding:1px 4px;border-radius:4px;font-family:Consolas,"Courier New",monospace;font-size:12.5px;overflow-wrap:break-word}
-.pdf-doc pre{background:#f3f5f9;color:#1b2333;border:1px solid #d5dbe7;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:break-word;overflow:visible;max-width:none;font-family:Consolas,"Courier New",monospace}
-.pdf-doc pre code{background:none;color:inherit;padding:0;font-size:12px}
-.pdf-doc table{border-collapse:separate;border-spacing:0;width:100%;margin:12px 0;font-size:12.5px}
-.pdf-doc th,.pdf-doc td{border-right:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:6px 8px;text-align:left;vertical-align:top}
-.pdf-doc th:first-child,.pdf-doc td:first-child{border-left:1px solid #cbd5e1}
-.pdf-doc thead th{border-top:1px solid #cbd5e1;background:#eef1f8;font-weight:700}
-.pdf-doc th[align="center"],.pdf-doc td[align="center"]{text-align:center}
-.pdf-doc th[align="right"],.pdf-doc td[align="right"]{text-align:right}
-.pdf-doc .katex-display{margin:10px 0}
-.pdf-doc .plain-fallback{white-space:pre-wrap}
-
 /* ---------- HEADER MENU & LEGAL MODALS ---------- */
 .menu-wrap{position:relative}
 .menu-dropdown{
@@ -593,16 +534,12 @@ main{min-width:0;min-height:0}
     <div class="modal-body">
       <h3>1. Acceptance of Terms</h3>
       <p>By accessing or using RashAI, you agree to be bound by these Terms. If you do not agree, please do not use the service.</p>
-      
       <h3>2. Educational Use Only</h3>
       <p>RashAI is a study aid. It is <strong>not</strong> a substitute for professional academic advice, tutoring, or official exam materials. You are solely responsible for verifying the accuracy of any information provided.</p>
-      
       <h3>3. User Conduct</h3>
       <p>You agree not to upload harmful, illegal, or copyrighted material that you do not have the right to use. Abuse of the AI (e.g., attempting to bypass safety filters) is strictly prohibited.</p>
-      
       <h3>4. Limitation of Liability</h3>
       <p>RashAI and its creators are not liable for any academic misconduct, failed exams, or damages resulting from the use of this service. All answers should be treated as a starting point for your own research.</p>
-      
       <h3>5. Service Availability</h3>
       <p>This is a free service. We do not guarantee 100% uptime, and the server may go to sleep during inactivity. We reserve the right to modify or discontinue the service at any time.</p>
     </div>
@@ -618,28 +555,22 @@ main{min-width:0;min-height:0}
     <div class="modal-body">
       <h3>1. Information We Collect</h3>
       <p>RashAI does not require an account, and we do not collect personal identifiers (like your name or email). However, we store your chat history locally in your browser's <strong>LocalStorage</strong>.</p>
-      
       <h3>2. How We Use Your Data</h3>
       <p>Your messages and attached files are sent to our secure backend (and the underlying AI provider) solely to generate a response. We do not sell your data to third parties.</p>
-      
       <h3>3. Data Retention</h3>
       <p>Chats are saved on your device, not on our servers. You can clear your chat history at any time using the "Clear chat history" button in the sidebar.</p>
-      
       <h3>4. Cookies & Tracking</h3>
       <p>We do not use tracking cookies or third-party analytics scripts. Your theme preferences and local chat history are the only things stored on your device.</p>
-      
       <h3>5. Contact</h3>
       <p>If you have questions about this policy, please contact the developer of this project.</p>
     </div>
   </div>
 </div>
 
-<!-- Markdown parser + HTML sanitizer + equations + PDF libraries (pinned versions) -->
+<!-- Markdown parser + HTML sanitizer + equations -->
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
 const API_URL = "https://rashai.onrender.com/api/chat";
@@ -1240,7 +1171,7 @@ function renderMessages() {
         iconAction(ICONS.copy, "Copy", btn => copyText(m.content || "", btn)),
         iconAction(ICONS.speaker, "Read aloud", () => speak(m.content || "")),
         iconAction(ICONS.fileText, "Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
-        iconAction(ICONS.filePdf, "Download PDF", btn => downloadPDF(m.content || "", btn))
+        iconAction(ICONS.filePdf, "Print / Save PDF", btn => downloadPDF(m.content || "", btn))
       );
 
       if (m.incomplete && idx === history.length - 1) {
@@ -1412,55 +1343,8 @@ function downloadText(t, n) {
 }
 
 /* =====================================================================
-   PDF EXPORT (With Conversational Filler Removal)
+   PDF EXPORT (Native Browser Print Engine for perfection)
    ===================================================================== */
-let pdfBusy = false;
-
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = () => resolve();
-    s.onerror = () => reject(new Error("Failed to load " + src));
-    document.head.appendChild(s);
-  });
-}
-
-async function ensureLib(isReady, urls) {
-  if (isReady()) return;
-  for (const u of urls) {
-    try { await loadScript(u); } catch (e) { continue; }
-    if (isReady()) return;
-  }
-  throw new Error("A PDF library could not be loaded. Check your internet connection and try again.");
-}
-
-async function ensurePdfLibs() {
-  await ensureLib(() => typeof window.html2canvas === "function",
-    ["https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"]);
-  await ensureLib(() => !!(window.jspdf && window.jspdf.jsPDF),
-    ["https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"]);
-}
-
-function showPdfOverlay(msg) {
-  const o = document.createElement("div");
-  o.className = "pdf-overlay";
-  o.innerHTML = '<div class="pdf-overlay-box"><div class="pdf-spinner"></div><div class="pdf-overlay-text"></div></div>';
-  o.querySelector(".pdf-overlay-text").textContent = msg;
-  document.body.appendChild(o);
-  return o;
-}
-
-function setPdfOverlay(o, msg) {
-  const t = o && o.querySelector(".pdf-overlay-text");
-  if (t) t.textContent = msg;
-}
-
-async function waitForFonts() {
-  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
-  await new Promise(r => setTimeout(r, 250));
-  try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
-}
 
 // This function smartly removes AI conversational filler from the end of the text
 function cleanPDFContent(text) {
@@ -1470,12 +1354,11 @@ function cleanPDFContent(text) {
   const parts = text.split(/(```[\s\S]*?```)/g);
   
   for (let i = 0; i < parts.length; i++) {
-    // Only process prose (even indices), skip code blocks (odd indices)
-    if (i % 2 === 0) {
+    if (i % 2 === 0) { // Prose
       let p = parts[i];
       
-      // Detect common AI follow-up questions
-      const fillerRegex = /(Want to dive deeper|Would you like me to|Do you want me to|Let me know if|Feel free to ask|Here are some follow-up|Just let me know|I hope this helps|If you have any other questions|Let me know what you think|Is there anything else|I can also help)/i;
+      // Match common AI conversational filler
+      const fillerRegex = /(Want to dive deeper|Would you like me to|Do you want me to|Let me know if|Feel free to ask|Here are some follow-up|Just let me know|I hope this helps|If you have any other questions|Let me know what you think|Is there anything else|I can also help|Let me know|How to run this locally|Happy studying|Good luck)/i;
       
       const match = p.match(fillerRegex);
       if (match) {
@@ -1484,7 +1367,7 @@ function cleanPDFContent(text) {
         // Find the last double newline before the match to safely cut off the entire paragraph
         let cutIndex = p.lastIndexOf('\n\n', idx);
         
-        if (cutIndex !== -1) {
+        if (cutIndex !== -1 && cutIndex > p.length * 0.5) {
           p = p.substring(0, cutIndex);
         } else {
           // If no double newline, cut at the sentence start
@@ -1492,7 +1375,7 @@ function cleanPDFContent(text) {
           if (sentenceStart !== -1) {
             p = p.substring(0, sentenceStart + 1);
           } else {
-            p = p.substring(0, idx); // Fallback
+            p = p.substring(0, idx);
           }
         }
       }
@@ -1501,117 +1384,150 @@ function cleanPDFContent(text) {
   }
   
   let result = parts.join("");
-  
-  // Remove trailing emojis or "Let me know!" if they somehow slip through
   result = result.replace(/(let me know|happy studying|good luck)[!.\s]*[\p{Emoji}]*$/iu, '').trim();
   
   return result;
 }
 
 async function downloadPDF(text, btn) {
-  // SANITIZE THE TEXT BEFORE PASSING TO THE PDF GENERATOR
   const cleanText = cleanPDFContent(text);
-  const answer = String(cleanText ?? "").trim();
-  
-  if (!answer) { alert("No answer text was found."); return; }
-  if (pdfBusy) return;
-  pdfBusy = true;
+  if (!cleanText) { alert("No answer text was found."); return; }
 
   const oldHtml = btn ? btn.innerHTML : "";
   if (btn) { btn.disabled = true; }
-  let overlay = null, host = null;
 
   try {
-    overlay = showPdfOverlay("Preparing PDF…");
-    await ensurePdfLibs();
+    // Create a hidden iframe to generate the PDF
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
 
-    host = document.createElement("div");
-    host.className = "pdf-host";
-    const doc = document.createElement("div");
-    doc.className = "pdf-doc";
-    const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-    
-    doc.innerHTML =
-      '<div class="pdf-title">RashAI — Study Answer</div>' +
-      '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
-      '<hr class="pdf-rule">' +
-      renderMarkdown(answer);
-      
-    host.appendChild(doc);
-    document.body.appendChild(host);
-    void host.offsetHeight;
-    await waitForFonts();
+    const doc = iframe.contentWindow.document;
+    const dateStr = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
 
-    setPdfOverlay(overlay, "Generating layout…");
-    
-    const canvas = await html2canvas(doc, {
-      scale: 2,
-      backgroundColor: "#ffffff",
-      logging: false,
-      useCORS: false,
-      allowTaint: false,
-      scrollX: 0, scrollY: 0,
-      windowWidth: 800,
-      windowHeight: doc.offsetHeight + 100
-    });
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>RashAI - Study Answer</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap');
+          @import url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
+          
+          body {
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #000000;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+          }
+          .header {
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+          }
+          .title {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 24px;
+            font-weight: bold;
+          }
+          .date {
+            font-size: 12px;
+            color: #555;
+          }
+          .content {
+            font-size: 14px;
+          }
+          h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fraunces', Georgia, serif;
+            color: #000;
+            margin-top: 24px;
+            margin-bottom: 8px;
+            page-break-after: avoid;
+          }
+          p { margin: 0 0 12px 0; }
+          ul, ol { margin: 0 0 12px 0; padding-left: 24px; }
+          li { margin-bottom: 4px; }
+          code {
+            font-family: 'Consolas', 'Courier New', monospace;
+            background: #f4f4f4;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 13px;
+          }
+          pre {
+            background: #f4f4f4;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            page-break-inside: avoid;
+          }
+          pre code {
+            background: transparent;
+            padding: 0;
+          }
+          table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background: #f9f9f9;
+          }
+          blockquote {
+            border-left: 4px solid #ccc;
+            margin: 0 0 12px 0;
+            padding-left: 16px;
+            color: #555;
+          }
+          @media print {
+            @page { margin: 20mm; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="title">RashAI — Study Answer</div>
+          <div class="date">${dateStr}</div>
+        </div>
+        <div class="content">
+          ${renderMarkdown(cleanText)}
+        </div>
+      </body>
+      </html>
+    `);
+    doc.close();
 
-    const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
-    const pageW = pdf.internal.pageSize.getWidth();
-    const pageH = pdf.internal.pageSize.getHeight();
-    
-    // 10mm margins
-    const margin = 10;
-    const usableW = pageW - (margin * 2);
-    const usableH = pageH - (margin * 2);
-
-    const imgWidth = usableW;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    
-    // Slicing logic to prevent blank pages
-    const pageCanvas = document.createElement("canvas");
-    const ctx = pageCanvas.getContext("2d");
-    
-    const pagePxH = (usableH / imgWidth) * canvas.width;
-    let heightLeft = canvas.height;
-    let position = 0;
-
-    pageCanvas.width = canvas.width;
-    pageCanvas.height = pagePxH;
-
-    while (heightLeft > 0) {
-      setPdfOverlay(overlay, "Saving page " + (pdf.internal.getNumberOfPages()) + "…");
-      
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-      
-      ctx.drawImage(
-        canvas,
-        0, position, canvas.width, pagePxH,
-        0, 0, canvas.width, pagePxH
-      );
-
-      const pageData = pageCanvas.toDataURL("image/jpeg", 0.95);
-      
-      if (position > 0) pdf.addPage();
-      pdf.addImage(pageData, "JPEG", margin, margin, imgWidth, usableH);
-
-      heightLeft -= pagePxH;
-      position += pagePxH;
-    }
-
-    const d = new Date();
-    const p2 = v => String(v).padStart(2, "0");
-    const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
-    saveBlob(pdf.output("blob"), "rashai-answer-" + stamp + ".pdf");
-
+    // Wait for fonts to load, then trigger print
+    iframe.onload = () => {
+      setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        
+        // Cleanup iframe after a short delay to ensure print dialog is triggered
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 2000);
+      }, 500);
+    };
   } catch (err) {
     console.error("PDF export failed:", err);
-    alert("Could not create the PDF.\n" + (err && err.message ? err.message : "Please try again."));
-  } finally {
-    if (host) host.remove();
-    if (overlay) overlay.remove();
+    alert("Could not generate the PDF.\n" + (err && err.message ? err.message : "Please try again."));
     if (btn) { btn.innerHTML = oldHtml; btn.disabled = false; }
-    pdfBusy = false;
   }
 }
 
