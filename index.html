@@ -194,7 +194,7 @@ header{
   border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 28px rgba(30,90,145,.12);
 }
 
-/* --- NEW ChatGPT Style Action Bar --- */
+/* --- ChatGPT Style Action Bar --- */
 .msgactions{
   display: flex;
   gap: 4px;
@@ -1412,7 +1412,7 @@ function downloadText(t, n) {
 }
 
 /* =====================================================================
-   PDF EXPORT (Completely Rewritten for clean PDFs, no blank pages)
+   PDF EXPORT (With Conversational Filler Removal)
    ===================================================================== */
 let pdfBusy = false;
 
@@ -1462,8 +1462,57 @@ async function waitForFonts() {
   try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
 }
 
+// This function smartly removes AI conversational filler from the end of the text
+function cleanPDFContent(text) {
+  if (!text) return "";
+  
+  // Split by code blocks to avoid stripping inside code
+  const parts = text.split(/(```[\s\S]*?```)/g);
+  
+  for (let i = 0; i < parts.length; i++) {
+    // Only process prose (even indices), skip code blocks (odd indices)
+    if (i % 2 === 0) {
+      let p = parts[i];
+      
+      // Detect common AI follow-up questions
+      const fillerRegex = /(Want to dive deeper|Would you like me to|Do you want me to|Let me know if|Feel free to ask|Here are some follow-up|Just let me know|I hope this helps|If you have any other questions|Let me know what you think|Is there anything else|I can also help)/i;
+      
+      const match = p.match(fillerRegex);
+      if (match) {
+        let idx = match.index;
+        
+        // Find the last double newline before the match to safely cut off the entire paragraph
+        let cutIndex = p.lastIndexOf('\n\n', idx);
+        
+        if (cutIndex !== -1) {
+          p = p.substring(0, cutIndex);
+        } else {
+          // If no double newline, cut at the sentence start
+          let sentenceStart = p.lastIndexOf('.', idx);
+          if (sentenceStart !== -1) {
+            p = p.substring(0, sentenceStart + 1);
+          } else {
+            p = p.substring(0, idx); // Fallback
+          }
+        }
+      }
+      parts[i] = p;
+    }
+  }
+  
+  let result = parts.join("");
+  
+  // Remove trailing emojis or "Let me know!" if they somehow slip through
+  result = result.replace(/(let me know|happy studying|good luck)[!.\s]*[\p{Emoji}]*$/iu, '').trim();
+  
+  return result;
+}
+
 async function downloadPDF(text, btn) {
-  const answer = String(text ?? "").trim();
+  // SANITIZE THE TEXT BEFORE PASSING TO THE PDF GENERATOR
+  const cleanText = cleanPDFContent(text);
+  const answer = String(cleanText ?? "").trim();
+  
   if (!answer) { alert("No answer text was found."); return; }
   if (pdfBusy) return;
   pdfBusy = true;
@@ -1482,7 +1531,6 @@ async function downloadPDF(text, btn) {
     doc.className = "pdf-doc";
     const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
     
-    // Strictly render ONLY the markdown content
     doc.innerHTML =
       '<div class="pdf-title">RashAI — Study Answer</div>' +
       '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
@@ -1496,7 +1544,6 @@ async function downloadPDF(text, btn) {
 
     setPdfOverlay(overlay, "Generating layout…");
     
-    // Capture the doc as a single massive canvas first
     const canvas = await html2canvas(doc, {
       scale: 2,
       backgroundColor: "#ffffff",
@@ -1512,7 +1559,7 @@ async function downloadPDF(text, btn) {
     const pageW = pdf.internal.pageSize.getWidth();
     const pageH = pdf.internal.pageSize.getHeight();
     
-    // We use 10mm margins all around
+    // 10mm margins
     const margin = 10;
     const usableW = pageW - (margin * 2);
     const usableH = pageH - (margin * 2);
@@ -1520,11 +1567,10 @@ async function downloadPDF(text, btn) {
     const imgWidth = usableW;
     const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    // Slice the massive canvas into page-sized chunks
+    // Slicing logic to prevent blank pages
     const pageCanvas = document.createElement("canvas");
     const ctx = pageCanvas.getContext("2d");
     
-    // Convert usableH to canvas pixels
     const pagePxH = (usableH / imgWidth) * canvas.width;
     let heightLeft = canvas.height;
     let position = 0;
@@ -1535,11 +1581,9 @@ async function downloadPDF(text, btn) {
     while (heightLeft > 0) {
       setPdfOverlay(overlay, "Saving page " + (pdf.internal.getNumberOfPages()) + "…");
       
-      // Clear previous page
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
       
-      // Draw slice onto pageCanvas
       ctx.drawImage(
         canvas,
         0, position, canvas.width, pagePxH,
