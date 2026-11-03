@@ -48,9 +48,52 @@ body:before{
 }
 body:after{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 100%);
+  background:linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.45) 100%);
   opacity:.6;
+}
+
+/* ---------- MOVING CLOUDS ---------- */
+.cloud-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.cloud {
+  position: absolute;
+  background: #ffffff;
+  border-radius: 100px;
+  filter: blur(8px);
+  opacity: 0.8;
+  animation: floatCloud linear infinite;
+  will-change: transform;
+}
+.cloud::before, .cloud::after {
+  content: '';
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+.c1 { width: 240px; height: 60px; top: 15%; left: -30vw; animation-duration: 75s; opacity: 0.7; }
+.c1::before { width: 100px; height: 100px; top: -50px; left: 30px; }
+.c1::after { width: 80px; height: 80px; top: -30px; left: 120px; }
+
+.c2 { width: 320px; height: 80px; top: 35%; left: -30vw; animation-duration: 110s; animation-delay: -25s; opacity: 0.5; filter: blur(12px); }
+.c2::before { width: 120px; height: 120px; top: -60px; left: 50px; }
+.c2::after { width: 100px; height: 100px; top: -40px; left: 160px; }
+
+.c3 { width: 200px; height: 50px; top: 65%; left: -30vw; animation-duration: 90s; animation-delay: -50s; opacity: 0.6; }
+.c3::before { width: 90px; height: 90px; top: -45px; left: 20px; }
+.c3::after { width: 70px; height: 70px; top: -25px; left: 90px; }
+
+.c4 { width: 180px; height: 40px; top: 80%; left: -30vw; animation-duration: 60s; animation-delay: -15s; opacity: 0.4; filter: blur(16px); }
+.c4::before { width: 80px; height: 80px; top: -40px; left: 20px; }
+.c4::after { width: 60px; height: 60px; top: -20px; left: 80px; }
+
+@keyframes floatCloud {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(140vw); }
 }
 
 button,textarea,select{font:inherit}
@@ -90,19 +133,14 @@ button:disabled{cursor:not-allowed}
 }
 .iconbtn:hover{background:var(--panel3);border-color:var(--accent);color:var(--text);transform:translateY(-1px)}
 
-/* NEW STYLE: Better New Session Button */
 .newchat{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:11px 14px;
-  border:0;border-radius:12px;
+  width:100%;padding:11px 14px;border:0;border-radius:12px;
   background:linear-gradient(145deg,var(--accent),var(--accent2));
   color:#ffffff; font-weight:600;font-size:14.5px;transition:.18s;
   box-shadow:0 4px 14px rgba(47,143,224,.35);
 }
-.newchat:hover{
-  transform:translateY(-1px);
-  box-shadow:0 6px 18px rgba(47,143,224,.45);
-}
+.newchat:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(47,143,224,.45)}
 .newchat span{font-size:18px;color:#ffffff;font-weight:700;line-height:1;}
 
 .sectionlabel{font-size:10.5px;color:var(--muted);padding:0 8px;text-transform:uppercase;letter-spacing:.12em;font-weight:600}
@@ -120,7 +158,7 @@ button:disabled{cursor:not-allowed}
 .sideaction span{width:16px;text-align:center;color:var(--accent)}
 
 /* ---------- main ---------- */
-main{height:100dvh;display:flex;flex-direction:column;position:relative;min-width:0;min-height:0}
+main{height:100dvh;display:flex;flex-direction:column;position:relative;z-index:2;min-width:0;min-height:0}
 header{
   height:62px;display:flex;align-items:center;gap:12px;padding:0 18px;
   border-bottom:1px solid var(--line);
@@ -145,19 +183,14 @@ header{
 .hello .orb{
   width:100px;height:100px;margin:0 auto 24px;border-radius:28px;
   display:grid;place-items:center;overflow:hidden;padding:0;
-  background:#1d232e;
-  box-shadow:0 22px 50px rgba(12,42,77,.25);
+  background:#1d232e; box-shadow:0 22px 50px rgba(12,42,77,.25);
   animation:float 6s ease-in-out infinite;
 }
 .hello .orb img, .hello .orb svg{width:100%;height:100%;object-fit:cover;display:block}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .hello h1{
-  font-family:Fraunces,Georgia,serif;
-  font-size:clamp(28px,4.2vw,42px);
-  letter-spacing:-.03em;
-  margin:0 0 12px;
-  font-weight:400; /* Unbolded */
-  line-height:1.15;
+  font-family:Fraunces,Georgia,serif; font-size:clamp(28px,4.2vw,42px);
+  letter-spacing:-.03em; margin:0 0 12px; font-weight:400; line-height:1.15;
 }
 .hello h1 span{background:linear-gradient(120deg,var(--accent),var(--accent2) 55%,var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .hello p{color:var(--muted);margin:0;font-size:15.5px;max-width:460px;margin-inline:auto}
@@ -197,7 +230,6 @@ pre code{background:none;padding:0;color:inherit}
 .typing i:nth-child(3){animation-delay:.3s}
 @keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
 
-/* NEW: incomplete-answer warning, download bar, continue button */
 .notewarn{
   margin-top:14px;padding:10px 12px;border-radius:10px;font-size:13px;line-height:1.55;
   white-space:pre-wrap;overflow-wrap:anywhere;color:#92400e;
@@ -209,62 +241,123 @@ pre code{background:none;padding:0;color:inherit}
 .filebar + .msgactions{margin-top:10px;padding-top:0;border-top:0}
 .smallbtn.primary{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
 
-/* ---------- composer (SMALLER & SHORTER) ---------- */
+/* ---------- composer ---------- */
 #bar{
-  width:min(620px,calc(100% - 24px));margin:0 auto 16px;padding:5px 8px 5px 14px;
-  border:1px solid var(--line);border-radius:22px;
+  width:min(620px,calc(100% - 24px));margin:0 auto 16px;
+  border:1px solid var(--line);border-radius:24px;
   background:linear-gradient(180deg,var(--panel), color-mix(in srgb,var(--panel) 88%,var(--bg)));
   box-shadow:var(--shadow);position:relative;z-index:2;
   transition:border-color .2s,box-shadow .2s;
+  display:flex;align-items:flex-end;padding:6px;
 }
 #bar:focus-within{border-color:color-mix(in srgb,var(--accent) 60%,var(--line));box-shadow:var(--shadow),var(--ring)}
 .filechip{
   font-size:12px;color:var(--accent);padding:6px 10px;display:none;cursor:pointer;
-  background:var(--panel2);border-radius:8px;margin-bottom:6px;width:fit-content;border:1px solid var(--line);
+  background:var(--panel2);border-radius:8px;margin:6px 6px 0 6px;width:fit-content;border:1px solid var(--line);
+  position:absolute;top:-38px;left:0;
 }
 #prompt{
-  width:100%;min-height:32px;max-height:120px;resize:none;border:0;outline:0;
-  background:transparent;color:var(--text);padding:6px 4px;font-size:14.5px;line-height:1.5;
+  width:100%;min-height:38px;max-height:140px;resize:none;border:0;outline:0;
+  background:transparent;color:var(--text);padding:9px 12px;font-size:14.5px;line-height:1.5;
+  flex:1;
 }
 #prompt::placeholder{color:var(--muted)}
-.toolbar{display:flex;align-items:center;gap:6px;padding:0;flex-wrap:wrap}
-.toolbar .spacer{flex:1}
-.toolbar .iconbtn{
-  width:32px;height:32px;border-radius:10px;font-size:18px;padding-bottom:2px;
+#attach {
+  width:36px;height:36px;border-radius:50%;flex-shrink:0;font-size:20px;
+  display:grid;place-items:center;margin-right:4px;margin-bottom:1px;
 }
 .sendbtn{
   background:linear-gradient(145deg,var(--accent),var(--accent2));color:var(--accentText);
-  border:0;border-radius:50%;width:34px;height:34px;display:grid;place-items:center;
-  font-size:16px;font-weight:800;transition:.16s;
+  border:0;border-radius:50%;width:38px;height:38px;display:grid;place-items:center;flex-shrink:0;
+  font-size:18px;font-weight:800;transition:.16s;
   box-shadow:0 4px 14px rgba(47,143,224,.4);
+  margin-left:4px;margin-bottom:1px;
 }
 .sendbtn:hover:not(:disabled){transform:translateY(-1px) scale(1.05);box-shadow:0 6px 18px rgba(47,143,224,.55)}
 .sendbtn:disabled{opacity:.45;box-shadow:none}
 .hint{text-align:center;color:var(--muted);font-size:11px;padding:0 8px 10px;opacity:.7}
 #file{display:none}
 
-/* empty state */
-body.empty #msgs{display:flex;align-items:center;justify-content:center;padding-bottom:140px;overflow:hidden}
-body.empty .hello{margin:0 auto;transform:translateY(-18px)}
-body.empty #wrap{display:none}
-body.empty #bar{position:absolute;top:60%;left:50%;transform:translate(-50%,-50%);margin:0}
+/* ---------- EMPTY STATE (PERFECTLY CENTERED) ---------- */
+body.empty main {
+  justify-content: center;
+}
+body.empty header {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: transparent;
+  border-bottom: none;
+  z-index: 10;
+}
+body.empty #msgs {
+  flex: 0 1 auto;
+  padding: 0;
+  overflow: visible;
+  margin-bottom: 40px; /* Creates the exact gap between text and search bar */
+}
+body.empty .hello {
+  margin: 0 auto;
+  transform: none;
+}
+body.empty #wrap {
+  display: none;
+}
+body.empty #bar {
+  position: relative;
+  top: auto; left: auto;
+  transform: none;
+  margin: 0 auto 12px;
+  flex-shrink: 0;
+}
+body.empty .hint {
+  position: absolute;
+  bottom: 10px; left: 0; right: 0;
+  padding: 0;
+}
 
+/* Responsive adjustments */
 @media(max-width:600px){
   header{height:56px;padding:0 12px;gap:9px}
   .studybadge{display:none}
   #msgs{padding:18px 12px}
-  .hello{margin-top:8vh;padding:0 8px}
+  .hello{padding:0 8px}
   .hello h1{font-size:clamp(24px,7vw,29px)}
   .hello .orb{width:80px;height:80px;border-radius:22px}
   .hello p{font-size:14.5px}
-  #bar{width:calc(100% - 18px);margin-bottom:12px;border-radius:20px;padding:4px 6px 4px 12px}
+  #bar{width:calc(100% - 18px);margin-bottom:12px;border-radius:22px;padding:4px}
   .msgrow{gap:8px;margin-bottom:18px}
   .bubble{padding:11px 13px;font-size:14px}
   .assistant .bubble{padding:14px 14px}
-  body.empty #bar{top:62%}
-  .toolbar .spacer{display:none}
+  #attach {width:34px;height:34px}
+  .sendbtn {width:36px;height:36px}
+  #prompt {padding:8px 10px}
+  
+  /* Mobile Empty State */
+  body.empty main { justify-content: flex-start; }
+  body.empty header {
+    position: relative;
+    background: color-mix(in srgb,var(--bg) 78%,transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  body.empty #msgs {
+    flex: 1;
+    padding: 22px 10px 16px;
+    overflow-y: auto;
+    margin-bottom: 0;
+  }
+  body.empty .hello {
+    margin: 18px auto 22px;
+    width: 100%;
+  }
+  body.empty #bar {
+    margin: 0 auto 8px;
+    width: calc(100% - 16px);
+  }
+  body.empty .hint {
+    position: relative;
+    bottom: auto;
+  }
 }
-@media(max-height:620px){body.empty #bar{top:68%}body.empty .hello{transform:translateY(-30px)}}
 
 /* mobile fixes */
 main{min-width:0;min-height:0}
@@ -274,12 +367,6 @@ main{min-width:0;min-height:0}
   body{height:100dvh;overflow:hidden}
   main{height:100dvh;height:100%;min-height:0}
   #msgs{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain}
-  body.empty #msgs{
-    display:flex;flex-direction:column;align-items:stretch;
-    justify-content:flex-start;padding:22px 10px 16px;overflow-y:auto;
-  }
-  body.empty .hello{margin:18px auto 22px;padding:0 4px;transform:none;width:100%}
-  body.empty #bar{position:relative;top:auto;left:auto;transform:none;width:100%;margin:0 auto 8px;flex-shrink:0}
   #bar{width:calc(100% - 16px)}
   .hint{padding-bottom:6px}
   .msgactions{gap:6px}
@@ -289,7 +376,6 @@ main{min-width:0;min-height:0}
   header{gap:7px}
   .statusdot{padding:4px 8px;font-size:11px}
   .iconbtn{width:34px;height:34px}
-  .sendbtn{width:32px;height:32px}
 }
 
 /* rendered Markdown (assistant bubbles) */
@@ -384,9 +470,65 @@ main{min-width:0;min-height:0}
 .pdf-doc th[align="right"],.pdf-doc td[align="right"]{text-align:right}
 .pdf-doc .katex-display{margin:10px 0}
 .pdf-doc .plain-fallback{white-space:pre-wrap}
+
+/* ---------- HEADER MENU & LEGAL MODALS ---------- */
+.menu-wrap{position:relative}
+.menu-dropdown{
+  position:absolute;top:calc(100% + 8px);right:0;width:200px;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  box-shadow:var(--shadow);padding:6px;display:none;flex-direction:column;z-index:20;
+  backdrop-filter:blur(16px) saturate(1.2);
+}
+.menu-dropdown.show{display:flex;animation:dropIn .2s cubic-bezier(.4,0,.2,1) both}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
+.menu-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;
+  font-size:13.5px;font-weight:500;color:var(--text);transition:.14s;text-align:left;
+}
+.menu-item:hover{background:var(--panel2);color:var(--accent)}
+.menu-item span{width:16px;text-align:center;color:var(--accent);font-size:14px}
+
+/* Modals */
+.modal-overlay{
+  position:fixed;inset:0;z-index:100;background:rgba(12,48,80,.4);backdrop-filter:blur(4px);
+  opacity:0;visibility:hidden;transition:.25s;display:grid;place-items:center;padding:20px;
+}
+.modal-overlay.show{opacity:1;visibility:visible}
+.modal{
+  background:var(--panel);border:1px solid var(--line);border-radius:24px;
+  box-shadow:var(--shadow);width:100%;max-width:520px;max-height:80vh;
+  display:flex;flex-direction:column;transform:translateY(12px) scale(.98);
+  transition:.25s;overflow:hidden;
+}
+.modal-overlay.show .modal{transform:none}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 22px;border-bottom:1px solid var(--line);
+}
+.modal-head h2{font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+.modal-head button{
+  width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:var(--panel2);color:var(--muted);font-size:18px;transition:.14s;
+}
+.modal-head button:hover{background:var(--panel3);color:var(--text);transform:rotate(90deg)}
+.modal-body{padding:20px 22px;overflow-y:auto;font-size:14px;line-height:1.65;color:var(--text)}
+.modal-body h3{font-size:14px;font-weight:700;color:var(--text);margin:16px 0 6px;letter-spacing:-.01em}
+.modal-body p{margin:0 0 10px;color:var(--muted)}
+.modal-body ul{margin:6px 0 12px;padding-left:20px;color:var(--muted)}
+.modal-body li{margin:3px 0}
+.modal-body strong{color:var(--text);font-weight:600}
 </style>
 </head>
 <body class="empty">
+
+<!-- MOVING CLOUDS BACKGROUND -->
+<div class="cloud-layer">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+  <div class="cloud c4"></div>
+</div>
+
 <div id="overlay"></div>
 <aside id="side">
   <div class="brand">
@@ -412,6 +554,15 @@ main{min-width:0;min-height:0}
     <span class="studybadge">Study Mode</span>
     <div class="header-spacer"></div>
     <div class="statusdot"><i></i> Online</div>
+    
+    <div class="menu-wrap">
+      <button class="iconbtn" id="topMenuBtn" aria-label="More options" title="More options">⋮</button>
+      <div class="menu-dropdown" id="topMenuDropdown">
+        <button class="menu-item" data-modal="modal-about"><span>ⓘ</span> About RashAI</button>
+        <button class="menu-item" data-modal="modal-terms"><span>§</span> Terms & Conditions</button>
+        <button class="menu-item" data-modal="modal-privacy"><span>⚿</span> Privacy Policy</button>
+      </div>
+    </div>
   </header>
   <section id="msgs">
     <div class="hello" id="hello">
@@ -425,16 +576,86 @@ main{min-width:0;min-height:0}
   </section>
   <div id="bar">
     <div class="filechip" id="filechip"></div>
+    <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button>
+    <input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css">
     <textarea id="prompt" rows="1" placeholder="Ask a study question…" aria-label="Ask RashAI"></textarea>
-    <div class="toolbar">
-      <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button>
-      <input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css">
-      <div class="spacer"></div>
-      <button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
-    </div>
+    <button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
   </div>
   <div class="hint">RashAI is a study aid — always verify important information.</div>
 </main>
+
+<!-- LEGAL MODALS -->
+<div class="modal-overlay" id="modal-about">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>About RashAI</h2>
+      <button class="close-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <p><strong>RashAI</strong> is a premium, focused study companion designed to help students understand complex topics, prepare for exams, debug code, and create revision notes.</p>
+      <h3>Our Mission</h3>
+      <p>We believe learning should be frictionless. RashAI strips away the clutter and delivers accurate, tailored educational answers with beautiful formatting, mathematical equations, and downloadable study materials.</p>
+      <h3>Features</h3>
+      <ul>
+        <li>Interactive AI chat for concepts and exam prep.</li>
+        <li>Beautiful LaTeX rendering for math and science.</li>
+        <li>One-click PDF and TXT exports of answers.</li>
+        <li>Project file extraction (ZIP downloads for code).</li>
+      </ul>
+      <p style="margin-top:16px;font-size:12px;">&copy; 2026 RashAI. Built for students, by students.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-terms">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Terms & Conditions</h2>
+      <button class="close-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>1. Acceptance of Terms</h3>
+      <p>By accessing or using RashAI, you agree to be bound by these Terms. If you do not agree, please do not use the service.</p>
+      
+      <h3>2. Educational Use Only</h3>
+      <p>RashAI is a study aid. It is <strong>not</strong> a substitute for professional academic advice, tutoring, or official exam materials. You are solely responsible for verifying the accuracy of any information provided.</p>
+      
+      <h3>3. User Conduct</h3>
+      <p>You agree not to upload harmful, illegal, or copyrighted material that you do not have the right to use. Abuse of the AI (e.g., attempting to bypass safety filters) is strictly prohibited.</p>
+      
+      <h3>4. Limitation of Liability</h3>
+      <p>RashAI and its creators are not liable for any academic misconduct, failed exams, or damages resulting from the use of this service. All answers should be treated as a starting point for your own research.</p>
+      
+      <h3>5. Service Availability</h3>
+      <p>This is a free service. We do not guarantee 100% uptime, and the server may go to sleep during inactivity. We reserve the right to modify or discontinue the service at any time.</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-privacy">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Privacy Policy</h2>
+      <button class="close-modal">×</button>
+    </div>
+    <div class="modal-body">
+      <h3>1. Information We Collect</h3>
+      <p>RashAI does not require an account, and we do not collect personal identifiers (like your name or email). However, we store your chat history locally in your browser's <strong>LocalStorage</strong>.</p>
+      
+      <h3>2. How We Use Your Data</h3>
+      <p>Your messages and attached files are sent to our secure backend (and the underlying AI provider) solely to generate a response. We do not sell your data to third parties.</p>
+      
+      <h3>3. Data Retention</h3>
+      <p>Chats are saved on your device, not on our servers. You can clear your chat history at any time using the "Clear chat history" button in the sidebar.</p>
+      
+      <h3>4. Cookies & Tracking</h3>
+      <p>We do not use tracking cookies or third-party analytics scripts. Your theme preferences and local chat history are the only things stored on your device.</p>
+      
+      <h3>5. Contact</h3>
+      <p>If you have questions about this policy, please contact the developer of this project.</p>
+    </div>
+  </div>
+</div>
 
 <!-- Markdown parser + HTML sanitizer + equations + PDF libraries (pinned versions) -->
 <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js"></script>
@@ -444,12 +665,6 @@ main{min-width:0;min-height:0}
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 
 <script>
-/* ============================================================
-   BACKEND CONTRACT — DO NOT CHANGE WITHOUT UPDATING server.js
-   POST /api/chat         { messages:[{role,content}], attachment, mode, continue? }
-                          -> { text, model, complete, finishReason, continuations, note }
-   GET  /health
-   ============================================================ */
 const API_URL = "https://rashai.onrender.com/api/chat";
 const HEALTH_URL = "https://rashai.onrender.com/health";
 const STUDY_MODE = "study";
@@ -460,7 +675,7 @@ const escapeHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({
 }[c]));
 
 /* =====================================================================
-   MARKDOWN PIPELINE (shared by the chat view and the PDF export)
+   MARKDOWN PIPELINE
    ===================================================================== */
 const SAFE_INLINE_HTML = /^<\/?(?:br|sub|sup|b|i|u|s|strong|em|mark|small|kbd|del|ins)\s*\/?>$/i;
 
@@ -681,10 +896,7 @@ function plainText(md) {
 }
 
 /* =====================================================================
-   PROJECT FILES (NEW): find "File: name.ext" + code block pairs in an
-   answer, then offer single-file downloads and a ZIP. Only code blocks
-   that are properly CLOSED are offered, so a cut-off file is never
-   presented as if it were complete.
+   PROJECT FILES (NEW)
    ===================================================================== */
 function cleanFilePath(raw) {
   let s = String(raw || "").trim().replace(/\\/g, "/");
@@ -739,11 +951,11 @@ function extractProjectFiles(md) {
       if (c && c[1][0] === ch && c[1].length >= len) { closed = true; break; }
       j++;
     }
-    if (!closed) break; // unfinished block: never offer it as a file
+    if (!closed) break;
 
     const path = prevLabel || labelFromInfo(open[2]);
     const code = lines.slice(i + 1, j).join("\n");
-    if (path && code.trim()) byPath.set(path, { path, code }); // a later block with the same name wins
+    if (path && code.trim()) byPath.set(path, { path, code });
     prevLabel = "";
     i = j + 1;
   }
@@ -767,7 +979,6 @@ function crc32(bytes) {
   return (c ^ 0xFFFFFFFF) >>> 0;
 }
 
-// Builds a standard .zip file (no compression) completely inside the browser.
 function buildZipBlob(entries) {
   const enc = new TextEncoder();
   const chunks = [], central = [];
@@ -784,8 +995,8 @@ function buildZipBlob(entries) {
     const lh = new DataView(new ArrayBuffer(30));
     lh.setUint32(0, 0x04034b50, true);
     lh.setUint16(4, 20, true);
-    lh.setUint16(6, 0x0800, true);          // UTF-8 file names
-    lh.setUint16(8, 0, true);               // stored (no compression)
+    lh.setUint16(6, 0x0800, true);
+    lh.setUint16(8, 0, true);
     lh.setUint16(10, dosTime, true);
     lh.setUint16(12, dosDate, true);
     lh.setUint32(14, crc, true);
@@ -853,7 +1064,6 @@ let history = [], attachment = null, busy = false, currentChatId = null;
 let savedChats = [];
 try { savedChats = JSON.parse(localStorage.getItem("rashai") || "[]"); } catch { savedChats = []; }
 
-/* ---------- wake the free Render backend ---------- */
 async function wakeServer() {
   try {
     const controller = new AbortController();
@@ -861,9 +1071,47 @@ async function wakeServer() {
     await fetch(HEALTH_URL, { cache: "no-store", signal: controller.signal });
     clearTimeout(t);
   } catch (e) {
-    console.warn("Wake-up ping failed (server may still be starting):", e.message);
+    console.warn("Wake-up ping failed:", e.message);
   }
 }
+
+/* ---------- Top Menu & Modals ---------- */
+const topMenuBtn = $("topMenuBtn");
+const topMenuDropdown = $("topMenuDropdown");
+
+topMenuBtn.onclick = (e) => {
+  e.stopPropagation();
+  topMenuDropdown.classList.toggle("show");
+};
+
+document.addEventListener("click", (e) => {
+  if (!topMenuDropdown.contains(e.target) && e.target !== topMenuBtn) {
+    topMenuDropdown.classList.remove("show");
+  }
+});
+
+document.querySelectorAll('.menu-item').forEach(btn => {
+  btn.onclick = () => {
+    const modalId = btn.dataset.modal;
+    const modal = $(modalId);
+    if (modal) {
+      modal.classList.add("show");
+      topMenuDropdown.classList.remove("show");
+    }
+  };
+});
+
+document.querySelectorAll('.close-modal').forEach(btn => {
+  btn.onclick = (e) => {
+    e.target.closest('.modal-overlay').classList.remove("show");
+  };
+});
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.classList.remove("show");
+  };
+});
 
 /* ---------- sidebar and chats ---------- */
 function openSidebar() { $("side").classList.add("open"); $("overlay").classList.add("show"); }
@@ -1057,7 +1305,7 @@ async function send() {
   history.push({ role: "user", content: msg });
   renderMessages();
   $("prompt").value = "";
-  $("prompt").style.height = "32px";
+  $("prompt").style.height = "38px";
 
   await requestAnswer(false);
 }
@@ -1139,7 +1387,7 @@ async function requestAnswer(isContinue) {
 
 $("send").onclick = send;
 $("prompt").addEventListener("input", () => {
-  $("prompt").style.height = "32px";
+  $("prompt").style.height = "38px";
   $("prompt").style.height = Math.min($("prompt").scrollHeight, 140) + "px";
 });
 $("prompt").addEventListener("keydown", e => {
