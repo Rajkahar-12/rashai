@@ -6,14 +6,72 @@
 <meta name="theme-color" content="#eaf6ff">
 <title>RashAI — Study Companion</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap" rel="stylesheet">
-
 <style>
+/* =========================================
+   OPTIMIZED SELF-HOSTED FONTS (No Render-Blocking)
+   ========================================= */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-400-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-500-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-600-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-700-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.0/files/inter-latin-800-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.0.0/files/fraunces-latin-400-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.0.0/files/fraunces-latin-600-normal.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(https://cdn.jsdelivr.net/npm/@fontsource/fraunces@5.0.0/files/fraunces-latin-700-normal.woff2) format('woff2');
+}
+
 :root{
   --bg:#eaf6ff;--bg2:#ddefff;--panel:#fff;--panel2:#eef7ff;
-  --panel3:#e0f0ff;--text:#0e2437;--muted:#5f7c99;--line:#cfe3f5;
+  --panel3:#e0f0ff;--text:#0e2437;
+  --muted:#4b6682; /* Darkened for better contrast */
+  --line:#cfe3f5;
   --accent:#2f8fe0;--accent2:#5cb0f7;--accent3:#8ed3ff;
   --accentText:#fff;--user:#d9edff;--code:#0e3a5c;
   --shadow:0 18px 48px rgba(30,90,145,.13);--radius:18px;
@@ -38,6 +96,16 @@ body:after{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
   background:linear-gradient(180deg,transparent,rgba(255,255,255,.3));opacity:.6
 }
+
+/* ---------- ACCESSIBILITY FOCUS RINGS ---------- */
+button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible), a:focus:not(:focus-visible) {
+  outline: none;
+}
+
 .cloud-layer{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
 .cloud{
   position:absolute;fill:#fff;
@@ -123,7 +191,7 @@ header{
   border:1px solid color-mix(in srgb,var(--accent) 34%,transparent)
 }
 .header-spacer{flex:1}
-.statusdot{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);padding:6px 11px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
+.statusdot{display:flex;align-items:center;gap:7px;font-size:12px;color:#3a5068;font-weight:500;padding:6px 11px;border:1px solid var(--line);border-radius:99px;background:var(--panel)}
 .statusdot i{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 10px rgba(74,222,128,.6);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
@@ -139,6 +207,7 @@ header{
 .hello h1{font-family:Fraunces,Georgia,serif;font-size:clamp(28px,4.2vw,42px);letter-spacing:-.03em;margin:0 0 12px;font-weight:400;line-height:1.15}
 .hello h1 span{background:linear-gradient(120deg,var(--accent),var(--accent2) 55%,var(--accent3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .hello p{color:var(--muted);margin:0;font-size:15.5px;max-width:460px;margin-inline:auto}
+
 #wrap{width:min(820px,calc(100% - 20px));margin:0 auto}
 .msgrow{display:flex;margin:0 auto 24px;max-width:820px;gap:12px;align-items:flex-start;animation:rise .32s ease both;min-width:0}
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -243,6 +312,52 @@ body.empty .hint{position:absolute;bottom:10px;left:0;right:0;padding:0}
 .modal-body li{margin:3px 0}
 .modal-body strong{color:var(--text);font-weight:600}
 
+/* PDF Export Host */
+.pdf-host { position: fixed; left: -9999px; top: 0; width: 700px; background: #ffffff; z-index: -1; pointer-events: none; }
+.pdf-doc { width: 700px; background: #ffffff; color: #172033; font-family: "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif; font-size: 14px; line-height: 1.6; padding: 40px; }
+.pdf-doc *{box-sizing:border-box}
+.pdf-doc .pdf-user-q{background:#f4f4f5; padding:12px 16px; border-radius:8px; margin-bottom:24px; font-size:14px; color:#333; border-left:4px solid #a1a1aa;}
+.pdf-doc .pdf-user-q strong{display:block; margin-bottom:4px; color:#111;}
+.pdf-doc .pdf-ai-a{font-size:14px; color:#111;}
+.pdf-doc .pdf-title{font-size:22px;font-weight:700;color:#2b3a8f;margin:0 0 2px;line-height:1.3}
+.pdf-doc .pdf-date{font-size:12px;color:#69748a;margin:0}
+.pdf-doc .pdf-rule{border:0;border-top:2px solid #8b9cff;margin:10px 0 14px}
+.pdf-doc p{margin:0 0 10px}
+.pdf-doc h1,.pdf-doc h2,.pdf-doc h3,.pdf-doc h4,.pdf-doc h5,.pdf-doc h6{margin:18px 0 8px;line-height:1.3;font-weight:700;color:#111a2e}
+.pdf-doc h1{font-size:21px}
+.pdf-doc h2{font-size:18px}
+.pdf-doc h3{font-size:16px}
+.pdf-doc h4{font-size:15px}
+.pdf-doc h5{font-size:14px}
+.pdf-doc h6{font-size:13px;color:#56627a}
+.pdf-doc strong,.pdf-doc b{font-weight:700}
+.pdf-doc em,.pdf-doc i{font-style:italic}
+.pdf-doc ul,.pdf-doc ol{margin:6px 0 10px;padding-left:26px}
+.pdf-doc li{margin:3px 0}
+.pdf-doc li > ul,.pdf-doc li > ol{margin:4px 0}
+.pdf-doc blockquote{border-left:4px solid #8b9cff;margin:10px 0;padding:6px 14px;background:#f3f5fb;color:#3a4660}
+.pdf-doc blockquote p:last-child{margin-bottom:0}
+.pdf-doc hr{border:0;border-top:1px solid #cbd5e1;margin:14px 0}
+.pdf-doc a{color:#3347a8;text-decoration:underline;overflow-wrap:break-word}
+.pdf-doc code{background:#eef1f8;color:#33408f;padding:1px 4px;border-radius:4px;font-family:Consolas,"Courier New",monospace;font-size:12.5px;overflow-wrap:break-word}
+.pdf-doc pre{background:#f3f5f9;color:#1b2333;border:1px solid #d5dbe7;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:break-word;overflow:visible;max-width:none;font-family:Consolas,"Courier New",monospace}
+.pdf-doc pre code{background:none;color:inherit;padding:0;font-size:12px}
+.pdf-doc table{border-collapse:separate;border-spacing:0;width:100%;margin:12px 0;font-size:12.5px}
+.pdf-doc th,.pdf-doc td{border-right:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:6px 8px;text-align:left;vertical-align:top}
+.pdf-doc th:first-child,.pdf-doc td:first-child{border-left:1px solid #cbd5e1}
+.pdf-doc thead th{border-top:1px solid #cbd5e1;background:#eef1f8;font-weight:700}
+.pdf-doc th[align="center"],.pdf-doc td[align="center"]{text-align:center}
+.pdf-doc th[align="right"],.pdf-doc td[align="right"]{text-align:right}
+.pdf-doc .katex-display{margin:10px 0}
+.pdf-doc .plain-fallback{white-space:pre-wrap}
+
+/* Modals */
+.pdf-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:grid;place-items:center}
+.pdf-overlay-box{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--text);text-align:center;padding:20px}
+.pdf-overlay-text{font-size:14px;color:var(--muted)}
+.pdf-spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:pdfspin .8s linear infinite}
+@keyframes pdfspin{to{transform:rotate(360deg)}}
+
 @media(max-width:600px){
   header{height:56px;padding:0 12px;gap:9px}
   .studybadge{display:none}
@@ -301,12 +416,7 @@ main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
 <aside id="side">
   <div class="brand">
     <div class="logo">
-      <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <rect width="48" height="48" rx="12" fill="#1d232e"/>
-        <path d="M12 24c4-2 8-2 12 0v15c-4-2-8-2-12 0z" fill="#fff"/>
-        <path d="M36 24c-4-2-8-2-12 0v15c4-2 8-2 12 0z" fill="#fff" opacity=".75"/>
-        <path d="M24 25v14" stroke="#1d232e" stroke-width="2"/>
-      </svg>
+      <img src="logo.png" alt="RashAI" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<svg viewBox=\'0 0 48 48\'><rect width=\'48\' height=\'48\' rx=\'12\' fill=\'#1d232e\'/><path d=\'M12 24c4-2 8-2 12 0v15c-4-2-8-2-12 0z\' fill=\'#fff\'/><path d=\'M36 24c-4-2-8-2-12 0v15c4-2 8-2 12 0z\' fill=\'#fff\' opacity=\'.75\'/><path d=\'M24 25v14\' stroke=\'#1d232e\' stroke-width=\'2\'/></svg>');">
     </div>
     <span>RashAI</span>
     <div style="flex:1"></div>
@@ -343,12 +453,7 @@ main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
   <section id="msgs">
     <div class="hello" id="hello">
       <div class="orb">
-        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-          <rect width="48" height="48" rx="12" fill="#1d232e"/>
-          <path d="M12 24c4-2 8-2 12 0v15c-4-2-8-2-12 0z" fill="#fff"/>
-          <path d="M36 24c-4-2-8-2-12 0v15c4-2 8-2 12 0z" fill="#fff" opacity=".75"/>
-          <path d="M24 25v14" stroke="#1d232e" stroke-width="2"/>
-        </svg>
+        <img src="logo.png" alt="RashAI" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<svg viewBox=\'0 0 48 48\'><rect width=\'48\' height=\'48\' rx=\'12\' fill=\'#1d232e\'/><path d=\'M12 24c4-2 8-2 12 0v15c-4-2-8-2-12 0z\' fill=\'#fff\'/><path d=\'M36 24c-4-2-8-2-12 0v15c4-2 8-2 12 0z\' fill=\'#fff\' opacity=\'.75\'/><path d=\'M24 25v14\' stroke=\'#1d232e\' stroke-width=\'2\'/></svg>');">
       </div>
       <h1>What are we <span>studying?</span></h1>
       <p>A focused study companion for concepts, exams, code, and revision.</p>
@@ -359,16 +464,17 @@ main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
   <div id="bar">
     <div class="filechip" id="filechip"></div>
     <button class="iconbtn" id="attach" title="Attach a file" aria-label="Attach a file">＋</button>
-    <input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css">
+    <input type="file" id="file" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg,.webp,.md,.csv,.json,.py,.c,.cpp,.java,.js,.html,.css" aria-label="Attach a file">
     <textarea id="prompt" rows="1" placeholder="Ask a study question…" aria-label="Ask RashAI"></textarea>
     <button class="sendbtn" id="send" title="Send message" aria-label="Send message">↑</button>
   </div>
   <div class="hint">RashAI is a study aid — always verify important information.</div>
 </main>
 
+<!-- LEGAL MODALS -->
 <div class="modal-overlay" id="modal-about">
   <div class="modal">
-    <div class="modal-head"><h2>About RashAI</h2><button class="close-modal">×</button></div>
+    <div class="modal-head"><h2>About RashAI</h2><button class="close-modal" aria-label="Close dialog">×</button></div>
     <div class="modal-body">
       <p><strong>RashAI</strong> is a premium, focused study companion designed to help students understand complex topics, prepare for exams, debug code, and create revision notes.</p>
       <h3>Our Mission</h3>
@@ -387,7 +493,7 @@ main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
 
 <div class="modal-overlay" id="modal-terms">
   <div class="modal">
-    <div class="modal-head"><h2>Terms & Conditions</h2><button class="close-modal">×</button></div>
+    <div class="modal-head"><h2>Terms & Conditions</h2><button class="close-modal" aria-label="Close dialog">×</button></div>
     <div class="modal-body">
       <h3>1. Acceptance of Terms</h3>
       <p>By accessing or using RashAI, you agree to be bound by these Terms. If you do not agree, please do not use the service.</p>
@@ -405,7 +511,7 @@ main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
 
 <div class="modal-overlay" id="modal-privacy">
   <div class="modal">
-    <div class="modal-head"><h2>Privacy Policy</h2><button class="close-modal">×</button></div>
+    <div class="modal-head"><h2>Privacy Policy</h2><button class="close-modal" aria-label="Close dialog">×</button></div>
     <div class="modal-body">
       <h3>1. Information We Collect</h3>
       <p>RashAI does not require an account, and we do not collect personal identifiers (like your name or email). However, we store your chat history locally in your browser's <strong>LocalStorage</strong>.</p>
@@ -421,962 +527,830 @@ main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js" defer></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js" defer></script>
+<!-- Markdown parser + HTML sanitizer + equations + PDF libraries (pinned versions, deferred) -->
+<script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/lib/marked.umd.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-const API_URL = "https://rashai.onrender.com/api/chat";
-const STUDY_MODE = "study";
-const $ = id => document.getElementById(id);
+window.addEventListener('DOMContentLoaded', () => {
+  const API_URL = "https://rashai.onrender.com/api/chat";
+  const HEALTH_URL = "https://rashai.onrender.com/health";
+  const STUDY_MODE = "study";
+  const $ = id => document.getElementById(id);
 
-const escapeHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({
-  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-}[c]));
+  const escapeHTML = s => String(s ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  }[c]));
 
-/* LAZY LOAD KATEX ONLY WHEN MATH IS USED */
-let katexPromise = null;
+  /* MARKDOWN PIPELINE */
+  const SAFE_INLINE_HTML = /^<\/?(?:br|sub|sup|b|i|u|s|strong|em|mark|small|kbd|del|ins)\s*\/?>$/i;
 
-function ensureKatex(){
-  if(window.katex)return Promise.resolve();
-  if(katexPromise)return katexPromise;
-
-  katexPromise = new Promise((resolve,reject)=>{
-    const css=document.createElement("link");
-    css.rel="stylesheet";
-    css.href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css";
-
-    const script=document.createElement("script");
-    script.src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js";
-    script.async=true;
-
-    let cssLoaded=false,scriptLoaded=false,finished=false;
-
-    const done=()=>{
-      if(finished||!cssLoaded||!scriptLoaded)return;
-      finished=true;
-      resolve();
-    };
-
-    const fail=()=>{
-      if(finished)return;
-      finished=true;
-      katexPromise=null;
-      reject(new Error("Could not load the math renderer."));
-    };
-
-    css.onload=()=>{cssLoaded=true;done()};
-    css.onerror=fail;
-    script.onload=()=>{scriptLoaded=true;done()};
-    script.onerror=fail;
-
-    document.head.appendChild(css);
-    document.head.appendChild(script);
-  });
-
-  return katexPromise;
-}
-
-/* MARKDOWN PIPELINE */
-const SAFE_INLINE_HTML = /^<\/?(?:br|sub|sup|b|i|u|s|strong|em|mark|small|kbd|del|ins)\s*\/?>$/i;
-
-if(window.marked){
-  marked.use({
-    gfm:true,breaks:true,
-    renderer:{
-      html(html,block){
-        if(html&&typeof html==="object"){block=html.block;html=html.text}
-        const raw=String(html??"");const t=raw.trim();
-        if(SAFE_INLINE_HTML.test(t))return t;
-        const esc=escapeHTML(raw);
-        return block?"<pre><code>"+esc.replace(/\n+$/,"")+"</code></pre>":esc;
-      },
-      image(href,title,text){
-        if(href&&typeof href==="object"){text=href.text;href=href.href}
-        const label=escapeHTML(text||href||"image");
-        return '<a href="'+escapeHTML(href||"")+'" target="_blank" rel="noopener noreferrer">Image: '+label+"</a>";
-      },
-      checkbox(checked){
-        if(checked&&typeof checked==="object")checked=checked.checked;
-        return checked?"☑ ":"☐ ";
-      }
-    }
-  });
-}
-
-if(window.DOMPurify){
-  DOMPurify.addHook("afterSanitizeAttributes",node=>{
-    if(node.tagName==="A"){
-      const href=node.getAttribute("href")||"";
-      if(href&&href.charAt(0)!=="#"){
-        node.setAttribute("target","_blank");
-        node.setAttribute("rel","noopener noreferrer");
-      }
-    }
-  });
-}
-
-const PURIFY_CONFIG={
-  FORBID_TAGS:["style","form","input","button","textarea","select","option","iframe","object","embed","link","meta","base","img","svg","math"],
-  FORBID_ATTR:["style","srcset"],ALLOW_DATA_ATTR:false
-};
-
-function extractInlineDollar(s,add){
-  let out="",i=0;const n=s.length;
-  while(i<n){
-    const c=s[i];
-    if(c==="\\"){out+=s.slice(i,i+2);i+=2;continue}
-    if(c==="$"){
-      const prev=i>0?s[i-1]:"";
-      const next=i+1<n?s[i+1]:"";
-      if(next&&next!=="$"&&!/\s/.test(next)&&!/\w/.test(prev)){
-        let j=i+1,found=-1;
-        while(j<n){
-          const d=s[j];
-          if(d==="\\"){j+=2;continue}
-          if(d==="\n")break;
-          if(d==="$"){found=j;break}
-          j++;
+  if (window.marked) {
+    marked.use({
+      gfm: true, breaks: true,
+      renderer: {
+        html(html, block) {
+          if (html && typeof html === "object") { block = html.block; html = html.text; }
+          const raw = String(html ?? ""); const t = raw.trim();
+          if (SAFE_INLINE_HTML.test(t)) return t;
+          const esc = escapeHTML(raw);
+          return block ? "<pre><code>" + esc.replace(/\n+$/, "") + "</code></pre>" : esc;
+        },
+        image(href, title, text) {
+          if (href && typeof href === "object") { text = href.text; href = href.href; }
+          const label = escapeHTML(text || href || "image");
+          return '<a href="' + escapeHTML(href || "") + '" target="_blank" rel="noopener noreferrer">Image: ' + label + "</a>";
+        },
+        checkbox(checked) {
+          if (checked && typeof checked === "object") checked = checked.checked;
+          return checked ? "☑ " : "☐ ";
         }
-        if(found>i+1){
-          const tex=s.slice(i+1,found);
-          const after=found+1<n?s[found+1]:"";
-          if(!/\s$/.test(tex)&&!/[0-9]/.test(after)){
-            out+=add(tex);i=found+1;continue;
+      }
+    });
+  }
+
+  if (window.DOMPurify) {
+    DOMPurify.addHook("afterSanitizeAttributes", node => {
+      if (node.tagName === "A") {
+        const href = node.getAttribute("href") || "";
+        if (href && href.charAt(0) !== "#") {
+          node.setAttribute("target", "_blank");
+          node.setAttribute("rel", "noopener noreferrer");
+        }
+      }
+    });
+  }
+
+  const PURIFY_CONFIG = {
+    FORBID_TAGS: ["style","form","input","button","textarea","select","option","iframe","object","embed","link","meta","base","img","svg","math"],
+    FORBID_ATTR: ["style", "srcset"], ALLOW_DATA_ATTR: false
+  };
+
+  function extractInlineDollar(s, add) {
+    let out = "", i = 0; const n = s.length;
+    while (i < n) {
+      const c = s[i];
+      if (c === "\\") { out += s.slice(i, i + 2); i += 2; continue; }
+      if (c === "$") {
+        const prev = i > 0 ? s[i - 1] : "";
+        const next = i + 1 < n ? s[i + 1] : "";
+        if (next && next !== "$" && !/\s/.test(next) && !/\w/.test(prev)) {
+          let j = i + 1, found = -1;
+          while (j < n) {
+            const d = s[j];
+            if (d === "\\") { j += 2; continue; }
+            if (d === "\n") break;
+            if (d === "$") { found = j; break; }
+            j++;
+          }
+          if (found > i + 1) {
+            const tex = s.slice(i + 1, found);
+            const after = found + 1 < n ? s[found + 1] : "";
+            if (!/\s$/.test(tex) && !/[0-9]/.test(after)) {
+              out += add(tex); i = found + 1; continue;
+            }
           }
         }
       }
+      out += c; i++;
     }
-    out+=c;i++;
+    return out;
   }
-  return out;
-}
 
-function cleanProse(s){
-  s=s.replace(/\\{2,}(?=[*_#|~>\-])/g,"\\");
-  s=s.split("\n").map(line=>{
-    if(/^[ \t|:\\-]*$/.test(line)&&/-{3,}/.test(line.replace(/\\/g,"")))return line.replace(/\\/g,"");
-    if(/^[ \t]*(?:\\?[*_]){3,}[ \t]*$/.test(line))return line.replace(/\\/g,"");
-    return line;
-  }).join("\n");
-  s=s.replace(/^([ \t]*)\\(#{1,6}[ \t])/gm,"$1$2");
-  s=s.replace(/^([ \t]*)\\([*+-])(?=[ \t])/gm,"$1$2");
-  s=s.replace(/^([ \t]*\d{1,3})\\\.(?=[ \t])/gm,"$1.");
-  s=s.replace(/^([ \t]*#{2,6})(?=[^\s#])/gm,"$1 ");
-  s=s.replace(/^([ \t]*)[•●▪◦‣∙][ \t]+/gm,"$1- ");
-  s=s.replace(/\\\*\\\*\\\*/g,"***").replace(/\\\*\\\*/g,"**").replace(/\\_\\_/g,"__");
-  s=s.replace(/\\\*([^\n*\\]+?)\\\*/g,"*$1*");
-  const delim=l=>l.indexOf("|")!==-1&&/^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$/.test(l);
-  const lines=s.split("\n"),out=[];
-  for(const line of lines){
-    if(out.length>=2&&delim(line)){
-      const header=out[out.length-1],above=out[out.length-2];
-      if(header.indexOf("|")!==-1&&!delim(header)&&above.trim()!==""&&above.indexOf("|")===-1)out.splice(out.length-1,0,"");
-    }
-    out.push(line);
-  }
-  return out.join("\n");
-}
-
-function processProse(t,addMath){
-  const stash=[];
-  const unstash=x=>x.replace(/\uE000(\d+)\uE001/g,(m,i)=>stash[+i]);
-  let s=t.replace(/(`+)(?:[^`]|[^`][\s\S]*?[^`])\1(?!`)/g,m=>{
-    stash.push(m);return "\uE000"+(stash.length-1)+"\uE001";
-  });
-  s=s.replace(/\$\$([\s\S]+?)\$\$/g,(m,x)=>addMath(unstash(x),true));
-  s=s.replace(/\\\[([\s\S]+?)\\\]/g,(m,x)=>/[\\^_={]/.test(x)?addMath(unstash(x),true):m);
-  s=s.replace(/\\\(([\s\S]+?)\\\)/g,(m,x)=>addMath(unstash(x),false));
-  s=extractInlineDollar(s,x=>addMath(unstash(x),false));
-  s=cleanProse(s);
-  return unstash(s);
-}
-
-function preprocessMarkdown(src,tok){
-  const maths=[];
-  const lines=String(src??"").replace(/\r\n?/g,"\n").split("\n");
-  const segs=[];let buf=[],inFence=false,fenceCh="",fenceLen=0;
-  const flush=code=>{if(buf.length){segs.push({code,text:buf.join("\n")});buf=[]}};
-  for(const line of lines){
-    if(!inFence){
-      const m=line.match(/^[ \t]*(`{3,})[^`]*$/)||line.match(/^[ \t]*(~{3,})/);
-      if(m){flush(false);inFence=true;fenceCh=m[1][0];fenceLen=m[1].length}
-      buf.push(line);
-    }else{
-      buf.push(line);
-      const m=line.match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
-      if(m&&m[1][0]===fenceCh&&m[1].length>=fenceLen){flush(true);inFence=false}
-    }
-  }
-  flush(inFence);
-  const addMath=(tex,display)=>{
-    maths.push({tex:tex.trim(),display});
-    return tok+(maths.length-1)+"END";
-  };
-  const text=segs.map(sg=>sg.code?sg.text:processProse(sg.text,addMath)).join("\n");
-  return {text,maths};
-}
-
-function mathToHtml(m){
-  if(window.katex){
-    try{return katex.renderToString(m.tex,{displayMode:m.display,throwOnError:false,output:"html",strict:"ignore",trust:false})}catch(e){}
-  }
-  const c=escapeHTML(m.tex);
-  return m.display?'<pre class="math-fallback">'+c+"</pre>":'<code class="math-fallback">'+c+"</code>";
-}
-
-function renderMarkdown(src,opts){
-  const wrapTables=!!(opts&&opts.wrapTables);
-  const text=String(src??"");
-  const fallback='<div class="plain-fallback">'+escapeHTML(text)+"</div>";
-  if(!window.marked||!window.DOMPurify)return fallback;
-
-  try{
-    const nonce=Math.random().toString(36).slice(2,8)||"x";
-    const tok="RASHMATH"+nonce+"N";
-    const pre=preprocessMarkdown(text,tok);
-
-    if(pre.maths.length&&!window.katex){
-      ensureKatex().then(()=>{
-        renderCache.clear();
-        renderMessages();
-      }).catch(err=>console.warn("Math renderer unavailable:",err));
-    }
-
-    let html=DOMPurify.sanitize(marked.parse(pre.text),PURIFY_CONFIG);
-
-    if(pre.maths.length){
-      const re=new RegExp(tok+"(\\d+)END","g");
-      html=html.replace(re,(m,i)=>{
-        const mm=pre.maths[+i];return mm?mathToHtml(mm):m;
-      });
-    }
-
-    if(wrapTables){
-      html=html.replace(/<table(?=[\s>])/g,'<div class="table-wrap"><table').replace(/<\/table>/g,"</table></div>");
-    }
-    return html;
-  }catch(err){
-    console.error("Markdown rendering failed:",err);
-    return fallback;
-  }
-}
-
-const renderCache=new Map();
-
-function formatAnswer(t){
-  const key=String(t??"");
-  if(!key)return "";
-  if(renderCache.has(key))return renderCache.get(key);
-  const html=renderMarkdown(key,{wrapTables:true});
-  if(renderCache.size>150)renderCache.delete(renderCache.keys().next().value);
-  renderCache.set(key,html);
-  return html;
-}
-
-function plainText(md){
-  return String(md??"")
-    .replace(/```[^\n]*\n?([\s\S]*?)```/g,"$1")
-    .replace(/`([^`]+)`/g,"$1")
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g,"$1")
-    .replace(/\[([^\]]+)\]\([^)]*\)/g,"$1")
-    .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm,"")
-    .replace(/^[ \t]*>[ \t]?/gm,"")
-    .replace(/^[ \t]*[-*+][ \t]+/gm,"")
-    .replace(/^[ \t]*\|?[ \t:|-]+\|?[ \t]*$/gm,"")
-    .replace(/\|/g,", ")
-    .replace(/(\*\*|__|\*|~~)/g,"")
-    .replace(/\\([^\w\s])/g,"$1")
-    .replace(/\n{3,}/g,"\n\n").trim();
-}
-
-/* PROJECT FILES */
-function cleanFilePath(raw){
-  let s=String(raw||"").trim().replace(/\\/g,"/");
-  s=s.replace(/^[\s`"'*_#>-]+/,"").replace(/[\s`"'*_:]+$/,"");
-  const parts=s.split("/").map(x=>x.trim()).filter(x=>x&&x!=="."&&x!=="..");
-  if(!parts.length||parts.length>6)return "";
-  if(!parts.every(x=>/^[A-Za-z0-9_][A-Za-z0-9_.@() +-]{0,99}$/.test(x)))return "";
-  const last=parts[parts.length-1];
-  if(!/\.[A-Za-z0-9]{1,10}$/.test(last)&&!/^(Dockerfile|Makefile|Procfile|LICENSE)$/.test(last))return "";
-  return parts.join("/");
-}
-
-function labelFromLine(line){
-  let m=line.match(/^[ \t]*(?:[-*>#]+[ \t]*)?(?:\*\*|__)?(?:File(?:name)?|Path)[ \t]*[:：][ \t]*(.+?)(?:\*\*|__)?[ \t]*$/i);
-  if(m)return cleanFilePath(m[1]);
-  m=line.match(/^[ \t]*(?:#{1,6}[ \t]+|\d+[.)][ \t]+|[-*][ \t]+)?(?:\*\*|__)?`?([A-Za-z0-9_][\w .\/@()+-]*\.[A-Za-z0-9]{1,10})`?(?:\*\*|__)?[ \t]*:?[ \t]*$/);
-  if(m)return cleanFilePath(m[1]);
-  return "";
-}
-
-function labelFromInfo(info){
-  const s=String(info||"").trim();
-  let m=s.match(/(?:title|file|filename)\s*=\s*["']?([^"'\s]+)/i);
-  if(m)return cleanFilePath(m[1]);
-  m=s.match(/^[\w+#-]+:(\S+)$/);
-  if(m)return cleanFilePath(m[1]);
-  const words=s.split(/\s+/);
-  if(words.length>1)return cleanFilePath(words[1]);
-  return "";
-}
-
-function extractProjectFiles(md){
-  const lines=String(md??"").replace(/\r\n?/g,"\n").split("\n");
-  const byPath=new Map();let prevLabel="",i=0;
-  while(i<lines.length){
-    const line=lines[i];
-    const open=line.match(/^[ \t]*(`{3,}|~{3,})(.*)$/);
-    if(!open||(open[1][0]==="`"&&open[2].indexOf("`")!==-1)){
-      if(line.trim())prevLabel=labelFromLine(line);
-      i++;continue;
-    }
-    const ch=open[1][0],len=open[1].length;
-    let j=i+1,closed=false;
-    while(j<lines.length){
-      const c=lines[j].match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
-      if(c&&c[1][0]===ch&&c[1].length>=len){closed=true;break}
-      j++;
-    }
-    if(!closed)break;
-    const path=prevLabel||labelFromInfo(open[2]);
-    const code=lines.slice(i+1,j).join("\n");
-    if(path&&code.trim())byPath.set(path,{path,code});
-    prevLabel="";i=j+1;
-  }
-  return Array.from(byPath.values());
-}
-
-const CRC_TABLE=(()=>{
-  const t=new Uint32Array(256);
-  for(let n=0;n<256;n++){
-    let c=n;
-    for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);
-    t[n]=c>>>0;
-  }
-  return t;
-})();
-
-function crc32(bytes){
-  let c=0xFFFFFFFF;
-  for(let i=0;i<bytes.length;i++)c=CRC_TABLE[(c^bytes[i])&0xFF]^(c>>>8);
-  return(c^0xFFFFFFFF)>>>0;
-}
-
-function buildZipBlob(entries){
-  const enc=new TextEncoder();const chunks=[],central=[];let offset=0;
-  const now=new Date();
-  const dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
-  const dosDate=((Math.max(1980,now.getFullYear())-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
-
-  entries.forEach(e=>{
-    const nameBytes=enc.encode(e.name);const data=e.data;
-    const crc=crc32(data),size=data.length;
-    const lh=new DataView(new ArrayBuffer(30));
-    lh.setUint32(0,0x04034b50,true);lh.setUint16(4,20,true);
-    lh.setUint16(6,0x0800,true);lh.setUint16(8,0,true);
-    lh.setUint16(10,dosTime,true);lh.setUint16(12,dosDate,true);
-    lh.setUint32(14,crc,true);lh.setUint32(18,size,true);
-    lh.setUint32(22,size,true);lh.setUint16(26,nameBytes.length,true);
-    lh.setUint16(28,0,true);
-    chunks.push(new Uint8Array(lh.buffer),nameBytes,data);
-
-    const ch=new DataView(new ArrayBuffer(46));
-    ch.setUint32(0,0x02014b50,true);ch.setUint16(4,20,true);
-    ch.setUint16(6,20,true);ch.setUint16(8,0x0800,true);
-    ch.setUint16(10,0,true);ch.setUint16(12,dosTime,true);
-    ch.setUint16(14,dosDate,true);ch.setUint32(16,crc,true);
-    ch.setUint32(20,size,true);ch.setUint32(24,size,true);
-    ch.setUint16(28,nameBytes.length,true);ch.setUint16(30,0,true);
-    ch.setUint16(32,0,true);ch.setUint16(34,0,true);
-    ch.setUint16(36,0,true);ch.setUint32(38,0,true);
-    ch.setUint32(42,offset,true);
-    central.push(new Uint8Array(ch.buffer),nameBytes);
-    offset+=30+nameBytes.length+size;
-  });
-
-  const cdSize=central.reduce((s,c)=>s+c.length,0);
-  const end=new DataView(new ArrayBuffer(22));
-  end.setUint32(0,0x06054b50,true);end.setUint16(4,0,true);
-  end.setUint16(6,0,true);end.setUint16(8,entries.length,true);
-  end.setUint16(10,entries.length,true);end.setUint32(12,cdSize,true);
-  end.setUint32(16,offset,true);end.setUint16(20,0,true);
-  return new Blob([...chunks,...central,new Uint8Array(end.buffer)],{type:"application/zip"});
-}
-
-function downloadProjectFile(f){
-  const name=f.path.split("/").pop();
-  saveBlob(new Blob([f.code+"\n"],{type:"text/plain;charset=utf-8"}),name);
-}
-
-function downloadProjectZip(files){
-  const enc=new TextEncoder();
-  const entries=files.map(f=>({name:"rashai-project/"+f.path,data:enc.encode(f.code+"\n")}));
-  const d=new Date();const p2=v=>String(v).padStart(2,"0");
-  const stamp=d.getFullYear()+p2(d.getMonth()+1)+p2(d.getDate())+"-"+p2(d.getHours())+p2(d.getMinutes());
-  saveBlob(buildZipBlob(entries),"rashai-project-"+stamp+".zip");
-}
-
-/* APP STATE */
-let history=[],attachment=null,busy=false,currentChatId=null;
-let savedChats=[];
-try{savedChats=JSON.parse(localStorage.getItem("rashai")||"[]")}catch{savedChats=[]}
-
-/* TOP MENU & MODALS */
-const topMenuBtn=$("topMenuBtn");
-const topMenuDropdown=$("topMenuDropdown");
-
-topMenuBtn.onclick=e=>{
-  e.stopPropagation();
-  topMenuDropdown.classList.toggle("show");
-};
-
-document.addEventListener("click",e=>{
-  if(!topMenuDropdown.contains(e.target)&&e.target!==topMenuBtn){
-    topMenuDropdown.classList.remove("show");
-  }
-});
-
-document.querySelectorAll(".menu-item").forEach(btn=>{
-  btn.onclick=()=>{
-    const modal=$(btn.dataset.modal);
-    if(modal){modal.classList.add("show");topMenuDropdown.classList.remove("show")}
-  };
-});
-
-document.querySelectorAll(".close-modal").forEach(btn=>{
-  btn.onclick=e=>e.target.closest(".modal-overlay").classList.remove("show");
-});
-
-document.querySelectorAll(".modal-overlay").forEach(overlay=>{
-  overlay.onclick=e=>{if(e.target===overlay)overlay.classList.remove("show")};
-});
-
-/* SIDEBAR AND CHATS */
-function openSidebar(){$("side").classList.add("open");$("overlay").classList.add("show")}
-function closeSidebar(){$("side").classList.remove("open");$("overlay").classList.remove("show")}
-$("menu").onclick=openSidebar;
-$("closeSide").onclick=closeSidebar;
-$("overlay").onclick=closeSidebar;
-
-function persist(){
-  try{localStorage.setItem("rashai",JSON.stringify(savedChats))}catch(e){console.warn("Could not save chat history:",e)}
-}
-
-/* OPTIMIZED: BUILD RECENT CHAT LIST IN ONE DOM UPDATE */
-function renderRecent(){
-  const recent=$("recent");
-  const fragment=document.createDocumentFragment();
-
-  savedChats.slice().reverse().forEach(chat=>{
-    const b=document.createElement("button");
-    b.className="recentitem"+(chat.id===currentChatId?" active":"");
-    b.textContent=chat.title||"Session";
-    b.onclick=()=>{
-      saveCurrentChat();
-      history=chat.messages||[];
-      currentChatId=chat.id;
-      renderMessages();
-      renderRecent();
-      closeSidebar();
-    };
-    fragment.appendChild(b);
-  });
-
-  recent.replaceChildren(fragment);
-}
-
-function saveCurrentChat(){
-  if(!history.length)return;
-  const title=(history.find(m=>m.role==="user")?.content||"New session").slice(0,42);
-  if(!currentChatId)currentChatId=String(Date.now());
-
-  const entry={id:currentChatId,title,messages:history,updated:Date.now()};
-  const i=savedChats.findIndex(c=>c.id===currentChatId);
-
-  if(i>=0)savedChats[i]=entry;
-  else savedChats.push(entry);
-
-  savedChats=savedChats.slice(-30);
-  persist();
-  renderRecent();
-}
-
-function newChat(){
-  saveCurrentChat();
-  history=[];
-  currentChatId=null;
-  attachment=null;
-  updateFileChip();
-  renderMessages();
-  renderRecent();
-  $("prompt").value="";
-  closeSidebar();
-  $("prompt").focus();
-}
-
-$("newChat").onclick=newChat;
-
-$("clearChats").onclick=()=>{
-  if(confirm("Clear all saved chat history?")){
-    savedChats=[];
-    currentChatId=null;
-    persist();
-    renderRecent();
-  }
-};
-
-/* MESSAGE ACTIONS */
-function action(label,fn){
-  const b=document.createElement("button");
-  b.className="smallbtn";
-  b.textContent=label;
-  b.onclick=()=>fn(b);
-  return b;
-}
-
-const ICONS={
-  copy:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
-  check:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-  speaker:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
-  fileText:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
-  filePdf:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
-};
-
-function iconAction(iconSvg,title,fn,extraClass){
-  const b=document.createElement("button");
-  b.className="icon-action "+(extraClass||"");
-  b.innerHTML=iconSvg;
-  b.title=title;
-  b.onclick=()=>fn(b);
-  return b;
-}
-
-async function copyText(text,btn){
-  let ok=false;
-  try{await navigator.clipboard.writeText(text);ok=true}
-  catch{
-    const t=document.createElement("textarea");
-    t.value=text;t.style.position="fixed";t.style.opacity="0";
-    document.body.appendChild(t);t.select();
-    try{ok=document.execCommand("copy")}catch(e){}
-    t.remove();
-  }
-  if(btn){
-    const oldHtml=btn.innerHTML;
-    btn.innerHTML=ok?ICONS.check:oldHtml;
-    setTimeout(()=>{btn.innerHTML=oldHtml},2000);
-  }
-}
-
-function renderMessages(){
-  const wrap=$("wrap");
-  wrap.innerHTML="";
-  document.body.classList.toggle("empty",history.length===0);
-  $("hello").style.display=history.length?"none":"block";
-
-  history.forEach((m,idx)=>{
-    const row=document.createElement("div");
-    row.className="msgrow "+(m.role==="user"?"user":"assistant");
-
-    const bubble=document.createElement("div");
-    bubble.className="bubble";
-
-    if(m.role==="assistant")bubble.innerHTML=formatAnswer(m.content||"");
-    else bubble.textContent=m.content||"";
-
-    row.appendChild(bubble);
-
-    if(m.role==="assistant"){
-      if(m.note){
-        const warn=document.createElement("div");
-        warn.className="notewarn";
-        warn.textContent=m.note;
-        bubble.appendChild(warn);
+  function cleanProse(s) {
+    s = s.replace(/\\{2,}(?=[*_#|~>\-])/g, "\\");
+    s = s.split("\n").map(line => {
+      if (/^[ \t|:\\-]*$/.test(line) && /-{3,}/.test(line.replace(/\\/g, ""))) return line.replace(/\\/g, "");
+      if (/^[ \t]*(?:\\?[*_]){3,}[ \t]*$/.test(line)) return line.replace(/\\/g, "");
+      return line;
+    }).join("\n");
+    s = s.replace(/^([ \t]*)\\(#{1,6}[ \t])/gm, "$1$2");
+    s = s.replace(/^([ \t]*)\\([*+-])(?=[ \t])/gm, "$1$2");
+    s = s.replace(/^([ \t]*\d{1,3})\\\.(?=[ \t])/gm, "$1.");
+    s = s.replace(/^([ \t]*#{2,6})(?=[^\s#])/gm, "$1 ");
+    s = s.replace(/^([ \t]*)[•●▪◦‣∙][ \t]+/gm, "$1- ");
+    s = s.replace(/\\\*\\\*\\\*/g, "***").replace(/\\\*\\\*/g, "**").replace(/\\_\\_/g, "__");
+    s = s.replace(/\\\*([^\n*\\]+?)\\\*/g, "*$1*");
+    const delim = l => l.indexOf("|") !== -1 && /^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$/.test(l);
+    const lines = s.split("\n"), out = [];
+    for (const line of lines) {
+      if (out.length >= 2 && delim(line)) {
+        const header = out[out.length - 1], above = out[out.length - 2];
+        if (header.indexOf("|") !== -1 && !delim(header) && above.trim() !== "" && above.indexOf("|") === -1) out.splice(out.length - 1, 0, "");
       }
+      out.push(line);
+    }
+    return out.join("\n");
+  }
 
-      const files=m.error?[]:extractProjectFiles(m.content||"");
+  function processProse(t, addMath) {
+    const stash = [];
+    const unstash = x => x.replace(/\uE000(\d+)\uE001/g, (m, i) => stash[+i]);
+    let s = t.replace(/(`+)(?:[^`]|[^`][\s\S]*?[^`])\1(?!`)/g, m => {
+      stash.push(m); return "\uE000" + (stash.length - 1) + "\uE001";
+    });
+    s = s.replace(/\$\$([\s\S]+?)\$\$/g, (m, x) => addMath(unstash(x), true));
+    s = s.replace(/\\\[([\s\S]+?)\\\]/g, (m, x) => /[\\^_={]/.test(x) ? addMath(unstash(x), true) : m);
+    s = s.replace(/\\\(([\s\S]+?)\\\)/g, (m, x) => addMath(unstash(x), false));
+    s = extractInlineDollar(s, x => addMath(unstash(x), false));
+    s = cleanProse(s);
+    return unstash(s);
+  }
 
-      if(files.length){
-        const fb=document.createElement("div");
-        fb.className="filebar";
+  function preprocessMarkdown(src, tok) {
+    const maths = [];
+    const lines = String(src ?? "").replace(/\r\n?/g, "\n").split("\n");
+    const segs = [];
+    let buf = [], inFence = false, fenceCh = "", fenceLen = 0;
+    const flush = code => { if (buf.length) { segs.push({ code, text: buf.join("\n") }); buf = []; } };
+    for (const line of lines) {
+      if (!inFence) {
+        const m = line.match(/^[ \t]*(`{3,})[^`]*$/) || line.match(/^[ \t]*(~{3,})/);
+        if (m) { flush(false); inFence = true; fenceCh = m[1][0]; fenceLen = m[1].length; }
+        buf.push(line);
+      } else {
+        buf.push(line);
+        const m = line.match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
+        if (m && m[1][0] === fenceCh && m[1].length >= fenceLen) { flush(true); inFence = false; }
+      }
+    }
+    flush(inFence);
+    const addMath = (tex, display) => {
+      maths.push({ tex: tex.trim(), display });
+      return tok + (maths.length - 1) + "END";
+    };
+    const text = segs.map(sg => sg.code ? sg.text : processProse(sg.text, addMath)).join("\n");
+    return { text, maths };
+  }
 
-        const label=document.createElement("span");
-        label.className="filelabel";
-        label.textContent=m.incomplete?"Finished files so far:":"Files in this answer:";
-        fb.appendChild(label);
-
-        files.slice(0,12).forEach(f=>{
-          fb.appendChild(action("⬇ "+f.path,()=>downloadProjectFile(f)));
+  function mathToHtml(m) {
+    if (window.katex) {
+      try {
+        return katex.renderToString(m.tex, {
+          displayMode: m.display, throwOnError: false, output: "html",
+          strict: "ignore", trust: false
         });
-
-        if(files.length>1){
-          const z=action("⬇ Download all (ZIP)",()=>downloadProjectZip(files));
-          z.classList.add("primary");
-          fb.appendChild(z);
-        }
-
-        bubble.appendChild(fb);
-      }
-
-      const a=document.createElement("div");
-      a.className="msgactions";
-
-      a.append(
-        iconAction(ICONS.copy,"Copy",btn=>copyText(m.content||"",btn)),
-        iconAction(ICONS.speaker,"Read aloud",()=>speak(m.content||"")),
-        iconAction(ICONS.fileText,"Download TXT",()=>downloadText(m.content||"","rashai-answer.txt")),
-        iconAction(ICONS.filePdf,"Print / Save PDF",btn=>downloadPDF(m.content||"",btn))
-      );
-
-      if(m.incomplete&&idx===history.length-1){
-        const c=action("Continue generating",()=>continueGeneration());
-        c.className="smallbtn primary";
-        a.prepend(c);
-      }
-
-      bubble.appendChild(a);
+      } catch (e) {}
     }
+    const c = escapeHTML(m.tex);
+    return m.display ? '<pre class="math-fallback">' + c + "</pre>" : '<code class="math-fallback">' + c + "</code>";
+  }
 
-    wrap.appendChild(row);
+  function renderMarkdown(src, opts) {
+    const wrapTables = !!(opts && opts.wrapTables);
+    const text = String(src ?? "");
+    const fallback = '<div class="plain-fallback">' + escapeHTML(text) + "</div>";
+    if (!window.marked || !window.DOMPurify) return fallback;
+    try {
+      const nonce = Math.random().toString(36).slice(2, 8) || "x";
+      const tok = "RASHMATH" + nonce + "N";
+      const pre = preprocessMarkdown(text, tok);
+      let html = DOMPurify.sanitize(marked.parse(pre.text), PURIFY_CONFIG);
+      if (pre.maths.length) {
+        const re = new RegExp(tok + "(\\d+)END", "g");
+        html = html.replace(re, (m, i) => {
+          const mm = pre.maths[+i];
+          return mm ? mathToHtml(mm) : m;
+        });
+      }
+      if (wrapTables) {
+        html = html.replace(/<table(?=[\s>])/g, '<div class="table-wrap"><table').replace(/<\/table>/g, "</table></div>");
+      }
+      return html;
+    } catch (err) {
+      console.error("Markdown rendering failed:", err);
+      return fallback;
+    }
+  }
+
+  const renderCache = new Map();
+  function formatAnswer(t) {
+    const key = String(t ?? "");
+    if (!key) return "";
+    if (renderCache.has(key)) return renderCache.get(key);
+    const html = renderMarkdown(key, { wrapTables: true });
+    if (renderCache.size > 150) renderCache.delete(renderCache.keys().next().value);
+    renderCache.set(key, html);
+    return html;
+  }
+
+  function plainText(md) {
+    return String(md ?? "")
+      .replace(/```[^\n]*\n?([\s\S]*?)```/g, "$1").replace(/`([^`]+)`/g, "$1")
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/^[ \t]{0,3}#{1,6}[ \t]+/gm, "").replace(/^[ \t]*>[ \t]?/gm, "")
+      .replace(/^[ \t]*[-*+][ \t]+/gm, "").replace(/^[ \t]*\|?[ \t:|-]+\|?[ \t]*$/gm, "")
+      .replace(/\|/g, ", ").replace(/(\*\*|__|\*|~~)/g, "")
+      .replace(/\\([^\w\s])/g, "$1").replace(/\n{3,}/g, "\n\n").trim();
+  }
+
+  /* PROJECT FILES */
+  function cleanFilePath(raw) {
+    let s = String(raw || "").trim().replace(/\\/g, "/");
+    s = s.replace(/^[\s`"'*_#>-]+/, "").replace(/[\s`"'*_:]+$/, "");
+    const parts = s.split("/").map(x => x.trim()).filter(x => x && x !== "." && x !== "..");
+    if (!parts.length || parts.length > 6) return "";
+    if (!parts.every(x => /^[A-Za-z0-9_][A-Za-z0-9_.@() +-]{0,99}$/.test(x))) return "";
+    const last = parts[parts.length - 1];
+    if (!/\.[A-Za-z0-9]{1,10}$/.test(last) && !/^(Dockerfile|Makefile|Procfile|LICENSE)$/.test(last)) return "";
+    return parts.join("/");
+  }
+
+  function labelFromLine(line) {
+    let m = line.match(/^[ \t]*(?:[-*>#]+[ \t]*)?(?:\*\*|__)?(?:File(?:name)?|Path)[ \t]*[:：][ \t]*(.+?)(?:\*\*|__)?[ \t]*$/i);
+    if (m) return cleanFilePath(m[1]);
+    m = line.match(/^[ \t]*(?:#{1,6}[ \t]+|\d+[.)][ \t]+|[-*][ \t]+)?(?:\*\*|__)?`?([A-Za-z0-9_][\w .\/@()+-]*\.[A-Za-z0-9]{1,10})`?(?:\*\*|__)?[ \t]*:?[ \t]*$/);
+    if (m) return cleanFilePath(m[1]);
+    return "";
+  }
+
+  function labelFromInfo(info) {
+    const s = String(info || "").trim();
+    let m = s.match(/(?:title|file|filename)\s*=\s*["']?([^"'\s]+)/i);
+    if (m) return cleanFilePath(m[1]);
+    m = s.match(/^[\w+#-]+:(\S+)$/);
+    if (m) return cleanFilePath(m[1]);
+    const words = s.split(/\s+/);
+    if (words.length > 1) return cleanFilePath(words[1]);
+    return "";
+  }
+
+  function extractProjectFiles(md) {
+    const lines = String(md ?? "").replace(/\r\n?/g, "\n").split("\n");
+    const byPath = new Map(); let prevLabel = ""; let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      const open = line.match(/^[ \t]*(`{3,}|~{3,})(.*)$/);
+      if (!open || (open[1][0] === "`" && open[2].indexOf("`") !== -1)) {
+        if (line.trim()) prevLabel = labelFromLine(line); i++; continue;
+      }
+      const ch = open[1][0], len = open[1].length;
+      let j = i + 1, closed = false;
+      while (j < lines.length) {
+        const c = lines[j].match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
+        if (c && c[1][0] === ch && c[1].length >= len) { closed = true; break; }
+        j++;
+      }
+      if (!closed) break;
+      const path = prevLabel || labelFromInfo(open[2]);
+      const code = lines.slice(i + 1, j).join("\n");
+      if (path && code.trim()) byPath.set(path, { path, code });
+      prevLabel = ""; i = j + 1;
+    }
+    return Array.from(byPath.values());
+  }
+
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n = 0; n < 256; n++) {
+      let c = n;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[n] = c >>> 0;
+    }
+    return t;
+  })();
+
+  function crc32(bytes) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function buildZipBlob(entries) {
+    const enc = new TextEncoder(); const chunks = [], central = []; let offset = 0;
+    const now = new Date();
+    const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+    const dosDate = ((Math.max(1980, now.getFullYear()) - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+
+    entries.forEach(e => {
+      const nameBytes = enc.encode(e.name); const data = e.data;
+      const crc = crc32(data), size = data.length;
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true);
+      lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+      lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+      lh.setUint32(14, crc, true); lh.setUint32(18, size, true);
+      lh.setUint32(22, size, true); lh.setUint16(26, nameBytes.length, true); lh.setUint16(28, 0, true);
+      chunks.push(new Uint8Array(lh.buffer), nameBytes, data);
+
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true);
+      ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, dosTime, true);
+      ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true); ch.setUint32(20, size, true);
+      ch.setUint32(24, size, true); ch.setUint16(28, nameBytes.length, true); ch.setUint16(30, 0, true);
+      ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true);
+      ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+      central.push(new Uint8Array(ch.buffer), nameBytes);
+      offset += 30 + nameBytes.length + size;
+    });
+
+    const cdSize = central.reduce((s, c) => s + c.length, 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(4, 0, true); end.setUint16(6, 0, true);
+    end.setUint16(8, entries.length, true); end.setUint16(10, entries.length, true);
+    end.setUint32(12, cdSize, true); end.setUint32(16, offset, true); end.setUint16(20, 0, true);
+    return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+  }
+
+  function downloadProjectFile(f) {
+    const name = f.path.split("/").pop();
+    saveBlob(new Blob([f.code + "\n"], { type: "text/plain;charset=utf-8" }), name);
+  }
+
+  function downloadProjectZip(files) {
+    const enc = new TextEncoder();
+    const entries = files.map(f => ({ name: "rashai-project/" + f.path, data: enc.encode(f.code + "\n") }));
+    const d = new Date(); const p2 = v => String(v).padStart(2, "0");
+    const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+    saveBlob(buildZipBlob(entries), "rashai-project-" + stamp + ".zip");
+  }
+
+  /* APP STATE */
+  let history = [], attachment = null, busy = false, currentChatId = null;
+  let savedChats = [];
+  try { savedChats = JSON.parse(localStorage.getItem("rashai") || "[]"); } catch { savedChats = []; }
+
+  async function wakeServer() {
+    try {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), 8000);
+      await fetch(HEALTH_URL, { cache: "no-store", signal: controller.signal });
+      clearTimeout(t);
+    } catch (e) { console.warn("Wake-up ping failed:", e.message); }
+  }
+
+  /* MENU & MODALS */
+  const topMenuBtn = $("topMenuBtn");
+  const topMenuDropdown = $("topMenuDropdown");
+
+  topMenuBtn.onclick = e => {
+    e.stopPropagation();
+    topMenuDropdown.classList.toggle("show");
+  };
+
+  document.addEventListener("click", e => {
+    if (!topMenuDropdown.contains(e.target) && e.target !== topMenuBtn) {
+      topMenuDropdown.classList.remove("show");
+    }
   });
 
-  $("msgs").scrollTop=$("msgs").scrollHeight;
-}
+  document.querySelectorAll('.menu-item').forEach(btn => {
+    btn.onclick = () => {
+      const modal = $(btn.dataset.modal);
+      if (modal) {
+        modal.classList.add("show");
+        topMenuDropdown.classList.remove("show");
+      }
+    };
+  });
 
-/* ATTACHMENTS */
-$("attach").onclick=()=>$("file").click();
+  document.querySelectorAll('.close-modal').forEach(btn => {
+    btn.onclick = e => { e.target.closest('.modal-overlay').classList.remove("show"); };
+  });
 
-$("file").onchange=async e=>{
-  const f=e.target.files[0];
-  if(!f)return;
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.onclick = e => { if (e.target === overlay) overlay.classList.remove("show"); };
+  });
 
-  if(f.size>5*1024*1024){
-    alert("Files must be 5 MB or smaller.");
-    e.target.value="";
-    return;
-  }
+  /* SIDEBAR AND CHATS */
+  function openSidebar() { $("side").classList.add("open"); $("overlay").classList.add("show"); }
+  function closeSidebar() { $("side").classList.remove("open"); $("overlay").classList.remove("show"); }
+  $("menu").onclick = openSidebar; $("closeSide").onclick = closeSidebar; $("overlay").onclick = closeSidebar;
 
-  try{
-    const data=await new Promise((resolve,reject)=>{
-      const r=new FileReader();
-      r.onload=()=>resolve(r.result);
-      r.onerror=()=>reject(new Error("Could not read the file."));
-      r.readAsDataURL(f);
+  function persist() { try { localStorage.setItem("rashai", JSON.stringify(savedChats)); } catch (e) {} }
+
+  function renderRecent() {
+    const recent = $("recent");
+    const fragment = document.createDocumentFragment();
+    savedChats.slice().reverse().forEach(chat => {
+      const b = document.createElement("button");
+      b.className = "recentitem" + (chat.id === currentChatId ? " active" : "");
+      b.textContent = chat.title || "Session";
+      b.onclick = () => {
+        saveCurrentChat(); history = chat.messages || []; currentChatId = chat.id;
+        renderMessages(); renderRecent(); closeSidebar();
+      };
+      fragment.appendChild(b);
     });
-
-    attachment={name:f.name,type:f.type||"application/octet-stream",data};
-    updateFileChip();
-  }catch(err){
-    alert(err.message);
-    e.target.value="";
+    recent.replaceChildren(fragment);
   }
-};
 
-function updateFileChip(){
-  $("filechip").style.display=attachment?"block":"none";
-  $("filechip").textContent=attachment?`📎 ${attachment.name}  ×`:"";
-  $("filechip").onclick=()=>{
-    attachment=null;
-    $("file").value="";
-    updateFileChip();
+  function saveCurrentChat() {
+    if (!history.length) return;
+    const title = (history.find(m => m.role === "user")?.content || "New session").slice(0, 42);
+    if (!currentChatId) currentChatId = String(Date.now());
+    const entry = { id: currentChatId, title, messages: history, updated: Date.now() };
+    const i = savedChats.findIndex(c => c.id === currentChatId);
+    if (i >= 0) savedChats[i] = entry; else savedChats.push(entry);
+    savedChats = savedChats.slice(-30);
+    persist(); renderRecent();
+  }
+
+  function newChat() {
+    saveCurrentChat(); history = []; currentChatId = null; attachment = null;
+    updateFileChip(); renderMessages(); renderRecent();
+    $("prompt").value = ""; closeSidebar(); $("prompt").focus();
+  }
+  $("newChat").onclick = newChat;
+
+  $("clearChats").onclick = () => {
+    if (confirm("Clear all saved chat history?")) {
+      savedChats = []; currentChatId = null; persist(); renderRecent();
+    }
   };
-}
 
-/* SENDING */
-async function send(){
-  const text=$("prompt").value.trim();
-  if((!text&&!attachment)||busy)return;
-
-  const msg=(text||"Please review the attached file.")+
-    (attachment?`\n[Attachment: ${attachment.name}]`:"");
-
-  history.push({role:"user",content:msg});
-  renderMessages();
-
-  $("prompt").value="";
-  $("prompt").style.height="38px";
-
-  await requestAnswer(false);
-}
-
-async function continueGeneration(){
-  if(busy)return;
-  const last=history[history.length-1];
-
-  if(!last||last.role!=="assistant"||!last.incomplete)return;
-  await requestAnswer(true);
-}
-
-async function requestAnswer(isContinue){
-  busy=true;
-  $("send").disabled=true;
-
-  const loading=document.createElement("div");
-  loading.className="typing";
-  loading.innerHTML="<i></i><i></i><i></i> "+
-    (isContinue?"RashAI is continuing…":"RashAI is thinking…");
-
-  $("wrap").appendChild(loading);
-  $("msgs").scrollTop=$("msgs").scrollHeight;
-
-  try{
-    /*
-      OPTIMIZATION:
-      The health endpoint is no longer called before every message.
-      The actual chat request wakes the Render server when needed.
-    */
-    const r=await fetch(API_URL,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        messages:history.filter(m=>!m.error).map(m=>({role:m.role,content:m.content})),
-        attachment,
-        mode:STUDY_MODE,
-        continue:isContinue
-      })
-    });
-
-    const d=await r.json().catch(()=>({}));
-
-    if(!r.ok)throw new Error(d.error||"Server returned "+r.status);
-
-    const answer=d.text||d.reply||d.response||d.message||d.answer||
-      "I couldn't find a response. Please try again.";
-
-    const incomplete=d.complete===false;
-
-    if(isContinue){
-      const last=history[history.length-1];
-      last.content=answer;
-      last.incomplete=incomplete;
-      last.note=incomplete?(d.note||""):"";
-    }else{
-      history.push({
-        role:"assistant",
-        content:answer,
-        incomplete,
-        note:incomplete?(d.note||""):""
-      });
-    }
-
-    renderMessages();
-    saveCurrentChat();
-
-  }catch(e){
-    const offline=e instanceof TypeError;
-
-    const errText=offline
-      ?"Sorry, I couldn't reach RashAI. The free server may be waking up — wait about a minute and try again."
-      :"Sorry, something went wrong.\n\n"+e.message;
-
-    if(isContinue){
-      const last=history[history.length-1];
-      last.note="⚠️ Could not continue: "+errText;
-    }else{
-      history.push({role:"assistant",error:true,content:errText});
-    }
-
-    renderMessages();
-
-  }finally{
-    attachment=null;
-    $("file").value="";
-    updateFileChip();
-
-    busy=false;
-    $("send").disabled=false;
-    $("prompt").focus();
+  /* MESSAGE ACTIONS */
+  function action(label, fn) {
+    const b = document.createElement("button");
+    b.className = "smallbtn"; b.textContent = label; b.onclick = () => fn(b); return b;
   }
-}
 
-$("send").onclick=send;
+  const ICONS = {
+    copy: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    speaker: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>`,
+    fileText: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+    filePdf: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`
+  };
 
-$("prompt").addEventListener("input",()=>{
-  $("prompt").style.height="38px";
-  $("prompt").style.height=Math.min($("prompt").scrollHeight,140)+"px";
-});
-
-$("prompt").addEventListener("keydown",e=>{
-  if(e.key==="Enter"&&!e.shiftKey){
-    e.preventDefault();
-    send();
+  function iconAction(iconSvg, title, fn, extraClass) {
+    const b = document.createElement("button");
+    b.className = "icon-action " + (extraClass || "");
+    b.innerHTML = iconSvg; b.title = title; b.onclick = () => fn(b);
+    return b;
   }
-});
 
-/* READ ALOUD AND TXT */
-function speak(t){
-  if(!("speechSynthesis" in window))return;
-  speechSynthesis.cancel();
-  speechSynthesis.speak(new SpeechSynthesisUtterance(plainText(t)));
-}
+  async function copyText(text, btn) {
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; }
+    catch {
+      const t = document.createElement("textarea");
+      t.value = text; t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.appendChild(t); t.select();
+      try { ok = document.execCommand("copy"); } catch (e) {}
+      t.remove();
+    }
+    if (btn) {
+      const oldHtml = btn.innerHTML;
+      btn.innerHTML = ok ? ICONS.check : oldHtml;
+      setTimeout(() => { btn.innerHTML = oldHtml; }, 2000);
+    }
+  }
 
-function saveBlob(blob,name){
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;
-  a.download=name;
-  a.rel="noopener";
-  a.style.display="none";
-  document.body.appendChild(a);
-  a.click();
+  function renderMessages() {
+    const wrap = $("wrap");
+    wrap.innerHTML = "";
+    document.body.classList.toggle("empty", history.length === 0);
+    $("hello").style.display = history.length ? "none" : "block";
 
-  setTimeout(()=>{
-    a.remove();
-    URL.revokeObjectURL(url);
-  },60000);
-}
+    history.forEach((m, idx) => {
+      const row = document.createElement("div");
+      row.className = "msgrow " + (m.role === "user" ? "user" : "assistant");
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
 
-function downloadText(t,n){
-  saveBlob(new Blob([t],{type:"text/plain;charset=utf-8"}),n);
-}
+      if (m.role === "assistant") bubble.innerHTML = formatAnswer(m.content || "");
+      else bubble.textContent = m.content || "";
 
-/* PDF EXPORT */
-function cleanPDFContent(text){
-  if(!text)return "";
+      row.appendChild(bubble);
 
-  const parts=text.split(/(```[\s\S]*?```)/g);
-
-  for(let i=0;i<parts.length;i++){
-    if(i%2===0){
-      let p=parts[i];
-
-      const fillerRegex=/(Want to dive deeper|Would you like me to|Do you want me to|Let me know if|Feel free to ask|Here are some follow-up|Just let me know|I hope this helps|If you have any other questions|Let me know what you think|Is there anything else|I can also help|Let me know|How to run this locally|Happy studying|Good luck)/i;
-
-      const match=p.match(fillerRegex);
-
-      if(match){
-        let idx=match.index;
-        let cutIndex=p.lastIndexOf("\n\n",idx);
-
-        if(cutIndex!==-1&&cutIndex>p.length*.5)p=p.substring(0,cutIndex);
-        else{
-          let sentenceStart=p.lastIndexOf(".",idx);
-          if(sentenceStart!==-1)p=p.substring(0,sentenceStart+1);
-          else p=p.substring(0,idx);
+      if (m.role === "assistant") {
+        if (m.note) {
+          const warn = document.createElement("div");
+          warn.className = "notewarn"; warn.textContent = m.note; bubble.appendChild(warn);
         }
+
+        const files = m.error ? [] : extractProjectFiles(m.content || "");
+        if (files.length) {
+          const fb = document.createElement("div");
+          fb.className = "filebar";
+          const label = document.createElement("span");
+          label.className = "filelabel";
+          label.textContent = m.incomplete ? "Finished files so far:" : "Files in this answer:";
+          fb.appendChild(label);
+          files.slice(0, 12).forEach(f => {
+            fb.appendChild(action("⬇ " + f.path, () => downloadProjectFile(f)));
+          });
+          if (files.length > 1) {
+            const z = action("⬇ Download all (ZIP)", () => downloadProjectZip(files));
+            z.classList.add("primary"); fb.appendChild(z);
+          }
+          bubble.appendChild(fb);
+        }
+
+        const prevMsg = idx > 0 ? history[idx - 1] : null;
+        const userQuery = (prevMsg && prevMsg.role === 'user') ? prevMsg.content : "Study Query";
+
+        const a = document.createElement("div");
+        a.className = "msgactions";
+        a.append(
+          iconAction(ICONS.copy, "Copy", btn => copyText(m.content || "", btn)),
+          iconAction(ICONS.speaker, "Read aloud", () => speak(m.content || "")),
+          iconAction(ICONS.fileText, "Download TXT", () => downloadText(m.content || "", "rashai-answer.txt")),
+          iconAction(ICONS.filePdf, "Download PDF", btn => downloadPDF(userQuery, m.content || "", btn))
+        );
+
+        if (m.incomplete && idx === history.length - 1) {
+          const c = action("Continue generating", () => continueGeneration());
+          c.className = "smallbtn primary"; a.prepend(c);
+        }
+
+        bubble.appendChild(a);
       }
 
-      parts[i]=p;
-    }
-  }
-
-  let result=parts.join("");
-  result=result.replace(/(let me know|happy studying|good luck)[!.\s]*[\p{Emoji}]*$/iu,"").trim();
-  return result;
-}
-
-async function downloadPDF(text,btn){
-  const cleanText=cleanPDFContent(text);
-
-  if(!cleanText){
-    alert("No answer text was found.");
-    return;
-  }
-
-  const oldHtml=btn?btn.innerHTML:"";
-  if(btn)btn.disabled=true;
-
-  let iframe=null;
-
-  try{
-    iframe=document.createElement("iframe");
-    iframe.style.position="fixed";
-    iframe.style.right="0";
-    iframe.style.bottom="0";
-    iframe.style.width="0";
-    iframe.style.height="0";
-    iframe.style.border="0";
-
-    document.body.appendChild(iframe);
-
-    const doc=iframe.contentWindow.document;
-    const dateStr=new Date().toLocaleDateString(undefined,{
-      year:"numeric",month:"long",day:"numeric"
+      wrap.appendChild(row);
     });
 
-    iframe.onload=()=>{
-      setTimeout(()=>{
-        try{
-          iframe.contentWindow.focus();
-          iframe.contentWindow.print();
-        }catch(err){
-          console.error("Print failed:",err);
-        }
+    $("msgs").scrollTop = $("msgs").scrollHeight;
+  }
 
-        setTimeout(()=>{
-          if(iframe&&document.body.contains(iframe)){
-            document.body.removeChild(iframe);
-          }
-          if(btn)btn.disabled=false;
-        },2000);
-      },500);
-    };
+  /* ATTACHMENTS */
+  $("attach").onclick = () => $("file").click();
 
-    doc.open();
+  $("file").onchange = async e => {
+    const f = e.target.files[0];
+    if (!f) return;
 
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>RashAI - Study Answer</title>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap');
-          body{font-family:'Inter',system-ui,sans-serif;color:#000;line-height:1.6;margin:0;padding:0}
-          .header{border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:20px}
-          .title{font-family:'Fraunces',Georgia,serif;font-size:24px;font-weight:bold}
-          .date{font-size:12px;color:#555}
-          .content{font-size:14px}
-          h1,h2,h3,h4,h5,h6{font-family:'Fraunces',Georgia,serif;color:#000;margin-top:24px;margin-bottom:8px;page-break-after:avoid}
-          p{margin:0 0 12px}
-          ul,ol{margin:0 0 12px;padding-left:24px}
-          li{margin-bottom:4px}
-          code{font-family:'Consolas','Courier New',monospace;background:#f4f4f4;padding:2px 4px;border-radius:4px;font-size:13px}
-          pre{background:#f4f4f4;padding:12px;border-radius:6px;overflow-x:auto;page-break-inside:avoid}
-          pre code{background:transparent;padding:0}
-          table{border-collapse:collapse;width:100%;margin-bottom:16px}
-          th,td{border:1px solid #ccc;padding:8px;text-align:left}
-          th{background:#f9f9f9}
-          blockquote{border-left:4px solid #ccc;margin:0 0 12px;padding-left:16px;color:#555}
-          @media print{
-            @page{margin:20mm}
-            body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="title">RashAI — Study Answer</div>
-          <div class="date">${dateStr}</div>
-        </div>
-        <div class="content">${renderMarkdown(cleanText)}</div>
-      </body>
-      </html>
-    `);
-
-    doc.close();
-
-  }catch(err){
-    console.error("PDF export failed:",err);
-
-    if(iframe&&document.body.contains(iframe)){
-      document.body.removeChild(iframe);
+    if (f.size > 5 * 1024 * 1024) {
+      alert("Files must be 5 MB or smaller."); e.target.value = ""; return;
     }
 
-    alert("Could not generate the PDF.\n"+
-      (err&&err.message?err.message:"Please try again."));
+    try {
+      const data = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload = () => resolve(r.result);
+        r.onerror = () => reject(new Error("Could not read the file."));
+        r.readAsDataURL(f);
+      });
+      attachment = { name: f.name, type: f.type || "application/octet-stream", data };
+      updateFileChip();
+    } catch (err) { alert(err.message); e.target.value = ""; }
+  };
 
-    if(btn){
-      btn.innerHTML=oldHtml;
-      btn.disabled=false;
+  function updateFileChip() {
+    $("filechip").style.display = attachment ? "block" : "none";
+    $("filechip").textContent = attachment ? `📎 ${attachment.name}  ×` : "";
+    $("filechip").onclick = () => { attachment = null; $("file").value = ""; updateFileChip(); };
+  }
+
+  /* SENDING */
+  async function send() {
+    const text = $("prompt").value.trim();
+    if ((!text && !attachment) || busy) return;
+
+    const msg = (text || "Please review the attached file.") + (attachment ? `\n[Attachment: ${attachment.name}]` : "");
+    history.push({ role: "user", content: msg });
+    renderMessages();
+
+    $("prompt").value = "";
+    $("prompt").style.height = "38px";
+
+    await requestAnswer(false);
+  }
+
+  async function continueGeneration() {
+    if (busy) return;
+    const last = history[history.length - 1];
+    if (!last || last.role !== "assistant" || !last.incomplete) return;
+    await requestAnswer(true);
+  }
+
+  async function requestAnswer(isContinue) {
+    busy = true; $("send").disabled = true;
+
+    const loading = document.createElement("div");
+    loading.className = "typing";
+    loading.innerHTML = "<i></i><i></i><i></i> " + (isContinue ? "RashAI is continuing…" : "RashAI is thinking…");
+    $("wrap").appendChild(loading);
+    $("msgs").scrollTop = $("msgs").scrollHeight;
+
+    try {
+      const r = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: history.filter(m => !m.error).map(m => ({ role: m.role, content: m.content })),
+          attachment, mode: STUDY_MODE, continue: isContinue
+        })
+      });
+
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(d.error || "Server returned " + r.status);
+
+      const answer = d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again.";
+      const incomplete = d.complete === false;
+
+      if (isContinue) {
+        const last = history[history.length - 1];
+        last.content = answer; last.incomplete = incomplete; last.note = incomplete ? (d.note || "") : "";
+      } else {
+        history.push({ role: "assistant", content: answer, incomplete, note: incomplete ? (d.note || "") : "" });
+      }
+      renderMessages(); saveCurrentChat();
+    } catch (e) {
+      const offline = e instanceof TypeError;
+      const errText = offline
+        ? "Sorry, I couldn't reach RashAI. The free server may be waking up — wait about a minute and try again."
+        : "Sorry, something went wrong.\n\n" + e.message;
+
+      if (isContinue) {
+        const last = history[history.length - 1]; last.note = "⚠️ Could not continue: " + errText;
+      } else {
+        history.push({ role: "assistant", error: true, content: errText });
+      }
+      renderMessages();
+    } finally {
+      attachment = null; $("file").value = ""; updateFileChip();
+      busy = false; $("send").disabled = false; $("prompt").focus();
     }
   }
-}
 
-/* START APP */
-renderRecent();
-renderMessages();
+  $("send").onclick = send;
+
+  $("prompt").addEventListener("input", () => {
+    $("prompt").style.height = "38px";
+    $("prompt").style.height = Math.min($("prompt").scrollHeight, 140) + "px";
+  });
+
+  $("prompt").addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  });
+
+  /* READ ALOUD AND TXT */
+  function speak(t) {
+    if (!("speechSynthesis" in window)) return;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(new SpeechSynthesisUtterance(plainText(t)));
+  }
+
+  function saveBlob(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = name; a.rel = "noopener";
+    a.style.display = "none"; document.body.appendChild(a); a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60000);
+  }
+
+  function downloadText(t, n) {
+    saveBlob(new Blob([t], { type: "text/plain;charset=utf-8" }), n);
+  }
+
+  /* PDF EXPORT */
+  let pdfBusy = false;
+
+  function showPdfOverlay(msg) {
+    const o = document.createElement("div");
+    o.className = "pdf-overlay";
+    o.innerHTML = '<div class="pdf-overlay-box"><div class="pdf-spinner"></div><div class="pdf-overlay-text"></div></div>';
+    o.querySelector(".pdf-overlay-text").textContent = msg;
+    document.body.appendChild(o);
+    return o;
+  }
+
+  function setPdfOverlay(o, msg) {
+    const t = o && o.querySelector(".pdf-overlay-text");
+    if (t) t.textContent = msg;
+  }
+
+  async function waitForFonts() {
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+    await new Promise(r => setTimeout(r, 250));
+    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
+  }
+
+  function stripAIFiller(text) {
+    if (!text) return "";
+    let paras = text.split('\n\n');
+    let filtered = paras.filter(p => {
+      let lower = p.toLowerCase().trim();
+      return !(
+        lower.startsWith('want to dive deeper') ||
+        lower.startsWith('would you like me to') ||
+        lower.startsWith('do you want me to') ||
+        lower.startsWith('let me know') ||
+        lower.startsWith('feel free to') ||
+        lower.startsWith('i hope this helps') ||
+        lower.startsWith('if you have any other questions') ||
+        lower.startsWith('just let me know') ||
+        lower.startsWith('how to run this locally') ||
+        lower.startsWith('how the chat messages') ||
+        lower.startsWith('here are some') ||
+        lower.startsWith('is there anything else')
+      );
+    });
+    return filtered.join('\n\n').trim();
+  }
+
+  async function downloadPDF(question, answer, btn) {
+    const cleanAnswer = stripAIFiller(answer);
+    if (!cleanAnswer) { alert("No answer text was found."); return; }
+    if (pdfBusy) return;
+    pdfBusy = true;
+
+    const oldHtml = btn ? btn.innerHTML : "";
+    if (btn) { btn.disabled = true; }
+    let overlay = null, host = null;
+
+    try {
+      overlay = showPdfOverlay("Preparing PDF…");
+
+      host = document.createElement("div");
+      host.className = "pdf-host";
+      const doc = document.createElement("div");
+      doc.className = "pdf-doc";
+      
+      const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+      
+      doc.innerHTML =
+        '<div class="pdf-title">RashAI — Study Answer</div>' +
+        '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
+        '<hr class="pdf-rule">' +
+        '<div class="pdf-user-q"><strong>Question:</strong>' + escapeHTML(question) + '</div>' +
+        '<div class="pdf-ai-a">' + renderMarkdown(cleanAnswer) + '</div>';
+        
+      host.appendChild(doc);
+      document.body.appendChild(host);
+      void host.offsetHeight;
+      await waitForFonts();
+
+      setPdfOverlay(overlay, "Generating PDF…");
+      
+      const canvas = await html2canvas(doc, {
+        scale: 2,
+        backgroundColor: "#ffffff",
+        logging: false,
+        useCORS: false,
+        allowTaint: false,
+        scrollX: 0, scrollY: 0,
+        windowWidth: 800,
+        windowHeight: doc.offsetHeight + 100
+      });
+
+      const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      const margin = 10;
+      const usableWidth = pageWidth - (margin * 2);
+      const usableHeight = pageHeight - (margin * 2);
+      
+      const pxPerMm = canvas.width / usableWidth;
+      const pageHeightPx = Math.floor(usableHeight * pxPerMm);
+      
+      let heightLeft = canvas.height;
+      let position = 0;
+      
+      while (heightLeft > 0) {
+        setPdfOverlay(overlay, "Saving page " + (pdf.internal.getNumberOfPages()) + "…");
+        
+        const pageCanvas = document.createElement('canvas');
+        pageCanvas.width = canvas.width;
+        pageCanvas.height = Math.min(pageHeightPx, heightLeft);
+        
+        const ctx = pageCanvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+        
+        ctx.drawImage(
+          canvas,
+          0, position, canvas.width, pageCanvas.height,
+          0, 0, pageCanvas.width, pageCanvas.height
+        );
+        
+        const pageData = pageCanvas.toDataURL('image/jpeg', 0.95);
+        
+        if (position > 0) pdf.addPage();
+        
+        const imgHeightMm = (pageCanvas.height / canvas.width) * usableWidth;
+        pdf.addImage(pageData, 'JPEG', margin, margin, usableWidth, imgHeightMm);
+        
+        heightLeft -= pageHeightPx;
+        position += pageHeightPx;
+      }
+
+      const d = new Date();
+      const p2 = v => String(v).padStart(2, "0");
+      const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+      saveBlob(pdf.output("blob"), "rashai-answer-" + stamp + ".pdf");
+
+    } catch (err) {
+      console.error("PDF export failed:", err);
+      alert("Could not create the PDF.\n" + (err && err.message ? err.message : "Please try again."));
+    } finally {
+      if (host) host.remove();
+      if (overlay) overlay.remove();
+      if (btn) { btn.innerHTML = oldHtml; btn.disabled = false; }
+      pdfBusy = false;
+    }
+  }
+
+  /* START APP */
+  renderRecent();
+  renderMessages();
+});
 </script>
-
 </body>
 </html>
