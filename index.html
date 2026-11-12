@@ -70,7 +70,7 @@
 :root{
   --bg:#eaf6ff;--bg2:#ddefff;--panel:#fff;--panel2:#eef7ff;
   --panel3:#e0f0ff;--text:#0e2437;
-  --muted:#4b6682; /* Darkened for better contrast */
+  --muted:#4b6682;
   --line:#cfe3f5;
   --accent:#2f8fe0;--accent2:#5cb0f7;--accent3:#8ed3ff;
   --accentText:#fff;--user:#d9edff;--code:#0e3a5c;
@@ -295,109 +295,7 @@ body.empty .hint{position:absolute;bottom:10px;left:0;right:0;padding:0}
 @keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(.98)}to{opacity:1;transform:none}}
 .menu-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--text);transition:.14s;text-align:left}
 .menu-item:hover{background:var(--panel2);color:var(--accent)}
-.menu-item span{width:16px;text-align:center;color:var(--accent);font-size:14px}
-
-.modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(12,48,80,.4);backdrop-filter:blur(4px);opacity:0;visibility:hidden;transition:.25s;display:grid;place-items:center;padding:20px}
-.modal-overlay.show{opacity:1;visibility:visible}
-.modal{background:var(--panel);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);width:100%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;transform:translateY(12px) scale(.98);transition:.25s;overflow:hidden}
-.modal-overlay.show .modal{transform:none}
-.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
-.modal-head h2{font-family:Fraunces,Georgia,serif;font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
-.modal-head button{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--panel2);color:var(--muted);font-size:18px;transition:.14s}
-.modal-head button:hover{background:var(--panel3);color:var(--text);transform:rotate(90deg)}
-.modal-body{padding:20px 22px;overflow-y:auto;font-size:14px;line-height:1.65;color:var(--text)}
-.modal-body h3{font-size:14px;font-weight:700;color:var(--text);margin:16px 0 6px;letter-spacing:-.01em}
-.modal-body p{margin:0 0 10px;color:var(--muted)}
-.modal-body ul{margin:6px 0 12px;padding-left:20px;color:var(--muted)}
-.modal-body li{margin:3px 0}
-.modal-body strong{color:var(--text);font-weight:600}
-
-/* PDF Export Host */
-.pdf-host { position: fixed; left: -9999px; top: 0; width: 700px; background: #ffffff; z-index: -1; pointer-events: none; }
-.pdf-doc { width: 700px; background: #ffffff; color: #172033; font-family: "Segoe UI", Roboto, "Noto Sans", Arial, sans-serif; font-size: 14px; line-height: 1.6; padding: 40px; }
-.pdf-doc *{box-sizing:border-box}
-.pdf-doc .pdf-user-q{background:#f4f4f5; padding:12px 16px; border-radius:8px; margin-bottom:24px; font-size:14px; color:#333; border-left:4px solid #a1a1aa;}
-.pdf-doc .pdf-user-q strong{display:block; margin-bottom:4px; color:#111;}
-.pdf-doc .pdf-ai-a{font-size:14px; color:#111;}
-.pdf-doc .pdf-title{font-size:22px;font-weight:700;color:#2b3a8f;margin:0 0 2px;line-height:1.3}
-.pdf-doc .pdf-date{font-size:12px;color:#69748a;margin:0}
-.pdf-doc .pdf-rule{border:0;border-top:2px solid #8b9cff;margin:10px 0 14px}
-.pdf-doc p{margin:0 0 10px}
-.pdf-doc h1,.pdf-doc h2,.pdf-doc h3,.pdf-doc h4,.pdf-doc h5,.pdf-doc h6{margin:18px 0 8px;line-height:1.3;font-weight:700;color:#111a2e}
-.pdf-doc h1{font-size:21px}
-.pdf-doc h2{font-size:18px}
-.pdf-doc h3{font-size:16px}
-.pdf-doc h4{font-size:15px}
-.pdf-doc h5{font-size:14px}
-.pdf-doc h6{font-size:13px;color:#56627a}
-.pdf-doc strong,.pdf-doc b{font-weight:700}
-.pdf-doc em,.pdf-doc i{font-style:italic}
-.pdf-doc ul,.pdf-doc ol{margin:6px 0 10px;padding-left:26px}
-.pdf-doc li{margin:3px 0}
-.pdf-doc li > ul,.pdf-doc li > ol{margin:4px 0}
-.pdf-doc blockquote{border-left:4px solid #8b9cff;margin:10px 0;padding:6px 14px;background:#f3f5fb;color:#3a4660}
-.pdf-doc blockquote p:last-child{margin-bottom:0}
-.pdf-doc hr{border:0;border-top:1px solid #cbd5e1;margin:14px 0}
-.pdf-doc a{color:#3347a8;text-decoration:underline;overflow-wrap:break-word}
-.pdf-doc code{background:#eef1f8;color:#33408f;padding:1px 4px;border-radius:4px;font-family:Consolas,"Courier New",monospace;font-size:12.5px;overflow-wrap:break-word}
-.pdf-doc pre{background:#f3f5f9;color:#1b2333;border:1px solid #d5dbe7;border-radius:8px;padding:10px 12px;margin:10px 0;font-size:12px;line-height:1.5;white-space:pre-wrap;overflow-wrap:break-word;overflow:visible;max-width:none;font-family:Consolas,"Courier New",monospace}
-.pdf-doc pre code{background:none;color:inherit;padding:0;font-size:12px}
-.pdf-doc table{border-collapse:separate;border-spacing:0;width:100%;margin:12px 0;font-size:12.5px}
-.pdf-doc th,.pdf-doc td{border-right:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;padding:6px 8px;text-align:left;vertical-align:top}
-.pdf-doc th:first-child,.pdf-doc td:first-child{border-left:1px solid #cbd5e1}
-.pdf-doc thead th{border-top:1px solid #cbd5e1;background:#eef1f8;font-weight:700}
-.pdf-doc th[align="center"],.pdf-doc td[align="center"]{text-align:center}
-.pdf-doc th[align="right"],.pdf-doc td[align="right"]{text-align:right}
-.pdf-doc .katex-display{margin:10px 0}
-.pdf-doc .plain-fallback{white-space:pre-wrap}
-
-/* Modals */
-.pdf-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:grid;place-items:center}
-.pdf-overlay-box{display:flex;flex-direction:column;align-items:center;gap:14px;color:var(--text);text-align:center;padding:20px}
-.pdf-overlay-text{font-size:14px;color:var(--muted)}
-.pdf-spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:pdfspin .8s linear infinite}
-@keyframes pdfspin{to{transform:rotate(360deg)}}
-
-@media(max-width:600px){
-  header{height:56px;padding:0 12px;gap:9px}
-  .studybadge{display:none}
-  #msgs{padding:18px 12px}
-  .hello{padding:0 8px}
-  .hello h1{font-size:clamp(24px,7vw,29px)}
-  .hello .orb{width:80px;height:80px;border-radius:22px}
-  .hello p{font-size:14.5px}
-  #bar{width:calc(100% - 18px);margin-bottom:12px;border-radius:22px;padding:4px}
-  .msgrow{gap:8px;margin-bottom:18px}
-  .bubble{padding:11px 13px;font-size:14px}
-  .assistant .bubble{padding:14px}
-  #attach{width:34px;height:34px}
-  .sendbtn{width:36px;height:36px}
-  #prompt{padding:8px 10px}
-  body.empty main{justify-content:flex-start}
-  body.empty header{position:relative;background:color-mix(in srgb,var(--bg) 78%,transparent);border-bottom:1px solid var(--line)}
-  body.empty #msgs{flex:1;padding:22px 10px 16px;overflow-y:auto;margin-bottom:0}
-  body.empty .hello{margin:18px auto 22px;width:100%}
-  body.empty #bar{margin:0 auto 8px;width:calc(100% - 16px)}
-  body.empty .hint{position:relative;bottom:auto}
-  body{height:100dvh;overflow:hidden}
-  main{height:100dvh;min-height:0}
-  #msgs{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain}
-  #bar{width:calc(100% - 16px)}
-  .hint{padding-bottom:6px}
-  .msgactions{gap:6px}
-  .cloud{filter:none;will-change:auto;opacity:.25}
-  .c1,.c2,.c3,.c4,.c5{animation-duration:180s}
-}
-@media(max-width:360px){
-  header{gap:7px}
-  .statusdot{padding:4px 8px;font-size:11px}
-  .iconbtn{width:34px;height:34px}
-}
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}
-  .cloud-layer{display:none}
-}
-main,#msgs,#wrap,.msgrow,.bubble{min-width:0;min-height:0}
+.menu-item span{width:16px;text-align:center;color:var(--accent);font-size:15px}
 </style>
 </head>
 
@@ -798,7 +696,7 @@ window.addEventListener('DOMContentLoaded', () => {
       const path = prevLabel || labelFromInfo(open[2]);
       const code = lines.slice(i + 1, j).join("\n");
       if (path && code.trim()) byPath.set(path, { path, code });
-      prevLabel = ""; i = j + 1;
+             prevLabel = ""; i = j + 1;
     }
     return Array.from(byPath.values());
   }
@@ -1097,260 +995,699 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   /* SENDING */
-  async function send() {
-    const text = $("prompt").value.trim();
-    if ((!text && !attachment) || busy) return;
+  async function send() {    /* AUTHENTICATION */
+    let firebase = null;
+    let currentUser = null;
+    let authReady = false;
+    let phoneConfirmation = false;
 
-    const msg = (text || "Please review the attached file.") + (attachment ? `\n[Attachment: ${attachment.name}]` : "");
-    history.push({ role: "user", content: msg });
-    renderMessages();
+    function addAuthInterface() {
+      const style = document.createElement("style");
+      style.textContent = `
+        #authBtn{border:1px solid var(--border);background:var(--panel);color:var(--text);border-radius:12px;padding:9px 13px;font-size:12px;font-weight:600;cursor:pointer;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        #authModal .auth-card{width:min(420px,calc(100vw - 30px));max-height:88vh;overflow-y:auto;background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;box-shadow:0 20px 70px #0005}
+        #authModal .auth-title{font-size:22px;font-weight:750;margin:0 0 6px}
+        #authModal .auth-sub{font-size:13px;color:var(--muted);margin:0 0 20px}
+        #authModal .auth-input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:11px;border:1px solid var(--border);background:var(--bg);color:var(--text);outline:none;margin:7px 0;font:inherit;font-size:14px}
+        #authModal .auth-input:focus{border-color:var(--accent)}
+        #authModal .auth-action{width:100%;padding:12px;border:0;border-radius:11px;background:var(--accent);color:#07111c;font-weight:700;cursor:pointer;margin-top:10px;font-size:14px}
+        #authModal .auth-secondary{width:100%;padding:11px;border:1px solid var(--border);border-radius:11px;background:transparent;color:var(--text);cursor:pointer;margin-top:9px;font-size:13px}
+        #authModal .auth-tabs{display:flex;gap:8px;margin:15px 0}
+        #authModal .auth-tab{flex:1;padding:10px;border:1px solid var(--border);border-radius:10px;background:transparent;color:var(--muted);cursor:pointer}
+        #authModal .auth-tab.active{background:var(--bg);color:var(--text);border-color:var(--accent)}
+        #authModal .auth-error{font-size:12px;color:#ef7777;min-height:18px;margin-top:10px;white-space:pre-wrap}
+        #authModal .auth-divider{text-align:center;color:var(--muted);font-size:12px;margin:14px 0}
+        #authModal .auth-link{border:0;background:none;color:var(--accent);cursor:pointer;font-size:12px;padding:8px 0}
+        #authModal .auth-section{display:none}
+        #authModal .auth-section.active{display:block}
+        #recaptcha-container{margin-top:10px}
+        @media(max-width:520px){#authModal .auth-card{padding:19px}#authBtn{max-width:105px;padding:8px;font-size:11px}}
+      `;
+      document.head.appendChild(style);
 
-    $("prompt").value = "";
-    $("prompt").style.height = "38px";
+      const authButton = document.createElement("button");
+      authButton.id = "authBtn";
+      authButton.textContent = "Sign in";
+      authButton.onclick = () => {
+        if (currentUser) {
+          if (confirm("Sign out of RashAI?")) signOutUser();
+        } else {
+          openAuthModal();
+        }
+      };
 
-    await requestAnswer(false);
-  }
+      const header = document.querySelector("header");
+      header.insertBefore(authButton, $("topMenuBtn").parentElement);
 
-  async function continueGeneration() {
-    if (busy) return;
-    const last = history[history.length - 1];
-    if (!last || last.role !== "assistant" || !last.incomplete) return;
-    await requestAnswer(true);
-  }
+      const modal = document.createElement("div");
+      modal.id = "authModal";
+      modal.className = "modal-overlay";
+      modal.innerHTML = `
+        <div class="auth-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <h2 class="auth-title">Welcome to RashAI</h2>
+              <p class="auth-sub">Sign in to save and sync your study sessions.</p>
+            </div>
+            <button id="authClose" class="iconbtn" aria-label="Close">×</button>
+          </div>
 
-  async function requestAnswer(isContinue) {
-    busy = true; $("send").disabled = true;
+          <button id="googleLogin" class="auth-secondary">Continue with Google</button>
 
-    const loading = document.createElement("div");
-    loading.className = "typing";
-    loading.innerHTML = "<i></i><i></i><i></i> " + (isContinue ? "RashAI is continuing…" : "RashAI is thinking…");
-    $("wrap").appendChild(loading);
-    $("msgs").scrollTop = $("msgs").scrollHeight;
+          <div class="auth-divider">OR CONTINUE WITH EMAIL</div>
 
-    try {
-      const r = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: history.filter(m => !m.error).map(m => ({ role: m.role, content: m.content })),
-          attachment, mode: STUDY_MODE, continue: isContinue
-        })
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="loginTab">Login</button>
+            <button class="auth-tab" id="registerTab">Register</button>
+          </div>
+
+          <div id="loginSection" class="auth-section active">
+            <input id="loginEmail" class="auth-input" type="email" placeholder="Email address" autocomplete="email">
+            <input id="loginPassword" class="auth-input" type="password" placeholder="Password" autocomplete="current-password">
+            <button id="loginSubmit" class="auth-action">Sign in</button>
+            <button id="forgotPassword" class="auth-link">Forgot password?</button>
+          </div>
+
+          <div id="registerSection" class="auth-section">
+            <input id="registerName" class="auth-input" type="text" placeholder="Your name" autocomplete="name">
+            <input id="registerEmail" class="auth-input" type="email" placeholder="Email address" autocomplete="email">
+            <input id="registerPassword" class="auth-input" type="password" placeholder="Create password (6+ characters)" autocomplete="new-password">
+            <button id="registerSubmit" class="auth-action">Create account</button>
+          </div>
+
+          <div class="auth-divider">OR USE PHONE NUMBER</div>
+
+          <div id="phoneSection">
+            <input id="phoneNumber" class="auth-input" type="tel" placeholder="+91 9876543210" autocomplete="tel">
+            <button id="sendOTP" class="auth-secondary">Send OTP</button>
+            <div id="otpArea" style="display:none">
+              <input id="phoneOTP" class="auth-input" type="text" inputmode="numeric" placeholder="Enter OTP">
+              <button id="verifyOTP" class="auth-action">Verify OTP</button>
+            </div>
+            <div id="recaptcha-container"></div>
+          </div>
+
+          <div id="authMessage" class="auth-error" role="status"></div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+
+      $("authClose").onclick = () => modal.classList.remove("show");
+      modal.addEventListener("click", e => {
+        if (e.target === modal) modal.classList.remove("show");
       });
 
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || "Server returned " + r.status);
+      $("loginTab").onclick = () => switchAuthTab("login");
+      $("registerTab").onclick = () => switchAuthTab("register");
 
-      const answer = d.text || d.reply || d.response || d.message || d.answer || "I couldn't find a response. Please try again.";
-      const incomplete = d.complete === false;
+      $("googleLogin").onclick = async () => {
+        await authAction(async () => {
+          await firebase.loginWithGoogle();
+        });
+      };
 
-      if (isContinue) {
-        const last = history[history.length - 1];
-        last.content = answer; last.incomplete = incomplete; last.note = incomplete ? (d.note || "") : "";
-      } else {
-        history.push({ role: "assistant", content: answer, incomplete, note: incomplete ? (d.note || "") : "" });
+      $("loginSubmit").onclick = async () => {
+        await authAction(async () => {
+          const email = $("loginEmail").value.trim();
+          const password = $("loginPassword").value;
+          if (!email || !password) throw new Error("Enter your email and password.");
+          await firebase.loginWithEmail(email, password);
+        });
+      };
+
+      $("registerSubmit").onclick = async () => {
+        await authAction(async () => {
+          const name = $("registerName").value.trim();
+          const email = $("registerEmail").value.trim();
+          const password = $("registerPassword").value;
+          if (!name || !email || !password) throw new Error("Fill in all registration fields.");
+          if (password.length < 6) throw new Error("Password must contain at least 6 characters.");
+          await firebase.registerWithEmail(name, email, password);
+        });
+      };
+
+      $("forgotPassword").onclick = async () => {
+        await authAction(async () => {
+          const email = $("loginEmail").value.trim();
+          if (!email) throw new Error("Enter your email address first.");
+          await firebase.resetPassword(email);
+          showAuthMessage("Password reset email sent. Check your inbox.", true);
+        });
+      };
+
+      $("sendOTP").onclick = async () => {
+        await authAction(async () => {
+          const phone = $("phoneNumber").value.trim();
+          if (!/^\+[1-9]\d{7,14}$/.test(phone)) {
+            throw new Error("Enter your phone number with country code, e.g. +919876543210.");
+          }
+          await firebase.resetPhoneRecaptcha();
+          await firebase.sendPhoneOTP(phone);
+          phoneConfirmation = true;
+          $("otpArea").style.display = "block";
+          showAuthMessage("OTP sent. Check your phone.", true);
+        });
+      };
+
+      $("verifyOTP").onclick = async () => {
+        await authAction(async () => {
+          const code = $("phoneOTP").value.trim();
+          if (!code) throw new Error("Enter the OTP.");
+          await firebase.verifyPhoneOTP(code);
+        });
+      };
+    }
+
+    function switchAuthTab(tab) {
+      const login = tab === "login";
+      $("loginTab").classList.toggle("active", login);
+      $("registerTab").classList.toggle("active", !login);
+      $("loginSection").classList.toggle("active", login);
+      $("registerSection").classList.toggle("active", !login);
+      showAuthMessage("");
+    }
+
+    function showAuthMessage(message, success) {
+      const el = $("authMessage");
+      if (!el) return;
+      el.textContent = message || "";
+      el.style.color = success ? "#36bd83" : "#ef7777";
+    }
+
+    async function authAction(callback) {
+      showAuthMessage("");
+      const buttons = [
+        $("googleLogin"), $("loginSubmit"), $("registerSubmit"),
+        $("sendOTP"), $("verifyOTP")
+      ].filter(Boolean);
+
+      buttons.forEach(b => b.disabled = true);
+      try {
+        await callback();
+      } catch (error) {
+        console.error("Authentication error:", error);
+        showAuthMessage(getAuthError(error));
+      } finally {
+        buttons.forEach(b => b.disabled = false);
       }
-      renderMessages(); saveCurrentChat();
-    } catch (e) {
-      const offline = e instanceof TypeError;
-      const errText = offline
-        ? "Sorry, I couldn't reach RashAI. The free server may be waking up — wait about a minute and try again."
-        : "Sorry, something went wrong.\n\n" + e.message;
+    }
 
-      if (isContinue) {
-        const last = history[history.length - 1]; last.note = "⚠️ Could not continue: " + errText;
-      } else {
-        history.push({ role: "assistant", error: true, content: errText });
+    function getAuthError(error) {
+      const code = error?.code || "";
+      const messages = {
+        "auth/invalid-email": "Please enter a valid email address.",
+        "auth/user-not-found": "No account was found with this email.",
+        "auth/wrong-password": "Incorrect email or password.",
+        "auth/invalid-credential": "Incorrect email or password.",
+        "auth/email-already-in-use": "An account already exists with this email.",
+        "auth/weak-password": "Choose a stronger password (at least 6 characters).",
+        "auth/popup-closed-by-user": "Google sign-in was cancelled.",
+        "auth/popup-blocked": "Your browser blocked the sign-in popup. Please allow popups and try again.",
+        "auth/too-many-requests": "Too many attempts. Please try again later.",
+        "auth/invalid-phone-number": "Check your phone number and country code.",
+        "auth/invalid-verification-code": "The OTP is incorrect. Please try again.",
+        "auth/code-expired": "The OTP expired. Please request a new one.",
+        "auth/unauthorized-domain": "This website domain is not authorized in Firebase Authentication."
+      };
+      return messages[code] || error?.message || "Authentication failed. Please try again.";
+    }
+
+    function openAuthModal() {
+      $("authModal").classList.add("show");
+      showAuthMessage("");
+    }
+
+    async function waitForFirebase() {
+      for (let i = 0; i < 120; i++) {
+        if (window.rashaiFirebase) return window.rashaiFirebase;
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
+      throw new Error("Firebase could not load. Check that firebase.js exists in your repository.");
+    }
+
+    async function signOutUser() {
+      try {
+        await firebase.logout();
+      } catch (error) {
+        alert(getAuthError(error));
+      }
+    }
+
+    async function syncChatsFromCloud() {
+      if (!currentUser || !firebase) return;
+
+      try {
+        const cloudChats = await firebase.loadChats();
+        const byId = new Map();
+
+        savedChats.forEach(chat => byId.set(String(chat.id), chat));
+
+        (cloudChats || []).forEach(chat => {
+          const id = String(chat.id);
+          const cloudUpdated = chat.updatedAt?.toMillis?.() || chat.updated || 0;
+          const local = byId.get(id);
+          const localUpdated = local?.updated || 0;
+
+          if (!local || cloudUpdated >= localUpdated) {
+            byId.set(id, {
+              id,
+              title: chat.title || "Study session",
+              messages: chat.messages || [],
+              updated: cloudUpdated || Date.now()
+            });
+          }
+        });
+
+        savedChats = Array.from(byId.values())
+          .sort((a, b) => (a.updated || 0) - (b.updated || 0))
+          .slice(-30);
+
+        persist();
+        renderRecent();
+
+        // Upload local-only sessions to the signed-in user's cloud account.
+        for (const chat of savedChats) {
+          try {
+            await firebase.saveChat(chat);
+          } catch (error) {
+            console.warn("Could not sync a chat:", chat.id, error);
+          }
+        }
+      } catch (error) {
+        console.error("Chat sync failed:", error);
+        showAuthMessage("Signed in, but chat sync failed. Check your Firestore rules.");
+      }
+    }
+
+    async function handleAuthChange(user) {
+      currentUser = user || null;
+      authReady = true;
+
+      const button = $("authBtn");
+      if (currentUser) {
+        button.textContent = currentUser.displayName || currentUser.email || currentUser.phoneNumber || "Account";
+        button.title = "Signed in. Click to sign out.";
+        $("authModal").classList.remove("show");
+        await syncChatsFromCloud();
+      } else {
+        button.textContent = "Sign in";
+        button.title = "Sign in to RashAI";
+      }
+    }
+
+    /* LOAD FIREBASE MODULE */
+    addAuthInterface();
+
+    const firebaseScript = document.createElement("script");
+    firebaseScript.type = "module";
+    firebaseScript.src = "./firebase.js";
+    document.head.appendChild(firebaseScript);
+
+    (async () => {
+      try {
+        firebase = await waitForFirebase();
+        firebase.watchAuth(user => {
+          handleAuthChange(user).catch(error => console.error("Auth state error:", error));
+        });
+      } catch (error) {
+        console.error(error);
+        $("authBtn").textContent = "Auth unavailable";
+        $("authBtn").title = error.message;
+      }
+    })();
+
+    /* CLOUD-SYNCED CHAT SAVING */
+    const originalPersist = persist;
+    saveCurrentChat = function() {
+      if (!history.length) return;
+
+      const title = (history.find(m => m.role === "user")?.content || "New session").slice(0, 42);
+      if (!currentChatId) currentChatId = String(Date.now());
+
+      const entry = {
+        id: currentChatId,
+        title,
+        messages: history,
+        updated: Date.now()
+      };
+
+      const index = savedChats.findIndex(chat => String(chat.id) === String(currentChatId));
+      if (index >= 0) savedChats[index] = entry;
+      else savedChats.push(entry);
+
+      savedChats = savedChats.slice(-30);
+      originalPersist();
+      renderRecent();
+
+      if (currentUser && firebase) {
+        firebase.saveChat(entry).catch(error => {
+          console.warn("Cloud chat save failed:", error);
+        });
+      }
+    };
+
+    /* AUTHENTICATED CHAT REQUEST */
+    requestAnswer = async function(isContinue) {
+      if (!currentUser || !firebase) {
+        openAuthModal();
+        alert("Please sign in to use RashAI chat.");
+        return;
+      }
+
+      busy = true;
+      $("send").disabled = true;
+
+      const loading = document.createElement("div");
+      loading.className = "typing";
+      loading.innerHTML = "<i></i><i></i><i></i> " +
+        (isContinue ? "RashAI is continuing…" : "RashAI is thinking…");
+      $("wrap").appendChild(loading);
+      $("msgs").scrollTop = $("msgs").scrollHeight;
+
+      try {
+        const token = await firebase.getToken();
+        if (!token) throw new Error("Your session expired. Please sign in again.");
+
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+          },
+          body: JSON.stringify({
+            messages: history.filter(m => !m.error).map(m => ({
+              role: m.role,
+              content: m.content
+            })),
+            attachment,
+            mode: STUDY_MODE,
+            continue: isContinue
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Server returned " + response.status);
+
+        const answer = data.text || data.reply || data.response ||
+          data.message || data.answer || "I couldn't find a response. Please try again.";
+        const incomplete = data.complete === false;
+
+        if (isContinue) {
+          const last = history[history.length - 1];
+          last.content = answer;
+          last.incomplete = incomplete;
+          last.note = incomplete ? (data.note || "") : "";
+        } else {
+          history.push({
+            role: "assistant",
+            content: answer,
+            incomplete,
+            note: incomplete ? (data.note || "") : ""
+          });
+        }
+
+        renderMessages();
+        saveCurrentChat();
+
+      } catch (error) {
+        const message = error instanceof TypeError
+          ? "Could not reach RashAI. The free server may be waking up. Please try again shortly."
+          : "Sorry, something went wrong.\n\n" + error.message;
+
+        if (isContinue) {
+          const last = history[history.length - 1];
+          last.note = "⚠️ Could not continue: " + message;
+        } else {
+          history.push({ role: "assistant", error: true, content: message });
+        }
+
+        renderMessages();
+
+      } finally {
+        loading.remove();
+        attachment = null;
+        $("file").value = "";
+        updateFileChip();
+        busy = false;
+        $("send").disabled = false;
+        $("prompt").focus();
+      }
+    };
+
+    /* SEND MESSAGE */
+    async function send() {
+      const text = $("prompt").value.trim();
+      if ((!text && !attachment) || busy) return;
+
+      if (!currentUser || !firebase) {
+        openAuthModal();
+        showAuthMessage("Please sign in before sending a message.");
+        return;
+      }
+
+      const message = (text || "Please review the attached file.") +
+        (attachment ? `\n[Attachment: ${attachment.name}]` : "");
+
+      history.push({ role: "user", content: message });
       renderMessages();
-    } finally {
-      attachment = null; $("file").value = ""; updateFileChip();
-      busy = false; $("send").disabled = false; $("prompt").focus();
+
+      $("prompt").value = "";
+      $("prompt").style.height = "38px";
+
+      await requestAnswer(false);
     }
-  }
 
-  $("send").onclick = send;
+    async function continueGeneration() {
+      if (busy) return;
+      const last = history[history.length - 1];
+      if (!last || last.role !== "assistant" || !last.incomplete) return;
+      await requestAnswer(true);
+    }
 
-  $("prompt").addEventListener("input", () => {
-    $("prompt").style.height = "38px";
-    $("prompt").style.height = Math.min($("prompt").scrollHeight, 140) + "px";
-  });
+    /* CLEAR LOCAL AND CLOUD HISTORY */
+    $("clearChats").onclick = async () => {
+      if (!confirm("Clear all saved chat history? This also deletes your synced chats from your account.")) return;
 
-  $("prompt").addEventListener("keydown", e => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-  });
+      try {
+        if (currentUser && firebase) {
+          for (const chat of savedChats) {
+            try {
+              await firebase.deleteChat(String(chat.id));
+            } catch (error) {
+              console.warn("Could not delete cloud chat:", chat.id, error);
+            }
+          }
+        }
 
-  /* READ ALOUD AND TXT */
-  function speak(t) {
-    if (!("speechSynthesis" in window)) return;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(new SpeechSynthesisUtterance(plainText(t)));
-  }
+        savedChats = [];
+        history = [];
+        currentChatId = null;
+        persist();
+        renderMessages();
+        renderRecent();
 
-  function saveBlob(blob, name) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url; a.download = name; a.rel = "noopener";
-    a.style.display = "none"; document.body.appendChild(a); a.click();
-    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60000);
-  }
-
-  function downloadText(t, n) {
-    saveBlob(new Blob([t], { type: "text/plain;charset=utf-8" }), n);
-  }
-
-  /* PDF EXPORT */
-  let pdfBusy = false;
-
-  function showPdfOverlay(msg) {
-    const o = document.createElement("div");
-    o.className = "pdf-overlay";
-    o.innerHTML = '<div class="pdf-overlay-box"><div class="pdf-spinner"></div><div class="pdf-overlay-text"></div></div>';
-    o.querySelector(".pdf-overlay-text").textContent = msg;
-    document.body.appendChild(o);
-    return o;
-  }
-
-  function setPdfOverlay(o, msg) {
-    const t = o && o.querySelector(".pdf-overlay-text");
-    if (t) t.textContent = msg;
-  }
-
-  async function waitForFonts() {
-    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
-    await new Promise(r => setTimeout(r, 250));
-    try { if (document.fonts && document.fonts.ready) await document.fonts.ready; } catch {}
-  }
-
-  function stripAIFiller(text) {
-    if (!text) return "";
-    let paras = text.split('\n\n');
-    let filtered = paras.filter(p => {
-      let lower = p.toLowerCase().trim();
-      return !(
-        lower.startsWith('want to dive deeper') ||
-        lower.startsWith('would you like me to') ||
-        lower.startsWith('do you want me to') ||
-        lower.startsWith('let me know') ||
-        lower.startsWith('feel free to') ||
-        lower.startsWith('i hope this helps') ||
-        lower.startsWith('if you have any other questions') ||
-        lower.startsWith('just let me know') ||
-        lower.startsWith('how to run this locally') ||
-        lower.startsWith('how the chat messages') ||
-        lower.startsWith('here are some') ||
-        lower.startsWith('is there anything else')
-      );
-    });
-    return filtered.join('\n\n').trim();
-  }
-
-  async function downloadPDF(question, answer, btn) {
-    const cleanAnswer = stripAIFiller(answer);
-    if (!cleanAnswer) { alert("No answer text was found."); return; }
-    if (pdfBusy) return;
-    pdfBusy = true;
-
-    const oldHtml = btn ? btn.innerHTML : "";
-    if (btn) { btn.disabled = true; }
-    let overlay = null, host = null;
-
-    try {
-      overlay = showPdfOverlay("Preparing PDF…");
-
-      host = document.createElement("div");
-      host.className = "pdf-host";
-      const doc = document.createElement("div");
-      doc.className = "pdf-doc";
-      
-      const dateStr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
-      
-      doc.innerHTML =
-        '<div class="pdf-title">RashAI — Study Answer</div>' +
-        '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
-        '<hr class="pdf-rule">' +
-        '<div class="pdf-user-q"><strong>Question:</strong>' + escapeHTML(question) + '</div>' +
-        '<div class="pdf-ai-a">' + renderMarkdown(cleanAnswer) + '</div>';
-        
-      host.appendChild(doc);
-      document.body.appendChild(host);
-      void host.offsetHeight;
-      await waitForFonts();
-
-      setPdfOverlay(overlay, "Generating PDF…");
-      
-      const canvas = await html2canvas(doc, {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        logging: false,
-        useCORS: false,
-        allowTaint: false,
-        scrollX: 0, scrollY: 0,
-        windowWidth: 800,
-        windowHeight: doc.offsetHeight + 100
-      });
-
-      const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      const margin = 10;
-      const usableWidth = pageWidth - (margin * 2);
-      const usableHeight = pageHeight - (margin * 2);
-      
-      const pxPerMm = canvas.width / usableWidth;
-      const pageHeightPx = Math.floor(usableHeight * pxPerMm);
-      
-      let heightLeft = canvas.height;
-      let position = 0;
-      
-      while (heightLeft > 0) {
-        setPdfOverlay(overlay, "Saving page " + (pdf.internal.getNumberOfPages()) + "…");
-        
-        const pageCanvas = document.createElement('canvas');
-        pageCanvas.width = canvas.width;
-        pageCanvas.height = Math.min(pageHeightPx, heightLeft);
-        
-        const ctx = pageCanvas.getContext('2d');
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
-        
-        ctx.drawImage(
-          canvas,
-          0, position, canvas.width, pageCanvas.height,
-          0, 0, pageCanvas.width, pageCanvas.height
-        );
-        
-        const pageData = pageCanvas.toDataURL('image/jpeg', 0.95);
-        
-        if (position > 0) pdf.addPage();
-        
-        const imgHeightMm = (pageCanvas.height / canvas.width) * usableWidth;
-        pdf.addImage(pageData, 'JPEG', margin, margin, usableWidth, imgHeightMm);
-        
-        heightLeft -= pageHeightPx;
-        position += pageHeightPx;
+      } catch (error) {
+        alert("Could not clear chat history: " + error.message);
       }
+    };
 
-      const d = new Date();
-      const p2 = v => String(v).padStart(2, "0");
-      const stamp = d.getFullYear() + p2(d.getMonth() + 1) + p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
-      saveBlob(pdf.output("blob"), "rashai-answer-" + stamp + ".pdf");
-
-    } catch (err) {
-      console.error("PDF export failed:", err);
-      alert("Could not create the PDF.\n" + (err && err.message ? err.message : "Please try again."));
-    } finally {
-      if (host) host.remove();
-      if (overlay) overlay.remove();
-      if (btn) { btn.innerHTML = oldHtml; btn.disabled = false; }
-      pdfBusy = false;
+    /* READ ALOUD AND TXT */
+    function speak(t) {
+      if (!("speechSynthesis" in window)) return;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(new SpeechSynthesisUtterance(plainText(t)));
     }
-  }
 
-  /* START APP */
-  renderRecent();
-  renderMessages();
-});
+    function saveBlob(blob, name) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = name;
+      a.rel = "noopener";
+      a.style.display = "none";
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        a.remove();
+        URL.revokeObjectURL(url);
+      }, 60000);
+    }
+
+    function downloadText(t, n) {
+      saveBlob(new Blob([t], { type: "text/plain;charset=utf-8" }), n);
+    }
+
+    /* PDF EXPORT */
+    let pdfBusy = false;
+
+    function showPdfOverlay(msg) {
+      const o = document.createElement("div");
+      o.className = "pdf-overlay";
+      o.innerHTML = '<div class="pdf-overlay-box"><div class="pdf-spinner"></div><div class="pdf-overlay-text"></div></div>';
+      o.querySelector(".pdf-overlay-text").textContent = msg;
+      document.body.appendChild(o);
+      return o;
+    }
+
+    function setPdfOverlay(o, msg) {
+      const t = o && o.querySelector(".pdf-overlay-text");
+      if (t) t.textContent = msg;
+    }
+
+    async function waitForFonts() {
+      try {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      } catch {}
+      await new Promise(r => setTimeout(r, 250));
+      try {
+        if (document.fonts && document.fonts.ready) await document.fonts.ready;
+      } catch {}
+    }
+
+    function stripAIFiller(text) {
+      if (!text) return "";
+      const paras = text.split("\n\n");
+      const filtered = paras.filter(p => {
+        const lower = p.toLowerCase().trim();
+        return !(
+          lower.startsWith("want to dive deeper") ||
+          lower.startsWith("would you like me to") ||
+          lower.startsWith("do you want me to") ||
+          lower.startsWith("let me know") ||
+          lower.startsWith("feel free to") ||
+          lower.startsWith("i hope this helps") ||
+          lower.startsWith("if you have any other questions") ||
+          lower.startsWith("just let me know") ||
+          lower.startsWith("how to run this locally") ||
+          lower.startsWith("how the chat messages") ||
+          lower.startsWith("here are some") ||
+          lower.startsWith("is there anything else")
+        );
+      });
+      return filtered.join("\n\n").trim();
+    }
+
+    async function downloadPDF(question, answer, btn) {
+      const cleanAnswer = stripAIFiller(answer);
+      if (!cleanAnswer) {
+        alert("No answer text was found.");
+        return;
+      }
+      if (pdfBusy) return;
+
+      pdfBusy = true;
+      const oldHtml = btn ? btn.innerHTML : "";
+      if (btn) btn.disabled = true;
+
+      let overlay = null;
+      let host = null;
+
+      try {
+        overlay = showPdfOverlay("Preparing PDF…");
+        host = document.createElement("div");
+        host.className = "pdf-host";
+
+        const doc = document.createElement("div");
+        doc.className = "pdf-doc";
+
+        const dateStr = new Date().toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+
+        doc.innerHTML =
+          '<div class="pdf-title">RashAI — Study Answer</div>' +
+          '<div class="pdf-date">' + escapeHTML(dateStr) + "</div>" +
+          '<hr class="pdf-rule">' +
+          '<div class="pdf-user-q"><strong>Question:</strong>' +
+          escapeHTML(question) + "</div>" +
+          '<div class="pdf-ai-a">' + renderMarkdown(cleanAnswer) + "</div>";
+
+        host.appendChild(doc);
+        document.body.appendChild(host);
+        void host.offsetHeight;
+        await waitForFonts();
+
+        setPdfOverlay(overlay, "Generating PDF…");
+
+        const canvas = await html2canvas(doc, {
+          scale: 2,
+          backgroundColor: "#ffffff",
+          logging: false,
+          useCORS: false,
+          allowTaint: false,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 800,
+          windowHeight: doc.offsetHeight + 100
+        });
+
+        const pdf = new window.jspdf.jsPDF("p", "mm", "a4");
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const usableWidth = pageWidth - margin * 2;
+        const usableHeight = pageHeight - margin * 2;
+        const pxPerMm = canvas.width / usableWidth;
+        const pageHeightPx = Math.floor(usableHeight * pxPerMm);
+
+        let heightLeft = canvas.height;
+        let position = 0;
+
+        while (heightLeft > 0) {
+          setPdfOverlay(overlay, "Saving page " + pdf.internal.getNumberOfPages() + "…");
+
+          const pageCanvas = document.createElement("canvas");
+          pageCanvas.width = canvas.width;
+          pageCanvas.height = Math.min(pageHeightPx, heightLeft);
+
+          const ctx = pageCanvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, pageCanvas.width, pageCanvas.height);
+
+          ctx.drawImage(
+            canvas,
+            0, position, canvas.width, pageCanvas.height,
+            0, 0, pageCanvas.width, pageCanvas.height
+          );
+
+          const pageData = pageCanvas.toDataURL("image/jpeg", 0.95);
+          if (position > 0) pdf.addPage();
+
+          const imgHeightMm = (pageCanvas.height / canvas.width) * usableWidth;
+          pdf.addImage(pageData, "JPEG", margin, margin, usableWidth, imgHeightMm);
+
+          heightLeft -= pageHeightPx;
+          position += pageHeightPx;
+        }
+
+        const d = new Date();
+        const p2 = v => String(v).padStart(2, "0");
+        const stamp = d.getFullYear() + p2(d.getMonth() + 1) +
+          p2(d.getDate()) + "-" + p2(d.getHours()) + p2(d.getMinutes());
+
+        saveBlob(pdf.output("blob"), "rashai-answer-" + stamp + ".pdf");
+
+      } catch (error) {
+        console.error("PDF export failed:", error);
+        alert("Could not create the PDF.\n" + (error?.message || "Please try again."));
+      } finally {
+        if (host) host.remove();
+        if (overlay) overlay.remove();
+        if (btn) {
+          btn.innerHTML = oldHtml;
+          btn.disabled = false;
+        }
+        pdfBusy = false;
+      }
+    }
+
+    /* START APP */
+    renderRecent();
+    renderMessages();
+    wakeServer();
+  });
 </script>
 </body>
 </html>
