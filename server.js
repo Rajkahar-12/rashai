@@ -10,10 +10,12 @@ const PORT = Number(process.env.PORT) || 3000;
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-const DEFAULT_ORIGIN = "https://rajkahar-12.github.io";
+const PRIMARY_ORIGIN = "https://rajkahar.is-a.dev";
+const LEGACY_ORIGIN = "https://rajkahar-12.github.io";
 
 const ALLOWED_ORIGINS = new Set([
-  DEFAULT_ORIGIN,
+  PRIMARY_ORIGIN,
+  LEGACY_ORIGIN,
   ...String(process.env.EXTRA_ORIGINS || "")
     .split(",")
     .map(s => s.trim())
@@ -50,16 +52,16 @@ const CONTINUE_PROMPT =
   "When everything is finished, close any open code block and stop.";
 
 const SYNTHESIS_PROMPT = `
-You are RashAI's synthesis model. You will receive one user question and three independent answers from different AI models.
+You are RashAI's synthesis model. You will receive one user question and two independent answers from different AI models.
 Your task: produce ONE final answer that is complete, accurate, and well-organised.
 
 RULES:
-- Compare all three answers.
+- Compare both answers.
 - Remove repeated information.
-- Resolve contradictions carefully. If one answer contradicts the other two and the contradiction cannot be resolved from the question alone, prefer the answer supported by the most reliable reasoning, and explicitly note the uncertainty.
+- Resolve contradictions carefully. If one answer contradicts the other and the contradiction cannot be resolved from the question alone, prefer the answer supported by the most reliable reasoning, and explicitly note the uncertainty.
 - Identify and exclude unsupported claims.
 - Preserve every important detail and useful example.
-- If an answer contains a helpful example the others lack, include it.
+- If an answer contains a helpful example the other lacks, include it.
 - Produce one natural, detailed final answer. Do not mention that you combined multiple answers.
 - Never invent information simply to make answers agree.
 - Match the depth and length the user's question implies.
@@ -169,7 +171,7 @@ const requests = new Map();
 function corsHeaders(origin) {
   return {
     "Access-Control-Allow-Origin":
-      origin && ALLOWED_ORIGINS.has(origin) ? origin : DEFAULT_ORIGIN,
+      origin && ALLOWED_ORIGINS.has(origin) ? origin : PRIMARY_ORIGIN,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin"
@@ -410,7 +412,7 @@ async function callOpenRouter(messages, model, maxTokens, options = {}) {
         headers: {
           Authorization: `Bearer ${key}`,
           "Content-Type": "application/json",
-          "HTTP-Referer": "https://rajkahar-12.github.io/rashai/",
+          "HTTP-Referer": "https://rajkahar.is-a.dev/rashai",
           "X-Title": "RashAI"
         },
         body: JSON.stringify({
@@ -559,6 +561,20 @@ function getErrorDetails(data) {
   };
 }
 
+const FRIENDLY_PROVIDER_ERRORS = {
+  AI_AUTH_ERROR: "authentication failed",
+  AI_RATE_LIMITED: "rate-limited",
+  AI_REQUEST_ERROR: "rejected the request",
+  AI_CONNECTION_FAILED: "could not connect",
+  EMPTY_AI_RESPONSE: "returned an empty response",
+  AI_TEMPORARILY_UNAVAILABLE: "temporarily unavailable",
+  GROQ_NOT_CONFIGURED: "not configured"
+};
+
+function friendlyProviderError(code) {
+  return FRIENDLY_PROVIDER_ERRORS[code] || String(code || "unknown error");
+}
+
 async function generateIndependentAnswers(messages) {
   const providers = [];
 
@@ -603,11 +619,16 @@ async function generateIndependentAnswers(messages) {
     }
   });
 
-  if (answers.length === 0) {
-    throw new Error("ALL_PROVIDERS_FAILED");
+  if (failures.length > 0) {
+    const summary = failures
+      .map(f => `${f.provider} ${friendlyProviderError(f.error)}`)
+      .join("; ");
+    const error = new Error("PROVIDER_FAILED");
+    error.providerDetails = summary;
+    throw error;
   }
 
-  return { answers, failures };
+  return { answers };
 }
 
 function buildSynthesisMessages(baseMessages, answers) {
@@ -624,38 +645,20 @@ function buildSynthesisMessages(baseMessages, answers) {
       role: "user",
       content:
         `USER QUESTION:\n${question}\n\n` +
-        `THREE INDEPENDENT ANSWERS:\n${answerBlock}\n\n` +
+        `TWO INDEPENDENT ANSWERS:\n${answerBlock}\n\n` +
         `Now produce ONE final answer following your synthesis rules.`
     }
   ];
 }
 
 async function synthesizeAnswers(baseMessages, answers) {
+  if (!OPENROUTER_API_KEY) {
+    throw new Error("AI_AUTH_ERROR");
+  }
+
   const synthesisMessages = buildSynthesisMessages(baseMessages, answers);
-
-  let lastError = null;
-
-  if (OPENROUTER_API_KEY) {
-    try {
-      const result = await callOpenRouter(synthesisMessages, SYNTHESIS_MODEL, 4096, { temperature: 0.25 });
-      return { ...result, provider: "openrouter" };
-    } catch (error) {
-      console.warn("OpenRouter synthesis failed:", error.message);
-      lastError = error;
-    }
-  }
-
-  if (GROQ_API_KEY) {
-    try {
-      const result = await callGroq(synthesisMessages, GROQ_CHAT_MODEL);
-      return { ...result, provider: "groq" };
-    } catch (error) {
-      console.warn("Groq synthesis failed:", error.message);
-      lastError = error;
-    }
-  }
-
-  throw lastError || new Error("ALL_PROVIDERS_FAILED");
+  const result = await callOpenRouter(synthesisMessages, SYNTHESIS_MODEL, 4096, { temperature: 0.25 });
+  return { ...result, provider: "openrouter" };
 }
 
 function findOpenFence(text) {
@@ -714,7 +717,7 @@ async function generateComplete(baseMessages, startText) {
   let continuations = 0;
   let finishReason = "stop";
   let model = "multi-model";
-  let lastMeta = { partialFailure: undefined, synthesisFailed: false, provider: "multi-model" };
+  let provider = "openrouter+groq";
 
   while (true) {
     const callMessages = continuing ? withContinuePrompt(baseMessages, text) : baseMessages;
@@ -722,49 +725,25 @@ async function generateComplete(baseMessages, startText) {
     let result;
 
     if (!continuing) {
-      const { answers, failures } = await generateIndependentAnswers(callMessages);
-      if (answers.length < 2) throw new Error("INSUFFICIENT_PROVIDERS");
-
-      try {
-        const synth = await synthesizeAnswers(callMessages, answers);
-        result = {
-          text: synth.text,
-          model: synth.model,
-          provider: synth.provider,
-          finishReason: synth.finishReason,
-          partialFailure: failures.length > 0 ? failures : undefined
-        };
-      } catch (synthError) {
-        console.error("Synthesis failed, using best available answer:", synthError.message);
-        const best = answers[0];
-        result = {
-          text: best.text,
-          model: best.model,
-          provider: best.provider,
-          finishReason: "stop",
-          synthesisFailed: true,
-          partialFailure: failures.length > 0 ? failures : undefined
-        };
-      }
+      const { answers } = await generateIndependentAnswers(callMessages);
+      const synth = await synthesizeAnswers(callMessages, answers);
+      result = {
+        text: synth.text,
+        model: synth.model,
+        provider: synth.provider,
+        finishReason: synth.finishReason
+      };
     } else {
-      if (OPENROUTER_API_KEY) {
-        const r = await callOpenRouter(callMessages, SYNTHESIS_MODEL, MAX_OUTPUT_TOKENS);
-        result = { ...r, provider: "openrouter" };
-      } else if (GROQ_API_KEY) {
-        const r = await callGroq(callMessages, GROQ_CHAT_MODEL);
-        result = { ...r, provider: "groq" };
-      } else {
-        throw new Error("INSUFFICIENT_PROVIDERS");
+      if (!OPENROUTER_API_KEY) {
+        throw new Error("AI_AUTH_ERROR");
       }
+      const r = await callOpenRouter(callMessages, SYNTHESIS_MODEL, MAX_OUTPUT_TOKENS);
+      result = { ...r, provider: "openrouter" };
     }
 
     finishReason = result.finishReason;
     model = result.model;
-    lastMeta = {
-      partialFailure: result.partialFailure,
-      synthesisFailed: Boolean(result.synthesisFailed),
-      provider: result.provider
-    };
+    provider = result.provider;
 
     let stalled = false;
 
@@ -800,20 +779,9 @@ async function generateComplete(baseMessages, startText) {
       out = out.replace(/^\s+/, "");
     }
 
-    let note = "";
-
-    if (!complete) {
-      note = "⚠️ This answer is INCOMPLETE. The synthesis model reached its output limit. Press \"Continue generating\" to carry on.";
-    }
-
-    if (lastMeta.partialFailure && lastMeta.partialFailure.length > 0) {
-      const list = lastMeta.partialFailure.map(f => `${f.provider} (${f.error})`).join(", ");
-      note += (note ? "\n\n" : "") + `⚠️ Partial failure: ${list}. The final answer was synthesized from the successful models only.`;
-    }
-
-    if (lastMeta.synthesisFailed) {
-      note += (note ? "\n\n" : "") + "⚠️ The synthesis step failed. This is the best available independent answer, not a combined final answer.";
-    }
+    const note = complete
+      ? ""
+      : "⚠️ This answer is INCOMPLETE. The synthesis model reached its output limit. Press \"Continue generating\" to carry on.";
 
     return {
       text: out,
@@ -821,7 +789,7 @@ async function generateComplete(baseMessages, startText) {
       complete,
       finishReason,
       continuations,
-      provider: lastMeta.provider,
+      provider,
       note
     };
   }
@@ -833,9 +801,11 @@ async function handleChat(req, res) {
     return send(res, 429, { error: `Too many requests. Try again in ${limit.retryAfter} seconds.` }, { "Retry-After": String(limit.retryAfter) });
   }
 
-  if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
-    console.error("No AI provider API key configured.");
-    return send(res, 500, { error: "The server has no AI provider configured." });
+  if (!OPENROUTER_API_KEY || !GROQ_API_KEY) {
+    console.error("Missing AI provider API keys.");
+    return send(res, 500, {
+      error: "RashAI requires both OPENROUTER_API_KEY and GROQ_API_KEY to be configured on the server."
+    });
   }
 
   try {
@@ -900,6 +870,12 @@ async function handleChat(req, res) {
   } catch (error) {
     console.error("Chat request failed:", error.message);
 
+    if (error.message === "PROVIDER_FAILED") {
+      return send(res, 503, {
+        error: `RashAI could not generate a combined answer because an AI provider failed (${error.providerDetails}). Please try again in a moment.`
+      });
+    }
+
     const known = {
       REQUEST_TOO_LARGE: [413, "Request too large. Please use a smaller file."],
       FILE_TOO_LARGE: [413, "Files must be 5 MB or smaller."],
@@ -909,7 +885,7 @@ async function handleChat(req, res) {
       AI_REQUEST_ERROR: [502, "The AI service rejected this request. Try a shorter message."],
       AI_CONNECTION_FAILED: [503, "Could not connect to the AI service. Please try again."],
       EMPTY_AI_RESPONSE: [503, "The AI service returned an empty answer. Please try again."],
-      INSUFFICIENT_PROVIDERS: [503, "Not enough AI providers are configured or available. At least two are required for combined answers."],
+      INSUFFICIENT_PROVIDERS: [503, "Both OpenRouter and Groq must be configured for combined answers."],
       ALL_PROVIDERS_FAILED: [503, "All AI providers failed. Please try again later."]
     };
 
@@ -1039,21 +1015,23 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (req.method === "GET" && req.url === "/") {
-    res.writeHead(302, { Location: DEFAULT_ORIGIN + "/rashai/" });
+    res.writeHead(302, { Location: PRIMARY_ORIGIN + "/rashai/" });
     return res.end();
   }
 
   if (req.method === "GET" && req.url === "/health") {
+    const bothConfigured = Boolean(OPENROUTER_API_KEY && GROQ_API_KEY);
     return send(res, 200, {
       status: "ok",
       uptime: Math.round(process.uptime()),
       stt: Boolean(GROQ_API_KEY),
-      chat: Boolean(OPENROUTER_API_KEY || GROQ_API_KEY),
+      chat: bothConfigured,
       firebase: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT),
       providers: {
         openrouter: Boolean(OPENROUTER_API_KEY),
         groq: Boolean(GROQ_API_KEY)
       },
+      architecture: "openrouter+groq → openrouter-synthesis",
       maxOutputTokens: MAX_OUTPUT_TOKENS,
       maxContinuations: MAX_CONTINUATIONS,
       models: {
@@ -1076,5 +1054,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`RashAI backend listening on port ${PORT}`);
+  console.log(`Primary origin: ${PRIMARY_ORIGIN}`);
+  console.log(`Allowed origins: ${[...ALLOWED_ORIGINS].join(", ")}`);
   console.log(`Providers: OpenRouter=${Boolean(OPENROUTER_API_KEY)} Groq=${Boolean(GROQ_API_KEY)}`);
+  console.log(`Architecture: OpenRouter + Groq → OpenRouter synthesis`);
 });
