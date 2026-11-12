@@ -8,7 +8,6 @@ const admin = require("firebase-admin");
 const PORT = Number(process.env.PORT) || 3000;
 
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
 const DEFAULT_ORIGIN = "https://rajkahar-12.github.io";
@@ -28,7 +27,6 @@ const RATE_LIMIT = 20;
 const RATE_WINDOW = 60 * 1000;
 
 const OPENROUTER_MODEL_1 = process.env.OPENROUTER_MODEL_1 || "openrouter/free";
-const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 const GROQ_CHAT_MODEL = process.env.GROQ_CHAT_MODEL || "openai/gpt-oss-20b";
 const SYNTHESIS_MODEL = process.env.SYNTHESIS_MODEL || "openrouter/free";
 
@@ -487,88 +485,6 @@ async function callOpenRouter(messages, model, maxTokens, options = {}) {
   throw new Error(lastStatus === 429 ? "AI_RATE_LIMITED" : "AI_TEMPORARILY_UNAVAILABLE");
 }
 
-async function callGemini(messages, model) {
-  const key = GEMINI_API_KEY;
-  if (!key) throw new Error("GEMINI_NOT_CONFIGURED");
-
-  const systemParts = messages.filter(m => m.role === "system").map(m => m.content);
-  const contents = [];
-
-  for (const msg of messages) {
-    if (msg.role === "system") continue;
-
-    const role = msg.role === "assistant" ? "model" : "user";
-    let parts;
-
-    if (Array.isArray(msg.content)) {
-      parts = msg.content.map(part => {
-        if (part.type === "text") return { text: part.text };
-        if (part.type === "image_url") {
-          const url = part.image_url?.url || "";
-          const m = url.match(/^data:([^;,]+);base64,(.+)$/);
-          if (m) return { inline_data: { mime_type: m[1], data: m[2] } };
-        }
-        return null;
-      }).filter(Boolean);
-    } else {
-      parts = [{ text: String(msg.content) }];
-    }
-
-    contents.push({ role, parts });
-  }
-
-  const body = {
-    contents,
-    generationConfig: {
-      temperature: 0.4,
-      maxOutputTokens: MAX_OUTPUT_TOKENS
-    }
-  };
-
-  if (systemParts.length) {
-    body.systemInstruction = { parts: [{ text: systemParts.join("\n\n") }] };
-  }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model || GEMINI_MODEL)}:generateContent?key=${encodeURIComponent(key)}`;
-
-  let response;
-  try {
-    response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(90000)
-    });
-  } catch (error) {
-    console.error("Gemini connection error:", error.message);
-    throw new Error("AI_CONNECTION_FAILED");
-  }
-
-  const data = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    console.error("Gemini request failed:", {
-      status: response.status,
-      error: data?.error?.message || data?.error
-    });
-    if (response.status === 401 || response.status === 403) throw new Error("AI_AUTH_ERROR");
-    if (response.status === 429) throw new Error("AI_RATE_LIMITED");
-    throw new Error("AI_TEMPORARILY_UNAVAILABLE");
-  }
-
-  const candidate = data?.candidates?.[0];
-  const text = candidate?.content?.parts?.map(p => p.text || "").join("") || "";
-
-  if (!text.trim()) throw new Error("EMPTY_AI_RESPONSE");
-
-  return {
-    text,
-    model: model || GEMINI_MODEL,
-    finishReason: candidate?.finishReason === "MAX_TOKENS" ? "length" : "stop",
-    maxTokensUsed: MAX_OUTPUT_TOKENS
-  };
-}
-
 async function callGroq(messages, model) {
   const key = GROQ_API_KEY;
   if (!key) throw new Error("GROQ_NOT_CONFIGURED");
@@ -654,14 +570,6 @@ async function generateIndependentAnswers(messages) {
     });
   }
 
-  if (GEMINI_API_KEY) {
-    providers.push({
-      name: "gemini",
-      model: GEMINI_MODEL,
-      run: () => callGemini(messages, GEMINI_MODEL)
-    });
-  }
-
   if (GROQ_API_KEY) {
     providers.push({
       name: "groq",
@@ -733,16 +641,6 @@ async function synthesizeAnswers(baseMessages, answers) {
       return { ...result, provider: "openrouter" };
     } catch (error) {
       console.warn("OpenRouter synthesis failed:", error.message);
-      lastError = error;
-    }
-  }
-
-  if (GEMINI_API_KEY) {
-    try {
-      const result = await callGemini(synthesisMessages, GEMINI_MODEL);
-      return { ...result, provider: "gemini" };
-    } catch (error) {
-      console.warn("Gemini synthesis failed:", error.message);
       lastError = error;
     }
   }
@@ -852,9 +750,6 @@ async function generateComplete(baseMessages, startText) {
       if (OPENROUTER_API_KEY) {
         const r = await callOpenRouter(callMessages, SYNTHESIS_MODEL, MAX_OUTPUT_TOKENS);
         result = { ...r, provider: "openrouter" };
-      } else if (GEMINI_API_KEY) {
-        const r = await callGemini(callMessages, GEMINI_MODEL);
-        result = { ...r, provider: "gemini" };
       } else if (GROQ_API_KEY) {
         const r = await callGroq(callMessages, GROQ_CHAT_MODEL);
         result = { ...r, provider: "groq" };
@@ -938,7 +833,7 @@ async function handleChat(req, res) {
     return send(res, 429, { error: `Too many requests. Try again in ${limit.retryAfter} seconds.` }, { "Retry-After": String(limit.retryAfter) });
   }
 
-  if (!OPENROUTER_API_KEY && !GEMINI_API_KEY && !GROQ_API_KEY) {
+  if (!OPENROUTER_API_KEY && !GROQ_API_KEY) {
     console.error("No AI provider API key configured.");
     return send(res, 500, { error: "The server has no AI provider configured." });
   }
@@ -1153,18 +1048,16 @@ const server = http.createServer(async (req, res) => {
       status: "ok",
       uptime: Math.round(process.uptime()),
       stt: Boolean(GROQ_API_KEY),
-      chat: Boolean(OPENROUTER_API_KEY || GEMINI_API_KEY || GROQ_API_KEY),
+      chat: Boolean(OPENROUTER_API_KEY || GROQ_API_KEY),
       firebase: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT),
       providers: {
         openrouter: Boolean(OPENROUTER_API_KEY),
-        gemini: Boolean(GEMINI_API_KEY),
         groq: Boolean(GROQ_API_KEY)
       },
       maxOutputTokens: MAX_OUTPUT_TOKENS,
       maxContinuations: MAX_CONTINUATIONS,
       models: {
         openrouter: OPENROUTER_MODEL_1,
-        gemini: GEMINI_MODEL,
         groq: GROQ_CHAT_MODEL,
         synthesis: SYNTHESIS_MODEL
       }
@@ -1183,5 +1076,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`RashAI backend listening on port ${PORT}`);
-  console.log(`Providers: OpenRouter=${Boolean(OPENROUTER_API_KEY)} Gemini=${Boolean(GEMINI_API_KEY)} Groq=${Boolean(GROQ_API_KEY)}`);
+  console.log(`Providers: OpenRouter=${Boolean(OPENROUTER_API_KEY)} Groq=${Boolean(GROQ_API_KEY)}`);
 });
