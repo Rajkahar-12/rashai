@@ -3,6 +3,7 @@
 const http = require("http");
 const mammoth = require("mammoth");
 const { extractText } = require("unpdf");
+const admin = require("firebase-admin");
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -132,7 +133,7 @@ IDENTITY
 - If something is uncertain, say so clearly.
 
 ### 3. Explanation structure (adapt, don't force)
-For questions that genuinely need depth, build through:
+For questions that genuinely need depth, build the answer through:
 1. What it means (plain language).
 2. Why it exists.
 3. How it works.
@@ -227,7 +228,7 @@ function corsHeaders(origin) {
     "Access-Control-Allow-Origin":
       origin && ALLOWED_ORIGINS.has(origin) ? origin : PRIMARY_ORIGIN,
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Vary": "Origin"
   };
 }
@@ -242,6 +243,35 @@ function send(res, status, data, headers = {}) {
   res.end(JSON.stringify(data));
 }
 
+function getFirebaseAuth() {
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT is missing.");
+  if (!admin.apps.length) {
+    let serviceAccount;
+    try { serviceAccount = JSON.parse(raw); }
+    catch { throw new Error("FIREBASE_SERVICE_ACCOUNT is invalid JSON."); }
+    admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+  }
+  return admin.auth();
+}
+
+async function verifyFirebaseToken(req, res) {
+  const authorization = String(req.headers.authorization || "");
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) {
+    send(res, 401, { error: "Please sign in to use RashAI." });
+    return false;
+  }
+  try {
+    req.firebaseUser = await getFirebaseAuth().verifyIdToken(match[1]);
+    return true;
+  } catch (error) {
+    console.warn("Firebase authentication failed:", error.message);
+    send(res, 401, { error: "Your session has expired. Please sign in again." });
+    return false;
+  }
+}
+
 function getClientIP(req) {
   const forwarded = req.headers["x-forwarded-for"];
   if (forwarded) return String(forwarded).split(",")[0].trim();
@@ -253,86 +283,56 @@ function readBody(req) {
     let body = "";
     let size = 0;
     let finished = false;
-
     req.on("data", chunk => {
       if (finished) return;
-
       size += chunk.length;
-
       if (size > MAX_BODY_SIZE) {
         finished = true;
         reject(new Error("REQUEST_TOO_LARGE"));
         req.resume();
         return;
       }
-
       body += chunk.toString("utf8");
     });
-
-    req.on("end", () => {
-      if (!finished) resolve(body);
-    });
-
-    req.on("error", error => {
-      if (!finished) reject(error);
-    });
+    req.on("end", () => { if (!finished) resolve(body); });
+    req.on("error", error => { if (!finished) reject(error); });
   });
 }
 
 function checkRateLimit(key) {
   const now = Date.now();
   const previous = requests.get(key);
-
   if (!previous || now - previous.start >= RATE_WINDOW) {
     requests.set(key, { start: now, count: 1 });
     return { allowed: true };
   }
-
   if (previous.count >= RATE_LIMIT) {
     return {
       allowed: false,
-      retryAfter: Math.max(
-        1,
-        Math.ceil((RATE_WINDOW - (now - previous.start)) / 1000)
-      )
+      retryAfter: Math.max(1, Math.ceil((RATE_WINDOW - (now - previous.start)) / 1000))
     };
   }
-
   previous.count++;
   return { allowed: true };
 }
 
 setInterval(() => {
   const now = Date.now();
-
   for (const [key, item] of requests) {
-    if (now - item.start >= RATE_WINDOW) {
-      requests.delete(key);
-    }
+    if (now - item.start >= RATE_WINDOW) requests.delete(key);
   }
 }, 5 * 60 * 1000).unref();
 
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
 function getRetryDelay(response, attempt) {
   const header = response.headers.get("retry-after");
-
   if (header) {
     const seconds = Number(header);
-
-    if (Number.isFinite(seconds) && seconds >= 0) {
-      return Math.min(seconds * 1000, 10000);
-    }
-
+    if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, 10000);
     const date = Date.parse(header);
-
-    if (Number.isFinite(date)) {
-      return Math.min(Math.max(0, date - Date.now()), 10000);
-    }
+    if (Number.isFinite(date)) return Math.min(Math.max(0, date - Date.now()), 10000);
   }
-
   return 1000 * (attempt + 1);
 }
 
@@ -355,40 +355,25 @@ async function extractAttachment(attachment) {
 
   if (dataUrl.startsWith("data:")) {
     const match = dataUrl.match(/^data:([^;,]+)?;base64,([\s\S]+)$/);
-
-    if (!match) {
-      throw new Error("INVALID_ATTACHMENT");
-    }
-
+    if (!match) throw new Error("INVALID_ATTACHMENT");
     const mime = (match[1] || type || "").toLowerCase();
     buffer = Buffer.from(match[2], "base64");
-
     if (mime.startsWith("image/")) {
-      image = {
-        mime,
-        dataUrl: `data:${mime};base64,${buffer.toString("base64")}`
-      };
+      image = { mime, dataUrl: `data:${mime};base64,${buffer.toString("base64")}` };
     }
   } else if (base64) {
     buffer = Buffer.from(base64, "base64");
   }
 
-  if (buffer && buffer.length > MAX_FILE_SIZE) {
-    throw new Error("FILE_TOO_LARGE");
-  }
+  if (buffer && buffer.length > MAX_FILE_SIZE) throw new Error("FILE_TOO_LARGE");
 
   if (image) {
-    return {
-      text: `The user attached an image named "${name}".`,
-      image
-    };
+    return { text: `The user attached an image named "${name}".`, image };
   }
 
   if (!buffer) {
     return {
-      text: typeof attachment.text === "string"
-        ? attachment.text.slice(0, 100000)
-        : "",
+      text: typeof attachment.text === "string" ? attachment.text.slice(0, 100000) : "",
       image: null
     };
   }
@@ -397,45 +382,20 @@ async function extractAttachment(attachment) {
 
   if (lowerName.endsWith(".pdf") || type.includes("pdf")) {
     try {
-      const { text } = await extractText(
-        new Uint8Array(buffer),
-        { mergePages: true }
-      );
-
+      const { text } = await extractText(new Uint8Array(buffer), { mergePages: true });
       if (!text || !text.trim()) {
-        return {
-          text: `[The PDF "${name}" was uploaded, but no selectable text was found.]`,
-          image: null
-        };
+        return { text: `[The PDF "${name}" was uploaded, but no selectable text was found.]`, image: null };
       }
-
-      return {
-        text: text.slice(0, 100000),
-        image: null
-      };
+      return { text: text.slice(0, 100000), image: null };
     } catch (pdfError) {
-      console.error(
-        "PDF extraction failed:",
-        pdfError?.message || pdfError
-      );
-
-      return {
-        text: `[The PDF "${name}" was uploaded, but its text could not be extracted.]`,
-        image: null
-      };
+      console.error("PDF extraction failed:", pdfError?.message || pdfError);
+      return { text: `[The PDF "${name}" was uploaded, but its text could not be extracted.]`, image: null };
     }
   }
 
-  if (
-    lowerName.endsWith(".docx") ||
-    type.includes("wordprocessingml")
-  ) {
+  if (lowerName.endsWith(".docx") || type.includes("wordprocessingml")) {
     const result = await mammoth.extractRawText({ buffer });
-
-    return {
-      text: result.value.slice(0, 100000),
-      image: null
-    };
+    return { text: result.value.slice(0, 100000), image: null };
   }
 
   const textExtensions = [
@@ -443,88 +403,45 @@ async function extractAttachment(attachment) {
     ".json", ".py", ".c", ".cpp", ".java"
   ];
 
-  if (
-    textExtensions.some(ext => lowerName.endsWith(ext)) ||
-    type.startsWith("text/") ||
-    type.includes("json")
-  ) {
-    return {
-      text: buffer.toString("utf8").slice(0, 100000),
-      image: null
-    };
+  if (textExtensions.some(ext => lowerName.endsWith(ext)) || type.startsWith("text/") || type.includes("json")) {
+    return { text: buffer.toString("utf8").slice(0, 100000), image: null };
   }
 
-  return {
-    text: `The attachment "${name}" was uploaded, but its text could not be extracted automatically.`,
-    image: null
-  };
+  return { text: `The attachment "${name}" was uploaded, but its text could not be extracted automatically.`, image: null };
 }
 
 function makeMessages(history, attachmentText, image) {
-  const messages = [
-    { role: "system", content: SYSTEM_PROMPT }
-  ];
+  const messages = [{ role: "system", content: SYSTEM_PROMPT }];
 
   for (const message of history) {
-    if (
-      !message ||
-      !["user", "assistant"].includes(message.role) ||
-      typeof message.content !== "string"
-    ) {
-      continue;
-    }
-
-    messages.push({
-      role: message.role,
-      content: message.content.slice(0, 30000)
-    });
+    if (!message || !["user", "assistant"].includes(message.role) || typeof message.content !== "string") continue;
+    messages.push({ role: message.role, content: message.content.slice(0, 30000) });
   }
 
   let lastUserIndex = -1;
-
   for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].role === "user") {
-      lastUserIndex = i;
-      break;
-    }
+    if (messages[i].role === "user") { lastUserIndex = i; break; }
   }
 
   if (attachmentText) {
     if (lastUserIndex >= 0) {
-      messages[lastUserIndex].content +=
-        `\n\n[Attached file content]\n${attachmentText}`;
+      messages[lastUserIndex].content += `\n\n[Attached file content]\n${attachmentText}`;
     } else {
-      messages.push({
-        role: "user",
-        content: `Please review this attachment:\n${attachmentText}`
-      });
+      messages.push({ role: "user", content: `Please review this attachment:\n${attachmentText}` });
     }
   }
 
   if (image) {
-    const imagePart = {
-      type: "image_url",
-      image_url: { url: image.dataUrl }
-    };
-
+    const imagePart = { type: "image_url", image_url: { url: image.dataUrl } };
     if (lastUserIndex >= 0) {
       messages[lastUserIndex].content = [
-        {
-          type: "text",
-          text: messages[lastUserIndex].content
-        },
+        { type: "text", text: messages[lastUserIndex].content },
         imagePart
       ];
     } else {
       messages.push({
         role: "user",
-        content: [
-          {
-            type: "text",
-            text: "Please inspect this image."
-          },
-          imagePart
-        ]
+        content: [{ type: "text", text: "Please inspect this image." }, imagePart]
       });
     }
   }
@@ -534,10 +451,7 @@ function makeMessages(history, attachmentText, image) {
 
 async function callOpenRouter(messages, model, maxTokens, options = {}) {
   const key = OPENROUTER_API_KEY;
-
-  if (!key) {
-    throw new Error("AI_AUTH_ERROR");
-  }
+  if (!key) throw new Error("AI_AUTH_ERROR");
 
   let tokens = maxTokens || MAX_OUTPUT_TOKENS;
   let retried = false;
@@ -548,34 +462,25 @@ async function callOpenRouter(messages, model, maxTokens, options = {}) {
     let response;
 
     try {
-      response = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${key}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": "https://rajkahar.is-a.dev/rashai",
-            "X-Title": "RashAI"
-          },
-          body: JSON.stringify({
-            model: model || OPENROUTER_MODEL_1,
-            messages,
-            temperature: options.temperature ?? 0.4,
-            max_tokens: tokens
-          }),
-          signal: AbortSignal.timeout(90000)
-        }
-      );
+      response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://rajkahar.is-a.dev/rashai",
+          "X-Title": "RashAI"
+        },
+        body: JSON.stringify({
+          model: model || OPENROUTER_MODEL_1,
+          messages,
+          temperature: options.temperature ?? 0.4,
+          max_tokens: tokens
+        }),
+        signal: AbortSignal.timeout(90000)
+      });
     } catch (error) {
       console.error("OpenRouter connection error:", error.message);
-
-      if (!retried) {
-        retried = true;
-        await sleep(1000);
-        continue;
-      }
-
+      if (!retried) { retried = true; await sleep(1000); continue; }
       throw new Error("AI_CONNECTION_FAILED");
     }
 
@@ -584,20 +489,11 @@ async function callOpenRouter(messages, model, maxTokens, options = {}) {
     if (response.ok) {
       const choice = data?.choices?.[0];
       const answer = choice?.message?.content;
-
-      if (typeof answer !== "string" || !answer.trim()) {
-        throw new Error("EMPTY_AI_RESPONSE");
-      }
+      if (typeof answer !== "string" || !answer.trim()) throw new Error("EMPTY_AI_RESPONSE");
 
       const finish = String(choice?.finish_reason || "").toLowerCase();
-      const nativeFinish = String(
-        choice?.native_finish_reason || ""
-      ).toLowerCase();
-
-      const hitLimit =
-        finish === "length" ||
-        nativeFinish === "length" ||
-        nativeFinish === "max_tokens";
+      const nativeFinish = String(choice?.native_finish_reason || "").toLowerCase();
+      const hitLimit = finish === "length" || nativeFinish === "length" || nativeFinish === "max_tokens";
 
       return {
         text: answer,
@@ -617,33 +513,21 @@ async function callOpenRouter(messages, model, maxTokens, options = {}) {
       rateLimitRemaining: response.headers.get("x-ratelimit-remaining")
     });
 
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("AI_AUTH_ERROR");
-    }
+    if (response.status === 401 || response.status === 403) throw new Error("AI_AUTH_ERROR");
 
     if (response.status === 400) {
       const text = `${details.message} ${details.raw || ""}`;
-
-      if (
-        shrinks < 2 &&
-        tokens > 1024 &&
-        /token|max_tokens|output|completion|context/i.test(text)
-      ) {
+      if (shrinks < 2 && tokens > 1024 && /token|max_tokens|output|completion|context/i.test(text)) {
         tokens = Math.max(1024, Math.floor(tokens / 2));
         shrinks++;
         continue;
       }
-
       throw new Error("AI_REQUEST_ERROR");
     }
 
     const retryable = [429, 502, 503, 504].includes(response.status);
     const message = details.message.toLowerCase();
-
-    const dailyLimit =
-      message.includes("daily") ||
-      message.includes("per day") ||
-      message.includes("quota");
+    const dailyLimit = message.includes("daily") || message.includes("per day") || message.includes("quota");
 
     if (!retried && retryable && !dailyLimit) {
       retried = true;
@@ -651,66 +535,44 @@ async function callOpenRouter(messages, model, maxTokens, options = {}) {
       continue;
     }
 
-    if (response.status === 429) {
-      throw new Error("AI_RATE_LIMITED");
-    }
-
+    if (response.status === 429) throw new Error("AI_RATE_LIMITED");
     throw new Error("AI_TEMPORARILY_UNAVAILABLE");
   }
 
-  throw new Error(
-    lastStatus === 429
-      ? "AI_RATE_LIMITED"
-      : "AI_TEMPORARILY_UNAVAILABLE"
-  );
+  throw new Error(lastStatus === 429 ? "AI_RATE_LIMITED" : "AI_TEMPORARILY_UNAVAILABLE");
 }
 
 async function callGroq(messages, model) {
   const key = GROQ_API_KEY;
-
-  if (!key) {
-    throw new Error("GROQ_NOT_CONFIGURED");
-  }
+  if (!key) throw new Error("GROQ_NOT_CONFIGURED");
 
   const safeMessages = messages.map(msg => {
     if (Array.isArray(msg.content)) {
-      const textParts = msg.content
-        .filter(p => p.type === "text")
-        .map(p => p.text);
-
+      const textParts = msg.content.filter(p => p.type === "text").map(p => p.text);
       return {
         role: msg.role,
-        content: textParts.join("\n") ||
-          "[Image attachment omitted: Groq text model does not support vision.]"
+        content: textParts.join("\n") || "[Image attachment omitted: Groq text model does not support vision.]"
       };
     }
-
-    return {
-      role: msg.role,
-      content: String(msg.content)
-    };
+    return { role: msg.role, content: String(msg.content) };
   });
 
   let response;
-
   try {
-    response = await fetch(
-      "https://api.groq.com/openai/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          model: model || GROQ_CHAT_MODEL,
-          messages: safeMessages,
-          temperature: 0.4,
-          max_tokens: MAX_OUTPUT_TOKENS
-        }),
-        signal: AbortSignal.timeout(90000)
-      }
-    );
+    response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: model || GROQ_CHAT_MODEL,
+        messages: safeMessages,
+        temperature: 0.4,
+        max_tokens: MAX_OUTPUT_TOKENS
+      }),
+      signal: AbortSignal.timeout(90000)
+    });
   } catch (error) {
     console.error("Groq connection error:", error.message);
     throw new Error("AI_CONNECTION_FAILED");
@@ -723,24 +585,15 @@ async function callGroq(messages, model) {
       status: response.status,
       error: data?.error?.message || data?.error
     });
-
-    if (response.status === 401 || response.status === 403) {
-      throw new Error("AI_AUTH_ERROR");
-    }
-
-    if (response.status === 429) {
-      throw new Error("AI_RATE_LIMITED");
-    }
-
+    if (response.status === 401 || response.status === 403) throw new Error("AI_AUTH_ERROR");
+    if (response.status === 429) throw new Error("AI_RATE_LIMITED");
     throw new Error("AI_TEMPORARILY_UNAVAILABLE");
   }
 
   const choice = data?.choices?.[0];
   const text = choice?.message?.content;
 
-  if (typeof text !== "string" || !text.trim()) {
-    throw new Error("EMPTY_AI_RESPONSE");
-  }
+  if (typeof text !== "string" || !text.trim()) throw new Error("EMPTY_AI_RESPONSE");
 
   return {
     text,
@@ -753,18 +606,13 @@ async function callGroq(messages, model) {
 function getErrorDetails(data) {
   const error = data?.error || {};
   const metadata = error.metadata || {};
-
   return {
     status: error.status || null,
     code: error.code || null,
-    message: String(
-      error.message || "Unknown OpenRouter error"
-    ).slice(0, 300),
+    message: String(error.message || "Unknown OpenRouter error").slice(0, 300),
     errorType: metadata.error_type || "unknown",
     providerCode: metadata.provider_code || null,
-    raw: metadata.raw
-      ? String(metadata.raw).slice(0, 300)
-      : null
+    raw: metadata.raw ? String(metadata.raw).slice(0, 300) : null
   };
 }
 
@@ -779,8 +627,7 @@ const FRIENDLY_PROVIDER_ERRORS = {
 };
 
 function friendlyProviderError(code) {
-  return FRIENDLY_PROVIDER_ERRORS[code] ||
-    String(code || "unknown error");
+  return FRIENDLY_PROVIDER_ERRORS[code] || String(code || "unknown error");
 }
 
 async function generateIndependentAnswers(messages) {
@@ -790,12 +637,7 @@ async function generateIndependentAnswers(messages) {
     providers.push({
       name: "openrouter",
       model: OPENROUTER_MODEL_1,
-      run: () => callOpenRouter(
-        messages,
-        OPENROUTER_MODEL_1,
-        MAX_OUTPUT_TOKENS,
-        { temperature: 0.35 }
-      )
+      run: () => callOpenRouter(messages, OPENROUTER_MODEL_1, MAX_OUTPUT_TOKENS, { temperature: 0.35 })
     });
   }
 
@@ -811,9 +653,7 @@ async function generateIndependentAnswers(messages) {
     throw new Error("INSUFFICIENT_PROVIDERS");
   }
 
-  const results = await Promise.allSettled(
-    providers.map(p => p.run())
-  );
+  const results = await Promise.allSettled(providers.map(p => p.run()));
 
   const answers = [];
   const failures = [];
@@ -836,11 +676,8 @@ async function generateIndependentAnswers(messages) {
 
   if (failures.length > 0) {
     const summary = failures
-      .map(f =>
-        `${f.provider} ${friendlyProviderError(f.error)}`
-      )
+      .map(f => `${f.provider} ${friendlyProviderError(f.error)}`)
       .join("; ");
-
     console.warn("Provider failure:", summary);
     throw new Error("PROVIDER_FAILED");
   }
@@ -849,25 +686,15 @@ async function generateIndependentAnswers(messages) {
 }
 
 function buildSynthesisMessages(baseMessages, answers) {
-  const lastUser = [...baseMessages]
-    .reverse()
-    .find(m => m.role === "user");
-
-  const question = lastUser
-    ? lastUser.content
-    : "(question not available)";
+  const lastUser = [...baseMessages].reverse().find(m => m.role === "user");
+  const question = lastUser ? lastUser.content : "(question not available)";
 
   const answerBlock = answers
-    .map((a, i) =>
-      `--- ANSWER ${i + 1} (from ${a.provider}, model: ${a.model}) ---\n${a.text}`
-    )
+    .map((a, i) => `--- ANSWER ${i + 1} (from ${a.provider}, model: ${a.model}) ---\n${a.text}`)
     .join("\n\n");
 
   return [
-    {
-      role: "system",
-      content: SYNTHESIS_PROMPT
-    },
+    { role: "system", content: SYNTHESIS_PROMPT },
     {
       role: "user",
       content:
@@ -883,88 +710,43 @@ async function synthesizeAnswers(baseMessages, answers) {
     throw new Error("AI_AUTH_ERROR");
   }
 
-  const synthesisMessages = buildSynthesisMessages(
-    baseMessages,
-    answers
-  );
-
-  const result = await callOpenRouter(
-    synthesisMessages,
-    SYNTHESIS_MODEL,
-    4096,
-    { temperature: 0.25 }
-  );
-
-  return {
-    ...result,
-    provider: "openrouter"
-  };
+  const synthesisMessages = buildSynthesisMessages(baseMessages, answers);
+  const result = await callOpenRouter(synthesisMessages, SYNTHESIS_MODEL, 4096, { temperature: 0.25 });
+  return { ...result, provider: "openrouter" };
 }
 
 function findOpenFence(text) {
   let open = null;
-
   for (const line of String(text || "").split("\n")) {
     if (!open) {
-      const m =
-        line.match(/^[ \t]*(`{3,})[^`]*$/) ||
-        line.match(/^[ \t]*(~{3,})/);
-
-      if (m) {
-        open = {
-          ch: m[1][0],
-          len: m[1].length
-        };
-      }
+      const m = line.match(/^[ \t]*(`{3,})[^`]*$/) || line.match(/^[ \t]*(~{3,})/);
+      if (m) open = { ch: m[1][0], len: m[1].length };
     } else {
       const m = line.match(/^[ \t]*(`{3,}|~{3,})[ \t]*$/);
-
-      if (
-        m &&
-        m[1][0] === open.ch &&
-        m[1].length >= open.len
-      ) {
-        open = null;
-      }
+      if (m && m[1][0] === open.ch && m[1].length >= open.len) open = null;
     }
   }
-
   return open;
 }
 
 function mergeContinuation(base, extra) {
   let add = String(extra || "").replace(/^\uFEFF/, "");
-
-  if (!add.trim()) {
-    return base;
-  }
+  if (!add.trim()) return base;
 
   if (findOpenFence(base)) {
     const lead = add.match(/^(?:[ \t]*\r?\n)*/)[0];
     const rest = add.slice(lead.length);
     const nl = rest.indexOf("\n");
     const first = nl === -1 ? rest : rest.slice(0, nl);
-
-    const opening = first.match(
-      /^[ \t]*(?:`{3,}|~{3,})(.*)$/
-    );
-
-    if (
-      opening &&
-      opening[1].trim() !== "" &&
-      !opening[1].includes("`")
-    ) {
+    const opening = first.match(/^[ \t]*(?:`{3,}|~{3,})(.*)$/);
+    if (opening && opening[1].trim() !== "" && !opening[1].includes("`")) {
       add = nl === -1 ? "" : rest.slice(nl + 1);
     }
   }
 
   const max = Math.min(600, base.length, add.length);
-
   for (let k = max; k >= 16; k--) {
-    if (base.endsWith(add.slice(0, k))) {
-      add = add.slice(k);
-      break;
-    }
+    if (base.endsWith(add.slice(0, k))) { add = add.slice(k); break; }
   }
 
   return base + add;
@@ -977,14 +759,8 @@ function withContinuePrompt(baseMessages, partialText) {
 
   return [
     ...baseMessages,
-    {
-      role: "assistant",
-      content: shown
-    },
-    {
-      role: "user",
-      content: CONTINUE_PROMPT
-    }
+    { role: "assistant", content: shown },
+    { role: "user", content: CONTINUE_PROMPT }
   ];
 }
 
@@ -998,22 +774,13 @@ async function generateComplete(baseMessages, startText) {
   let provider = "openrouter+groq";
 
   while (true) {
-    const callMessages = continuing
-      ? withContinuePrompt(baseMessages, text)
-      : baseMessages;
+    const callMessages = continuing ? withContinuePrompt(baseMessages, text) : baseMessages;
 
     let result;
 
     if (!continuing) {
-      const { answers } = await generateIndependentAnswers(
-        callMessages
-      );
-
-      const synth = await synthesizeAnswers(
-        callMessages,
-        answers
-      );
-
+      const { answers } = await generateIndependentAnswers(callMessages);
+      const synth = await synthesizeAnswers(callMessages, answers);
       result = {
         text: synth.text,
         model: synth.model,
@@ -1024,17 +791,8 @@ async function generateComplete(baseMessages, startText) {
       if (!OPENROUTER_API_KEY) {
         throw new Error("AI_AUTH_ERROR");
       }
-
-      const r = await callOpenRouter(
-        callMessages,
-        SYNTHESIS_MODEL,
-        MAX_OUTPUT_TOKENS
-      );
-
-      result = {
-        ...r,
-        provider: "openrouter"
-      };
+      const r = await callOpenRouter(callMessages, SYNTHESIS_MODEL, MAX_OUTPUT_TOKENS);
+      result = { ...r, provider: "openrouter" };
     }
 
     finishReason = result.finishReason;
@@ -1055,33 +813,22 @@ async function generateComplete(baseMessages, startText) {
     const hitLimit = finishReason === "length";
     const dangling = Boolean(findOpenFence(text));
 
-    if (!hitLimit && (!dangling || continuing)) {
-      return finish(true);
-    }
+    if (!hitLimit && (!dangling || continuing)) return finish(true);
 
-    const outOfRoom =
-      stalled ||
-      continuations >= MAX_CONTINUATIONS ||
+    const outOfRoom = stalled || continuations >= MAX_CONTINUATIONS ||
       Date.now() - startedAt > GEN_TIME_BUDGET_MS;
 
-    if (outOfRoom) {
-      return finish(!hitLimit);
-    }
+    if (outOfRoom) return finish(!hitLimit);
 
     continuing = true;
   }
 
   function finish(complete) {
     let out = text;
-
     if (complete) {
       out = out.trim();
-
       const open = findOpenFence(out);
-
-      if (open) {
-        out += "\n" + open.ch.repeat(Math.max(3, open.len));
-      }
+      if (open) out += "\n" + open.ch.repeat(Math.max(3, open.len));
     } else {
       out = out.replace(/^\s+/, "");
     }
@@ -1103,26 +850,13 @@ async function generateComplete(baseMessages, startText) {
 }
 
 async function handleChat(req, res) {
-  const limit = checkRateLimit(
-    "chat:" + getClientIP(req)
-  );
-
+  const limit = checkRateLimit("chat:" + req.firebaseUser.uid + ":" + getClientIP(req));
   if (!limit.allowed) {
-    return send(
-      res,
-      429,
-      {
-        error: `Too many requests. Try again in ${limit.retryAfter} seconds.`
-      },
-      {
-        "Retry-After": String(limit.retryAfter)
-      }
-    );
+    return send(res, 429, { error: `Too many requests. Try again in ${limit.retryAfter} seconds.` }, { "Retry-After": String(limit.retryAfter) });
   }
 
   if (!OPENROUTER_API_KEY || !GROQ_API_KEY) {
     console.error("Missing AI provider API keys.");
-
     return send(res, 500, {
       error: "RashAI is temporarily unavailable. Please try again later."
     });
@@ -1130,44 +864,26 @@ async function handleChat(req, res) {
 
   try {
     const rawBody = await readBody(req);
-
     let body;
-
-    try {
-      body = JSON.parse(rawBody);
-    } catch {
-      return send(res, 400, {
-        error: "Invalid JSON request."
-      });
-    }
+    try { body = JSON.parse(rawBody); }
+    catch { return send(res, 400, { error: "Invalid JSON request." }); }
 
     const history = body.messages;
 
     if (!Array.isArray(history) || history.length === 0) {
-      return send(res, 400, {
-        error: "Please enter a message first."
-      });
+      return send(res, 400, { error: "Please enter a message first." });
     }
-
     if (history.length > 40) {
-      return send(res, 400, {
-        error: "This conversation is too long. Start a new chat."
-      });
+      return send(res, 400, { error: "This conversation is too long. Start a new chat." });
     }
 
     const wantsContinue = body.continue === true;
     const latest = history[history.length - 1];
 
-    if (
-      !latest ||
-      latest.role !== (wantsContinue ? "assistant" : "user") ||
-      typeof latest.content !== "string" ||
-      !latest.content.trim()
-    ) {
+    if (!latest || latest.role !== (wantsContinue ? "assistant" : "user") ||
+        typeof latest.content !== "string" || !latest.content.trim()) {
       return send(res, 400, {
-        error: wantsContinue
-          ? "There is no unfinished answer to continue."
-          : "Your latest message is missing or invalid."
+        error: wantsContinue ? "There is no unfinished answer to continue." : "Your latest message is missing or invalid."
       });
     }
 
@@ -1176,15 +892,10 @@ async function handleChat(req, res) {
 
     if (wantsContinue) {
       modelHistory = history.slice(0, -1);
-
       const before = modelHistory[modelHistory.length - 1];
-
       if (!before || before.role !== "user") {
-        return send(res, 400, {
-          error: "There is no unfinished answer to continue."
-        });
+        return send(res, 400, { error: "There is no unfinished answer to continue." });
       }
-
       startText = latest.content;
     }
 
@@ -1192,24 +903,13 @@ async function handleChat(req, res) {
     let image = null;
 
     if (body.attachment) {
-      const extracted = await extractAttachment(
-        body.attachment
-      );
-
+      const extracted = await extractAttachment(body.attachment);
       attachmentText = extracted.text;
       image = extracted.image;
     }
 
-    const messages = makeMessages(
-      modelHistory,
-      attachmentText,
-      image
-    );
-
-    const result = await generateComplete(
-      messages,
-      startText
-    );
+    const messages = makeMessages(modelHistory, attachmentText, image);
+    const result = await generateComplete(messages, startText);
 
     return send(res, 200, {
       text: result.text,
@@ -1231,199 +931,92 @@ async function handleChat(req, res) {
     }
 
     const known = {
-      REQUEST_TOO_LARGE: [
-        413,
-        "Request too large. Please use a smaller file."
-      ],
-      FILE_TOO_LARGE: [
-        413,
-        "Files must be 5 MB or smaller."
-      ],
-      INVALID_ATTACHMENT: [
-        400,
-        "The attachment is invalid. Please upload it again."
-      ],
-      AI_RATE_LIMITED: [
-        503,
-        "All available free AI capacity may be busy or rate-limited. Wait a little and try again."
-      ],
-      AI_AUTH_ERROR: [
-        502,
-        "An AI provider rejected the API key. Check the environment variables in Vercel."
-      ],
-      AI_REQUEST_ERROR: [
-        502,
-        "The AI service rejected this request. Try a shorter message."
-      ],
-      AI_CONNECTION_FAILED: [
-        503,
-        "Could not connect to the AI service. Please try again."
-      ],
-      EMPTY_AI_RESPONSE: [
-        503,
-        "The AI service returned an empty answer. Please try again."
-      ],
-      INSUFFICIENT_PROVIDERS: [
-        503,
-        "RashAI is temporarily unavailable. Please try again later."
-      ],
-      ALL_PROVIDERS_FAILED: [
-        503,
-        "All AI providers failed. Please try again later."
-      ]
+      REQUEST_TOO_LARGE: [413, "Request too large. Please use a smaller file."],
+      FILE_TOO_LARGE: [413, "Files must be 5 MB or smaller."],
+      INVALID_ATTACHMENT: [400, "The attachment is invalid. Please upload it again."],
+      AI_RATE_LIMITED: [503, "All available free AI capacity may be busy or rate-limited. Wait a little and try again."],
+      AI_AUTH_ERROR: [502, "An AI provider rejected the API key. Check the environment variables in Render."],
+      AI_REQUEST_ERROR: [502, "The AI service rejected this request. Try a shorter message."],
+      AI_CONNECTION_FAILED: [503, "Could not connect to the AI service. Please try again."],
+      EMPTY_AI_RESPONSE: [503, "The AI service returned an empty answer. Please try again."],
+      INSUFFICIENT_PROVIDERS: [503, "RashAI is temporarily unavailable. Please try again later."],
+      ALL_PROVIDERS_FAILED: [503, "All AI providers failed. Please try again later."]
     };
 
     if (known[error.message]) {
       const [status, message] = known[error.message];
-
-      return send(res, status, {
-        error: message
-      });
+      return send(res, status, { error: message });
     }
 
-    if (
-      error.name === "TimeoutError" ||
-      error.name === "AbortError"
-    ) {
-      return send(res, 504, {
-        error: "The AI service took too long to respond. Please try again."
-      });
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return send(res, 504, { error: "The AI service took too long to respond. Please try again." });
     }
 
-    return send(res, 503, {
-      error: "The AI service is temporarily unavailable. Please try again."
-    });
+    return send(res, 503, { error: "The AI service is temporarily unavailable. Please try again." });
   }
 }
 
 function audioExtension(mimeType) {
   const m = String(mimeType || "").toLowerCase();
-
   if (m.includes("mp4") || m.includes("m4a")) return "mp4";
   if (m.includes("ogg")) return "ogg";
   if (m.includes("wav")) return "wav";
   if (m.includes("mpeg") || m.includes("mp3")) return "mp3";
-
   return "webm";
 }
 
-function normalizeAudioType(
-  rawMime,
-  fallback = "audio/webm"
-) {
-  const input = String(rawMime || fallback)
-    .toLowerCase()
-    .trim();
-
+function normalizeAudioType(rawMime, fallback = "audio/webm") {
+  const input = String(rawMime || fallback).toLowerCase().trim();
   const base = input.split(";")[0].trim() || fallback;
-
-  return {
-    mime: base,
-    ext: audioExtension(base)
-  };
+  return { mime: base, ext: audioExtension(base) };
 }
 
 async function handleTranscribe(req, res) {
   if (!GROQ_API_KEY) {
     console.error("GROQ_API_KEY is missing.");
-
-    return send(res, 500, {
-      error: "Voice service is not configured. Add GROQ_API_KEY in Vercel."
-    });
+    return send(res, 500, { error: "Voice service is not configured. Add GROQ_API_KEY in Render." });
   }
 
-  const limit = checkRateLimit(
-    "stt:" + getClientIP(req)
-  );
-
+  const limit = checkRateLimit("stt:" + req.firebaseUser.uid + ":" + getClientIP(req));
   if (!limit.allowed) {
-    return send(
-      res,
-      429,
-      {
-        error: `Too many requests. Try again in ${limit.retryAfter} seconds.`
-      },
-      {
-        "Retry-After": String(limit.retryAfter)
-      }
-    );
+    return send(res, 429, { error: `Too many requests. Try again in ${limit.retryAfter} seconds.` }, { "Retry-After": String(limit.retryAfter) });
   }
 
   try {
-    const body = JSON.parse(
-      (await readBody(req)) || "{}"
-    );
+    const body = JSON.parse((await readBody(req)) || "{}");
 
     if (typeof body.audio !== "string" || !body.audio) {
-      return send(res, 400, {
-        error: "No audio was received."
-      });
+      return send(res, 400, { error: "No audio was received." });
     }
 
-    const base64 = body.audio.replace(
-      /^data:[^,]*,/,
-      ""
-    );
-
-    const audioBuffer = Buffer.from(
-      base64,
-      "base64"
-    );
+    const base64 = body.audio.replace(/^data:[^,]*,/, "");
+    const audioBuffer = Buffer.from(base64, "base64");
 
     if (!audioBuffer.length) {
-      return send(res, 400, {
-        error: "Audio is empty. Please record a message and try again."
-      });
+      return send(res, 400, { error: "Audio is empty. Please record a message and try again." });
     }
-
     if (audioBuffer.length > MAX_AUDIO_SIZE) {
-      return send(res, 413, {
-        error: "Audio is too large. Please record a shorter message (max 5 MB)."
-      });
+      return send(res, 413, { error: "Audio is too large. Please record a shorter message (max 5 MB)." });
     }
 
-    const language =
-      body.language && body.language !== "auto"
-        ? String(body.language)
-        : "";
-
+    const language = body.language && body.language !== "auto" ? String(body.language) : "";
     if (language && !STT_LANGUAGES.has(language)) {
-      return send(res, 400, {
-        error: "Unsupported language selection."
-      });
+      return send(res, 400, { error: "Unsupported language selection." });
     }
 
-    const { mime, ext } = normalizeAudioType(
-      body.mimeType,
-      "audio/webm"
-    );
-
+    const { mime, ext } = normalizeAudioType(body.mimeType, "audio/webm");
     const form = new FormData();
-
-    form.append(
-      "file",
-      new Blob([audioBuffer], { type: mime }),
-      `rashai-recording.${ext}`
-    );
-
+    form.append("file", new Blob([audioBuffer], { type: mime }), `rashai-recording.${ext}`);
     form.append("model", STT_MODEL);
     form.append("response_format", "json");
+    if (language) form.append("language", language);
 
-    if (language) {
-      form.append("language", language);
-    }
-
-    const response = await fetch(
-      "https://api.groq.com/openai/v1/audio/transcriptions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${GROQ_API_KEY}`
-        },
-        body: form,
-        signal: AbortSignal.timeout(60000)
-      }
-    );
+    const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${GROQ_API_KEY}` },
+      body: form,
+      signal: AbortSignal.timeout(60000)
+    });
 
     const data = await response.json().catch(() => ({}));
 
@@ -1431,67 +1024,34 @@ async function handleTranscribe(req, res) {
       console.error("Groq transcription failed:", {
         status: response.status,
         error: data?.error,
-        mime,
-        ext,
-        bytes: audioBuffer.length
+        mime, ext, bytes: audioBuffer.length
       });
-
-      const upstreamMessage =
-        typeof data?.error?.message === "string"
-          ? data.error.message.slice(0, 200)
-          : "";
-
-      return send(
-        res,
-        response.status === 429 ? 503 : 502,
-        {
-          error: response.status === 429
-            ? "Voice transcription is busy. Please try again in a moment."
-            : `Voice transcription failed${upstreamMessage ? ": " + upstreamMessage : "."}`
-        }
-      );
-    }
-
-    if (
-      typeof data.text !== "string" ||
-      !data.text.trim()
-    ) {
-      return send(res, 422, {
-        error: "No speech was detected. Please try recording again."
+      const upstreamMessage = typeof data?.error?.message === "string" ? data.error.message.slice(0, 200) : "";
+      return send(res, response.status === 429 ? 503 : 502, {
+        error: response.status === 429
+          ? "Voice transcription is busy. Please try again in a moment."
+          : `Voice transcription failed${upstreamMessage ? ": " + upstreamMessage : "."}`
       });
     }
 
-    return send(res, 200, {
-      text: data.text.trim()
-    });
+    if (typeof data.text !== "string" || !data.text.trim()) {
+      return send(res, 422, { error: "No speech was detected. Please try recording again." });
+    }
+
+    return send(res, 200, { text: data.text.trim() });
 
   } catch (error) {
     console.error("Transcription error:", error.message);
-
     if (error.message === "REQUEST_TOO_LARGE") {
-      return send(res, 413, {
-        error: "Recording is too large. Please record a shorter message."
-      });
+      return send(res, 413, { error: "Recording is too large. Please record a shorter message." });
     }
-
     if (error instanceof SyntaxError) {
-      return send(res, 400, {
-        error: "Invalid transcription request."
-      });
+      return send(res, 400, { error: "Invalid transcription request." });
     }
-
-    if (
-      error.name === "TimeoutError" ||
-      error.name === "AbortError"
-    ) {
-      return send(res, 504, {
-        error: "Voice transcription timed out. Please try a shorter recording."
-      });
+    if (error.name === "TimeoutError" || error.name === "AbortError") {
+      return send(res, 504, { error: "Voice transcription timed out. Please try a shorter recording." });
     }
-
-    return send(res, 503, {
-      error: "Could not transcribe the recording. Please try again."
-    });
+    return send(res, 503, { error: "Could not transcribe the recording. Please try again." });
   }
 }
 
@@ -1505,29 +1065,22 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (origin && !ALLOWED_ORIGINS.has(origin)) {
-    return send(res, 403, {
-      error: "Origin not allowed."
-    });
+    return send(res, 403, { error: "Origin not allowed." });
   }
 
   if (req.method === "GET" && req.url === "/") {
-    res.writeHead(302, {
-      Location: PRIMARY_ORIGIN + "/rashai/"
-    });
-
+    res.writeHead(302, { Location: PRIMARY_ORIGIN + "/rashai/" });
     return res.end();
   }
 
   if (req.method === "GET" && req.url === "/health") {
-    const bothConfigured = Boolean(
-      OPENROUTER_API_KEY && GROQ_API_KEY
-    );
-
+    const bothConfigured = Boolean(OPENROUTER_API_KEY && GROQ_API_KEY);
     return send(res, 200, {
       status: "ok",
       uptime: Math.round(process.uptime()),
       stt: Boolean(GROQ_API_KEY),
       chat: bothConfigured,
+      firebase: Boolean(process.env.FIREBASE_SERVICE_ACCOUNT),
       providers: {
         openrouter: Boolean(OPENROUTER_API_KEY),
         groq: Boolean(GROQ_API_KEY)
@@ -1543,33 +1096,20 @@ const server = http.createServer(async (req, res) => {
     });
   }
 
-  if (
-    req.method === "POST" &&
-    req.url === "/api/transcribe"
-  ) {
-    return handleTranscribe(req, res);
-  }
-
-  if (
-    req.method === "POST" &&
-    req.url === "/api/chat"
-  ) {
+  if (req.method === "POST" && (req.url === "/api/transcribe" || req.url === "/api/chat")) {
+    const authenticated = await verifyFirebaseToken(req, res);
+    if (!authenticated) return;
+    if (req.url === "/api/transcribe") return handleTranscribe(req, res);
     return handleChat(req, res);
   }
 
-  return send(res, 404, {
-    error: "Not found."
-  });
+  return send(res, 404, { error: "Not found." });
 });
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`RashAI backend listening on port ${PORT}`);
   console.log(`Primary origin: ${PRIMARY_ORIGIN}`);
   console.log(`Allowed origins: ${[...ALLOWED_ORIGINS].join(", ")}`);
-  console.log(
-    `Providers: OpenRouter=${Boolean(OPENROUTER_API_KEY)} Groq=${Boolean(GROQ_API_KEY)}`
-  );
-  console.log(
-    "Architecture: OpenRouter + Groq → OpenRouter synthesis"
-  );
+  console.log(`Providers: OpenRouter=${Boolean(OPENROUTER_API_KEY)} Groq=${Boolean(GROQ_API_KEY)}`);
+  console.log(`Architecture: OpenRouter + Groq → OpenRouter synthesis`);
 });
